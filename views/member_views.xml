@@ -1,0 +1,32 @@
+<odoo>
+    <record id="view_member_tree" model="ir.ui.view">
+        <field name="name">member.tree</field>
+        <field name="model">travel.member</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="email"/>
+                <field name="phone"/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id="view_member_form" model="ir.ui.view">
+        <field name="name">member.form</field>
+        <field name="model">travel.member</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="company_id"/>
+                        <field name="email"/>
+                        <field name="phone"/>
+                        <field name="reservation_ids"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_travel_company,access_travel_company,model_travel_company,,1,1,1,1
+access_travel_member,access_travel_member,model_travel_member,,1,1,1,1
+access_travel_destination,access_travel_destination,model_travel_destination,,1,1,1,1
+access_travel_service,access_travel_service,model_travel_service,,1,1,1,1
+access_travel_reservation,access_travel_reservation,model_travel_reservation,,1,1,1,1
