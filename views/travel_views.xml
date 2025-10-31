@@ -18,14 +18,28 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <!-- BOUTON RÉSERVER -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_create_reservation" 
+                                type="object" 
+                                string="Réserver ce Voyage" 
+                                class="oe_highlight btn-primary"/>
+                    </div>
+                    
                     <group>
                         <field name="name"/>
                         <field name="description"/>
                         <field name="price"/>
                         <field name="start_date"/>
                         <field name="end_date"/>
-                        <field name="service_ids"/>
-                        <field name="reservation_ids"/>
+                        <field name="service_ids" widget="many2many_tags"/>
+                        <field name="reservation_ids">
+                            <tree>
+                                <field name="name"/>
+                                <field name="member_id"/>
+                                <field name="status"/>
+                            </tree>
+                        </field>
                     </group>
                 </sheet>
             </form>

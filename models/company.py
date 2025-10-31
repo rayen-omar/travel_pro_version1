@@ -1,14 +1,23 @@
 from odoo import models, fields
 
-class Company(models.Model):
+class TravelCompany(models.Model):
     _name = 'travel.company'
-    _description = 'Société ou Association'
+    _description = 'Travel Company'
 
-    name = fields.Char(string='Nom de la société', required=True)
+    name = fields.Char('Nom', required=True)
+    phone = fields.Char('Téléphone')
+    email = fields.Char('Email')
+    address = fields.Text('Adresse')
+    website = fields.Char('Site Web')
     member_ids = fields.One2many('travel.member', 'company_id', string='Membres')
-    
-    # Nouveaux champs
-    phone = fields.Char(string='Téléphone')
-    email = fields.Char(string='Email')
-    address = fields.Text(string='Adresse')
-    website = fields.Char(string='Site Web')
+
+    def action_create_member(self):
+        """Ouvre le formulaire membre avec société pré-remplie"""
+        return {
+            'name': 'Créer Membre',
+            'type': 'ir.actions.act_window',
+            'res_model': 'travel.member',
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {'default_company_id': self.id},
+        }

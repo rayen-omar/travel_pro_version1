@@ -1,13 +1,24 @@
 from odoo import models, fields
 
-class Travel(models.Model):
+class TravelDestination(models.Model):
     _name = 'travel.destination'
-    _description = 'Voyage'
+    _description = 'Travel Destination'
 
-    name = fields.Char(string='Nom du voyage', required=True)
-    description = fields.Text(string='Description')
-    price = fields.Float(string='Prix par participant')
-    start_date = fields.Date(string='Date de départ')
-    end_date = fields.Date(string='Date de retour')
-    service_ids = fields.One2many('travel.service', 'destination_id', string='Services')
+    name = fields.Char('Nom', required=True)
+    description = fields.Text('Description')
+    price = fields.Float('Prix')
+    start_date = fields.Date('Date Début')
+    end_date = fields.Date('Date Fin')
+    service_ids = fields.Many2many('travel.service', string='Services')
     reservation_ids = fields.One2many('travel.reservation', 'destination_id', string='Réservations')
+
+    def action_create_reservation(self):
+        """Ouvre le formulaire réservation avec voyage pré-rempli"""
+        return {
+            'name': 'Réserver ce Voyage',
+            'type': 'ir.actions.act_window',
+            'res_model': 'travel.reservation',
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {'default_destination_id': self.id},
+        }

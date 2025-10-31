@@ -17,13 +17,27 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <!-- BOUTON CRÉER MEMBRE -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_create_member" 
+                                type="object" 
+                                string="Créer Membre" 
+                                class="oe_highlight btn-primary"/>
+                    </div>
+                    
                     <group>
                         <field name="name"/>
                         <field name="phone"/>
                         <field name="email"/>
                         <field name="address"/>
                         <field name="website"/>
-                        <field name="member_ids"/>
+                        <field name="member_ids">
+                            <tree>
+                                <field name="name"/>
+                                <field name="email"/>
+                                <field name="phone"/>
+                            </tree>
+                        </field>
                     </group>
                 </sheet>
             </form>

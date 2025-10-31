@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_reservation_tree" model="ir.ui.view">
         <field name="name">reservation.tree</field>
@@ -7,6 +8,8 @@
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="destination_id"/>
+                <field name="check_in"/>
+                <field name="check_out"/>
                 <field name="nights"/>
                 <field name="participants"/>
                 <field name="total_price"/>
@@ -21,64 +24,71 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <field name="status" widget="statusbar" />
+                    <field name="status" widget="statusbar"/>
+                    <button name="action_create_sale_order" type="object"
+                            string="Créer Devis" class="btn-primary"
+                            attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
+                    <button name="action_view_sale_order" type="object"
+                            string="Voir Devis" class="btn-primary"
+                            attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
+                    <button name="action_save_reservation" type="object"
+                            string="Enregistrer la réservation" class="btn-success"/>
                 </header>
                 <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1" placeholder="Référence auto..."/></h1>
+                    </div>
+                    
                     <group>
-                        <group>
-                            <field name="name" readonly="1"/>
+                        <group string="Informations générales">
                             <field name="member_id"/>
                             <field name="destination_id"/>
                         </group>
-                        <group>
+                        <group string="Période">
                             <field name="check_in"/>
-                            <field name="check_out"/>
                             <field name="nights" readonly="1"/>
+                            <field name="check_out"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Hébergement">
                             <field name="hotel_service_id"/>
                             <field name="supplier_id"/>
                             <field name="local_or_foreign"/>
                         </group>
+                        <group string="Chambre">
+                            <field name="room_category"/>
+                            <field name="room_type"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Participants">
+                        <field name="adults"/>
+                        <field name="children"/>
+                        <field name="infants"/>
+                        <field name="participants" readonly="1"/>
+                    </group>
+                    
+                    <group string="Tarifs">
+                        <field name="purchase_amount"/>
+                        <field name="sale_amount"/>
+                        <field name="total_price" readonly="1"/>
                     </group>
                     
                     <notebook>
-                        <page string="Participants">
-                            <group>
-                                <field name="participants"/>
-                                <field name="adults"/>
-                                <field name="children"/>
-                                <field name="infants"/>
-                            </group>
+                        <page string="Services additionnels">
+                            <field name="service_ids" widget="many2many_tags"/>
                         </page>
-                        
-                        <page string="Chambre / Tarifs">
-                            <group>
-                                <field name="room_type"/>
-                                <field name="purchase_amount"/>
-                                <field name="sale_amount"/>
-                                <field name="total_price" readonly="1"/>
-                                <field name="currency_id" invisible="1"/>
-                            </group>
-                        </page>
-                        
-                        <page string="Services">
-                            <group>
-                                <field name="service_ids" widget="many2many_tags"/>
-                            </group>
-                        </page>
-                        
-                        <page string="Système">
-                            <group>
-                                <field name="sale_order_id"/>
-                            </group>
+                        <page string="Devis">
+                            <field name="sale_order_id" readonly="1"/>
                         </page>
                     </notebook>
-                    
-                    <footer>
-                        <button name="create_sale_order" type="object" string="Créer Devis" class="btn-primary"/>
-                        <button string="Annuler" class="btn-default" special="cancel"/>
-                    </footer>
-                    
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
