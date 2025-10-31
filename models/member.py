@@ -1,3 +1,4 @@
+# models/member.py
 from odoo import models, fields, api
 
 class TravelMember(models.Model):
@@ -9,13 +10,19 @@ class TravelMember(models.Model):
     email = fields.Char('Email')
     phone = fields.Char('Téléphone')
     reservation_ids = fields.One2many('travel.reservation', 'member_id', string='Réservations')
-
-    # PARTENAIRE AUTOMATIQUE
     partner_id = fields.Many2one('res.partner', string='Contact', required=True, ondelete='cascade')
+
+    # === SYSTÈME DE CRÉDIT ===
+    credit_balance = fields.Float('Solde Crédit', compute='_compute_credit_balance', store=True, readonly=True)
+    credit_history_ids = fields.One2many('travel.credit.history', 'member_id', string='Historique Crédit')
+
+    @api.depends('credit_history_ids.amount')
+    def _compute_credit_balance(self):
+        for rec in self:
+            rec.credit_balance = sum(h.amount for h in rec.credit_history_ids)
 
     @api.model
     def create(self, vals):
-        # Crée un contact si pas fourni
         if not vals.get('partner_id'):
             partner = self.env['res.partner'].create({
                 'name': vals.get('name', 'Client'),
@@ -27,7 +34,6 @@ class TravelMember(models.Model):
         return super().create(vals)
 
     def write(self, vals):
-        # Met à jour le contact si nom/email change
         for rec in self:
             if 'name' in vals or 'email' in vals or 'phone' in vals:
                 rec.partner_id.write({
@@ -43,5 +49,16 @@ class TravelMember(models.Model):
             'res_model': 'travel.reservation',
             'view_mode': 'form',
             'target': 'current',
+            'context': {'default_member_id': self.id},
+        }
+
+    # === RECHARGER CRÉDIT ===
+    def action_recharge_credit(self):
+        return {
+            'name': 'Recharger Crédit',
+            'type': 'ir.actions.act_window',
+            'res_model': 'travel.credit.recharge',
+            'view_mode': 'form',
+            'target': 'new',
             'context': {'default_member_id': self.id},
         }

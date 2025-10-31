@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue Liste (Tree) -->
+    <!-- Vue Liste -->
     <record id="view_member_tree" model="ir.ui.view">
         <field name="name">member.tree</field>
         <field name="model">travel.member</field>
@@ -10,41 +10,56 @@
                 <field name="company_id"/>
                 <field name="email"/>
                 <field name="phone"/>
+                <field name="credit_balance" widget="monetary"/>
             </tree>
         </field>
     </record>
     
-    <!-- Vue Formulaire (Form) -->
+    <!-- Vue Formulaire -->
     <record id="view_member_form" model="ir.ui.view">
         <field name="name">member.form</field>
         <field name="model">travel.member</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <!-- BOUTON CRÉER RÉSERVATION -->
                     <div class="oe_button_box" name="button_box">
                         <button name="action_create_reservation"
                                 type="object"
                                 string="Créer Réservation"
                                 class="oe_highlight btn-primary"/>
+                        <button name="action_recharge_credit"
+                                type="object"
+                                string="Recharger Crédit"
+                                class="oe_highlight btn-success"/>
                     </div>
                     
-                    <!-- FORMULAIRE -->
                     <group>
                         <field name="name"/>
                         <field name="company_id"/>
-                        <!-- CHAMP CACHÉ MAIS OBLIGATOIRE -->
                         <field name="partner_id" invisible="1"/>
                         <field name="email"/>
                         <field name="phone"/>
-                        <field name="reservation_ids">
-                            <tree>
-                                <field name="name"/>
-                                <field name="destination_id"/>
-                                <field name="status"/>
+                    </group>
+                    
+                    <group string="Crédit Membre">
+                        <field name="credit_balance" widget="monetary" class="oe_inline"/>
+                        <field name="credit_history_ids">
+                            <tree editable="bottom">
+                                <field name="date"/>
+                                <field name="type"/>
+                                <field name="amount" sum="Total"/>
+                                <field name="note"/>
                             </tree>
                         </field>
                     </group>
+                    
+                    <field name="reservation_ids">
+                        <tree>
+                            <field name="name"/>
+                            <field name="destination_id"/>
+                            <field name="status"/>
+                        </tree>
+                    </field>
                 </sheet>
             </form>
         </field>

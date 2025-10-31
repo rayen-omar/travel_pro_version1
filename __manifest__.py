@@ -12,6 +12,7 @@
         'views/travel_views.xml',
         'views/service_views.xml',
         'views/reservation_views.xml',
+        'views/credit_views.xml',
     ],
     'installable': True,
     'application': True,

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_credit_recharge_form" model="ir.ui.view">
+        <field name="name">credit.recharge.form</field>
+        <field name="model">travel.credit.recharge</field>
+        <field name="arch" type="xml">
+            <form string="Recharger Crédit">
+                <group>
+                    <field name="member_id" readonly="1"/>
+                    <field name="amount" placeholder="Montant en €"/>
+                </group>
+                <footer>
+                    <button name="action_recharge" type="object" string="Recharger" class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
