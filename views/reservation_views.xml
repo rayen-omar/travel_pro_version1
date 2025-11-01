@@ -1,27 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue Liste -->
     <record id="view_reservation_tree" model="ir.ui.view">
         <field name="name">reservation.tree</field>
         <field name="model">travel.reservation</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree decoration-success="status == 'confirmed'">
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="destination_id"/>
                 <field name="check_in"/>
                 <field name="check_out"/>
                 <field name="nights"/>
-                <field name="participants"/>
-                <field name="total_price"/>
-                <field name="credit_used"/>
-                <field name="remaining_to_pay"/>
+                <field name="total_price" widget="monetary"/>
+                <field name="credit_used" widget="monetary"/>
+                <field name="remaining_to_pay" widget="monetary"/>
                 <field name="status"/>
             </tree>
         </field>
     </record>
     
-    <!-- Vue Formulaire -->
     <record id="view_reservation_form" model="ir.ui.view">
         <field name="name">reservation.form</field>
         <field name="model">travel.reservation</field>
@@ -29,71 +26,38 @@
             <form>
                 <header>
                     <field name="status" widget="statusbar"/>
-                    <button name="action_create_sale_order" type="object"
-                            string="Créer Devis" class="btn-primary"
-                            attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
-                    <button name="action_view_sale_order" type="object"
-                            string="Voir Devis" class="btn-primary"
-                            attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
-                    <button name="action_save_reservation" type="object"
-                            string="Enregistrer" class="btn-success"/>
-                    <button name="action_cancel_and_credit" type="object"
-                            string="Annuler &amp; Créditer" class="btn-danger"
-                            attrs="{'invisible': [('status', 'in', ['done', 'cancel'])]}"
-                            confirm="Confirmer l'annulation et le crédit du montant ?"/>
+                    <button name="action_create_sale_order" type="object" string="Créer Devis" class="btn-primary" attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
+                    <button name="action_view_sale_order" type="object" string="Voir Devis" class="btn-primary" attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
+                    <button name="action_create_purchase" type="object" string="Commander Hôtel" class="btn-secondary" attrs="{'invisible': [('supplier_id', '=', False)]}"/>
+                    <button name="action_create_invoice" type="object" string="Facturer" class="btn-primary" attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
+                    <button name="action_open_pos" type="object" string="Payer Caisse" class="btn-success" attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}"/>
+                    <button name="action_cancel_and_credit" type="object" string="Annuler &amp; Créditer" class="btn-danger" attrs="{'invisible': [('status', 'in', ['done', 'cancel'])]}" confirm="Confirmer ?"/>
                 </header>
                 <sheet>
-                    <div class="oe_title">
-                        <h1><field name="name" readonly="1" placeholder="Référence auto..."/></h1>
-                    </div>
-                    
+                    <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
                     <group>
-                        <group string="Informations générales">
-                            <field name="member_id"/>
-                            <field name="destination_id"/>
-                        </group>
-                        <group string="Période">
-                            <field name="check_in"/>
-                            <field name="nights" readonly="1"/>
-                            <field name="check_out"/>
-                        </group>
+                        <group string="Client"><field name="member_id"/></group>
+                        <group string="Voyage"><field name="destination_id"/></group>
                     </group>
-                    
                     <group>
-                        <group string="Hébergement">
-                            <field name="hotel_service_id"/>
-                            <field name="supplier_id"/>
-                            <field name="local_or_foreign"/>
-                        </group>
-                        <group string="Chambre">
-                            <field name="room_category"/>
-                            <field name="room_type"/>
-                        </group>
+                        <group string="Période"><field name="check_in"/><field name="nights" readonly="1"/><field name="check_out"/></group>
+                        <group string="Participants"><field name="adults"/><field name="children"/><field name="infants"/><field name="participants" readonly="1"/></group>
                     </group>
-                    
-                    <group string="Participants">
-                        <field name="adults"/>
-                        <field name="children"/>
-                        <field name="infants"/>
-                        <field name="participants" readonly="1"/>
+                    <group>
+                        <group string="Hébergement"><field name="hotel_service_id"/><field name="supplier_id"/><field name="local_or_foreign"/></group>
+                        <group string="Chambre"><field name="room_category"/><field name="room_type"/></group>
                     </group>
-                    
                     <group string="Tarifs">
                         <field name="purchase_amount"/>
                         <field name="sale_amount"/>
                         <field name="total_price" readonly="1"/>
                         <field name="use_credit"/>
                         <field name="credit_used" readonly="1"/>
-                        <field name="remaining_to_pay" readonly="1" class="text-success font-weight-bold"/>
+                        <field name="remaining_to_pay" readonly="1" class="text-success"/>
                     </group>
-                    
                     <notebook>
-                        <page string="Services additionnels">
-                            <field name="service_ids" widget="many2many_tags"/>
-                        </page>
-                        <page string="Devis">
-                            <field name="sale_order_id" readonly="1"/>
-                        </page>
+                        <page string="Services"><field name="service_ids" widget="many2many_tags"/></page>
+                        <page string="Devis"><field name="sale_order_id" readonly="1"/></page>
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">

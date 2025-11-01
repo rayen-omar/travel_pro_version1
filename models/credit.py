@@ -1,7 +1,5 @@
-# models/credit.py
 from odoo import models, fields, api
 
-# === HISTORIQUE DES CRÉDITS ===
 class TravelCreditHistory(models.Model):
     _name = 'travel.credit.history'
     _description = 'Historique Crédit Membre'
@@ -9,7 +7,7 @@ class TravelCreditHistory(models.Model):
 
     member_id = fields.Many2one('travel.member', 'Membre', required=True, ondelete='cascade')
     date = fields.Datetime('Date', default=fields.Datetime.now, required=True)
-    amount = fields.Float('Montant', required=True)  # + = ajout, - = utilisation
+    amount = fields.Float('Montant', required=True)
     type = fields.Selection([
         ('recharge', 'Recharge manuelle'),
         ('refund', 'Remboursement annulation'),
@@ -18,7 +16,6 @@ class TravelCreditHistory(models.Model):
     reservation_id = fields.Many2one('travel.reservation', 'Réservation')
     note = fields.Text('Note')
 
-# === POPUP RECHARGE CRÉDIT ===
 class TravelCreditRecharge(models.TransientModel):
     _name = 'travel.credit.recharge'
     _description = 'Recharger Crédit Membre'

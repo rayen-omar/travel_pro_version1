@@ -1,94 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Actions -->
     <record id="action_company" model="ir.actions.act_window">
         <field name="name">Sociétés</field>
         <field name="res_model">travel.company</field>
         <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer votre première société
-            </p>
-        </field>
     </record>
-
+    
     <record id="action_member" model="ir.actions.act_window">
         <field name="name">Membres</field>
         <field name="res_model">travel.member</field>
         <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer votre premier membre
-            </p>
-        </field>
     </record>
-
+    
     <record id="action_travel" model="ir.actions.act_window">
         <field name="name">Voyages</field>
         <field name="res_model">travel.destination</field>
         <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer votre premier voyage
-            </p>
-        </field>
     </record>
-
+    
     <record id="action_service" model="ir.actions.act_window">
         <field name="name">Services</field>
         <field name="res_model">travel.service</field>
         <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer votre premier service
-            </p>
-        </field>
     </record>
-
+    
     <record id="action_reservation" model="ir.actions.act_window">
         <field name="name">Réservations</field>
         <field name="res_model">travel.reservation</field>
         <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer votre première réservation
-            </p>
-        </field>
     </record>
-
-    <!-- Menu Principal -->
-    <menuitem id="menu_travel_pro" 
-              name="TravelPro" 
-              sequence="10"/>
-
-    <!-- Sous-menus -->
-    <menuitem id="menu_company" 
-              name="Sociétés" 
-              parent="menu_travel_pro"
-              action="action_company" 
-              sequence="10"/>
-
-    <menuitem id="menu_member" 
-              name="Membres" 
-              parent="menu_travel_pro"
-              action="action_member" 
-              sequence="20"/>
-
-    <menuitem id="menu_travel" 
-              name="Voyages" 
-              parent="menu_travel_pro"
-              action="action_travel" 
-              sequence="30"/>
-
-    <menuitem id="menu_service" 
-              name="Services" 
-              parent="menu_travel_pro"
-              action="action_service" 
-              sequence="40"/>
-
-    <menuitem id="menu_reservation" 
-              name="Réservations" 
-              parent="menu_travel_pro"
-              action="action_reservation" 
-              sequence="50"/>
+    
+    <menuitem id="menu_travel_pro" name="TravelPro" sequence="10"/>
+    <menuitem id="menu_company" name="Sociétés" parent="menu_travel_pro" action="action_company" sequence="10"/>
+    <menuitem id="menu_member" name="Membres" parent="menu_travel_pro" action="action_member" sequence="20"/>
+    <menuitem id="menu_travel" name="Voyages" parent="menu_travel_pro" action="action_travel" sequence="30"/>
+    <menuitem id="menu_service" name="Services" parent="menu_travel_pro" action="action_service" sequence="40"/>
+    <menuitem id="menu_reservation" name="Réservations" parent="menu_travel_pro" action="action_reservation" sequence="50"/>
+    <menuitem id="menu_purchase" name="Achats Fournisseurs" parent="menu_travel_pro" action="purchase.purchase_form_action" sequence="60"/>
+    <menuitem id="menu_invoice" name="Factures Clients" parent="menu_travel_pro" action="account.action_move_out_invoice_type" sequence="70"/>
+    <menuitem id="menu_pos" name="Caisse (POS)" parent="menu_travel_pro" action="point_of_sale.action_pos_config_kanban" sequence="80"/>
 </odoo>

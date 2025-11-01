@@ -26,7 +26,7 @@
                         <field name="supplier_id"/>
                     </group>
                     <group>
-                        <field name="room_price" attrs="{'invisible':[('type','!=','hebergement')]}"/>
+                        <field name="room_price" attrs="{'invisible': [('type', '!=', 'hebergement')]}"/>
                         <field name="price"/>
                         <field name="destination_id"/>
                     </group>

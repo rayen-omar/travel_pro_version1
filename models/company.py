@@ -12,7 +12,6 @@ class TravelCompany(models.Model):
     member_ids = fields.One2many('travel.member', 'company_id', string='Membres')
 
     def action_create_member(self):
-        """Ouvre le formulaire membre avec société pré-remplie"""
         return {
             'name': 'Créer Membre',
             'type': 'ir.actions.act_window',

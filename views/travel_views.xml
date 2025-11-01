@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_travel_tree" model="ir.ui.view">
         <field name="name">travel.tree</field>
@@ -18,14 +19,9 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <!-- BOUTON RÉSERVER -->
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_create_reservation" 
-                                type="object" 
-                                string="Réserver ce Voyage" 
-                                class="oe_highlight btn-primary"/>
+                    <div class="oe_button_box">
+                        <button name="action_create_reservation" type="object" string="Réserver ce Voyage" class="oe_highlight btn-primary"/>
                     </div>
-                    
                     <group>
                         <field name="name"/>
                         <field name="description"/>

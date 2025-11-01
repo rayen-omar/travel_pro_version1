@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_inherit_travel" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.travel</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="reservation_id" domain="[('member_id.partner_id', '=', partner_id)]" options="{'no_create': True}"/>
+                <field name="reservation_name" readonly="1" attrs="{'invisible': [('reservation_id', '=', False)]}"/>
+            </xpath>
+            <xpath expr="//page[@name='other_info']" position="inside">
+                <group string="TravelPro" attrs="{'invisible': ['|', ('move_type', '!=', 'out_invoice'), ('move_type', '!=', 'out_refund')]}">
+                    <field name="member_id" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    
+    <record id="view_invoice_tree_inherit_travel" model="ir.ui.view">
+        <field name="name">account.move.tree.inherit.travel</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="reservation_name" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

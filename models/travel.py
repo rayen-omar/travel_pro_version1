@@ -13,7 +13,6 @@ class TravelDestination(models.Model):
     reservation_ids = fields.One2many('travel.reservation', 'destination_id', string='Réservations')
 
     def action_create_reservation(self):
-        """Ouvre le formulaire réservation avec voyage pré-rempli"""
         return {
             'name': 'Réserver ce Voyage',
             'type': 'ir.actions.act_window',

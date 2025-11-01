@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Journal Espèces -->
+    <record id="cash_journal_travel" model="account.journal">
+        <field name="name">Espèces - Agence Voyage</field>
+        <field name="code">CSH-TRAVEL</field>
+        <field name="type">cash</field>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Méthode de paiement Espèces -->
+    <record id="pos_payment_method_cash_travel" model="pos.payment.method">
+        <field name="name">Espèces</field>
+        <field name="journal_id" ref="cash_journal_travel"/>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Configuration Caisse -->
+    <record id="pos_config_travel" model="pos.config">
+        <field name="name">Caisse Agence Voyage</field>
+        <field name="module_pos_restaurant" eval="False"/>
+        <field name="iface_cashdrawer" eval="True"/>
+        <field name="iface_print_via_proxy" eval="True"/>
+        <field name="payment_method_ids" eval="[(4, ref('pos_payment_method_cash_travel'))]"/>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+</odoo>

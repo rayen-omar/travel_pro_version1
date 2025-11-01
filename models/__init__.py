@@ -4,3 +4,7 @@ from . import reservation
 from . import service
 from . import travel
 from . import credit
+from . import purchase
+from . import invoice
+from . import pos
+from . import partner
