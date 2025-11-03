@@ -8,3 +8,7 @@ from . import purchase
 from . import invoice
 from . import pos
 from . import partner
+from . import invoice_client
+from . import withholding
+from . import purchase_travel
+from . import purchase_report

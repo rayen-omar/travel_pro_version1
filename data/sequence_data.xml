@@ -7,4 +7,28 @@
         <field name="padding">4</field>
         <field name="number_next">1</field>
     </record>
+
+    <record id="seq_travel_invoice_client" model="ir.sequence">
+        <field name="name">Facture Client Travel</field>
+        <field name="code">travel.invoice.client</field>
+        <field name="prefix">FAC-</field>
+        <field name="padding">6</field>
+        <field name="number_next">1</field>
+    </record>
+
+    <record id="seq_travel_withholding" model="ir.sequence">
+        <field name="name">Retenue Fournisseur</field>
+        <field name="code">travel.withholding</field>
+        <field name="prefix">RET-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+    </record>
+
+    <record id="seq_travel_purchase" model="ir.sequence">
+        <field name="name">Achat Travel</field>
+        <field name="code">travel.purchase</field>
+        <field name="prefix">ACH-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+    </record>
 </odoo>

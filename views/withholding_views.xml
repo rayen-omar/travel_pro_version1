@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue liste retenues -->
+    <record id="view_travel_withholding_tree" model="ir.ui.view">
+        <field name="name">travel.withholding.tree</field>
+        <field name="model">travel.withholding</field>
+        <field name="arch" type="xml">
+            <tree string="Retenues Fournisseurs" decoration-info="state=='draft'" 
+                  decoration-success="state=='done'" decoration-muted="state=='cancel'">
+                <field name="name"/>
+                <field name="date_payment"/>
+                <field name="supplier_id"/>
+                <field name="amount_gross" sum="Total Brut"/>
+                <field name="withholding_rate"/>
+                <field name="amount_withholding" sum="Total Retenue"/>
+                <field name="date_withholding" optional="hide"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state=='draft'" 
+                       decoration-success="state=='done'"
+                       decoration-danger="state=='cancel'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue formulaire retenues -->
+    <record id="view_travel_withholding_form" model="ir.ui.view">
+        <field name="name">travel.withholding.form</field>
+        <field name="model">travel.withholding</field>
+        <field name="arch" type="xml">
+            <form string="Retenue Fournisseur">
+                <header>
+                    <button name="action_confirm" string="Confirmer" type="object" 
+                            class="oe_highlight" states="draft"/>
+                    <button name="action_cancel" string="Annuler" type="object" states="draft,done"/>
+                    <button name="action_draft" string="Remettre en brouillon" type="object" states="cancel"/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="date_payment"/>
+                            <field name="supplier_id" options="{'no_create': True}"/>
+                            <field name="date_withholding"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount_gross" widget="monetary"/>
+                            <field name="withholding_rate"/>
+                            <field name="amount_withholding" widget="monetary"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <field name="purchase_id" readonly="1"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" groups="base.group_user"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue recherche -->
+    <record id="view_travel_withholding_search" model="ir.ui.view">
+        <field name="name">travel.withholding.search</field>
+        <field name="model">travel.withholding</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Retenues">
+                <field name="name" string="Numéro"/>
+                <field name="supplier_id" string="Fournisseur"/>
+                <field name="date_payment"/>
+                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Effectuées" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Annulées" name="cancel" domain="[('state', '=', 'cancel')]"/>
+                <group expand="0" string="Grouper Par">
+                    <filter string="Fournisseur" name="group_supplier" context="{'group_by': 'supplier_id'}"/>
+                    <filter string="Date Paiement" name="group_date" context="{'group_by': 'date_payment'}"/>
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_travel_withholding" model="ir.actions.act_window">
+        <field name="name">Retenues Fournisseurs</field>
+        <field name="res_model">travel.withholding</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_done': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Enregistrer une retenue à la source
+            </p>
+            <p>
+                Enregistrez les retenues appliquées sur les paiements fournisseurs (généralement 1%).
+            </p>
+        </field>
+    </record>
+
+</odoo>

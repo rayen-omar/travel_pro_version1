@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue formulaire rapport achats -->
+    <record id="view_travel_purchase_report_form" model="ir.ui.view">
+        <field name="name">travel.purchase.report.form</field>
+        <field name="model">travel.purchase.report</field>
+        <field name="arch" type="xml">
+            <form string="Rapport des Achats">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>Rapport des Achats</span>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Période">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group string="Filtres">
+                            <field name="purchase_type"/>
+                            <field name="supplier_id" options="{'no_create': True}" 
+                                   attrs="{'invisible': [('purchase_type', '!=', 'all')]}"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Résultats" class="oe_subtotal_footer oe_right">
+                        <field name="currency_id" invisible="1"/>
+                        <field name="purchase_count" readonly="1"/>
+                        <separator/>
+                        <field name="total_ht" widget="monetary" readonly="1"/>
+                        <field name="total_tva" widget="monetary" readonly="1"/>
+                        <field name="total_ttc" widget="monetary" readonly="1" 
+                               style="font-weight: bold; font-size: 1.1em;"/>
+                        <separator/>
+                        <field name="total_withholding" widget="monetary" readonly="1" 
+                               style="color: red;"/>
+                        <field name="total_served" widget="monetary" readonly="1" 
+                               style="font-weight: bold; font-size: 1.1em; color: green;"/>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_view_purchases" string="Voir les Achats" type="object" 
+                                class="btn-primary"/>
+                        <button name="action_print_report" string="Imprimer Rapport" type="object" 
+                                class="btn-secondary"/>
+                        <button name="action_export_excel" string="Exporter Excel" type="object" 
+                                class="btn-secondary"/>
+                        <button string="Annuler" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action wizard -->
+    <record id="action_travel_purchase_report_wizard" model="ir.actions.act_window">
+        <field name="name">Rapport des Achats</field>
+        <field name="res_model">travel.purchase.report</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_travel_purchase"/>
+    </record>
+
+</odoo>

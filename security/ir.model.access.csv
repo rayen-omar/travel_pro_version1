@@ -9,3 +9,8 @@ access_travel_credit_recharge,travel.credit.recharge.access,model_travel_credit_
 access_travel_purchase_order,travel.purchase.order,model_purchase_order,base.group_user,1,1,1,1
 access_travel_account_move,travel.account.move,model_account_move,base.group_user,1,1,1,1
 access_travel_pos_order,travel.pos.order,model_pos_order,base.group_user,1,1,1,1
+access_travel_invoice_client,access_travel_invoice_client,model_travel_invoice_client,,1,1,1,1
+access_travel_invoice_client_line,access_travel_invoice_client_line,model_travel_invoice_client_line,,1,1,1,1
+access_travel_withholding,access_travel_withholding,model_travel_withholding,,1,1,1,1
+access_travel_purchase_travel,access_travel_purchase,model_travel_purchase,,1,1,1,1
+access_travel_purchase_report,access_travel_purchase_report,model_travel_purchase_report,,1,1,1,1
