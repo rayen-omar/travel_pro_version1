@@ -20,6 +20,7 @@
         'data/pos_config.xml',
         'views/company_views.xml',
         'views/member_views.xml',
+        'views/supplier_views.xml',
         'views/reservation_views.xml',
         'views/service_views.xml',
         'views/travel_views.xml',

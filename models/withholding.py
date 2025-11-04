@@ -10,8 +10,8 @@ class TravelWithholding(models.Model):
     name = fields.Char('Numéro', readonly=True, default='Nouveau', copy=False)
     date_payment = fields.Date('Date Versement', required=True, default=fields.Date.context_today, tracking=True)
     supplier_id = fields.Many2one('res.partner', string='Fournisseur', 
-                                  domain="[('supplier_rank', '>', 0)]", 
-                                  required=True, tracking=True)
+                                  required=True, tracking=True,
+                                  help="Le partenaire sera automatiquement marqué comme fournisseur s'il ne l'est pas déjà")
     
     # Montants
     amount_gross = fields.Monetary('Montant Brut', required=True, currency_field='currency_id', tracking=True)
@@ -44,11 +44,29 @@ class TravelWithholding(models.Model):
         for record in self:
             record.amount_withholding = record.amount_gross * (record.withholding_rate / 100.0)
     
+    @api.onchange('supplier_id')
+    def _onchange_supplier_id(self):
+        """Marquer automatiquement le partenaire comme fournisseur"""
+        if self.supplier_id and self.supplier_id.supplier_rank == 0:
+            self.supplier_id.supplier_rank = 1
+
+    def write(self, vals):
+        """Mettre à jour supplier_rank lors de la sauvegarde"""
+        result = super().write(vals)
+        if 'supplier_id' in vals and vals['supplier_id']:
+            supplier = self.env['res.partner'].browse(vals['supplier_id'])
+            if supplier.supplier_rank == 0:
+                supplier.supplier_rank = 1
+        return result
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'Nouveau') == 'Nouveau':
             vals['name'] = self.env['ir.sequence'].next_by_code('travel.withholding') or 'RET-00001'
-        return super(TravelWithholding, self).create(vals)
+        record = super(TravelWithholding, self).create(vals)
+        if record.supplier_id and record.supplier_id.supplier_rank == 0:
+            record.supplier_id.supplier_rank = 1
+        return record
     
     def action_confirm(self):
         self.ensure_one()

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action pour les Fournisseurs -->
+    <record id="action_supplier" model="ir.actions.act_window">
+        <field name="name">Fournisseurs</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="domain">[('supplier_rank', '&gt;', 0)]</field>
+        <field name="context">{'default_supplier_rank': 1, 'default_is_company': True, 'search_default_suppliers': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre premier fournisseur !
+            </p>
+            <p>
+                Les fournisseurs sont des partenaires avec lesquels vous travaillez. 
+                Lorsque vous créez un fournisseur depuis les réservations, services ou achats, 
+                il apparaîtra automatiquement dans cette liste.
+            </p>
+        </field>
+    </record>
+
+</odoo>

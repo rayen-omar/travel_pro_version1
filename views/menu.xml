@@ -36,6 +36,7 @@
     <!-- Sous-menus Principaux -->
     <menuitem id="menu_company" name="Sociétés" parent="menu_travel_pro" action="action_company" sequence="10"/>
     <menuitem id="menu_member" name="Membres" parent="menu_travel_pro" action="action_member" sequence="20"/>
+    <menuitem id="menu_supplier" name="Fournisseurs" parent="menu_travel_pro" action="action_supplier" sequence="25"/>
     <menuitem id="menu_travel" name="Voyages" parent="menu_travel_pro" action="action_travel" sequence="30"/>
     <menuitem id="menu_service" name="Services" parent="menu_travel_pro" action="action_service" sequence="40"/>
     <menuitem id="menu_reservation" name="Réservations" parent="menu_travel_pro" action="action_reservation" sequence="50"/>

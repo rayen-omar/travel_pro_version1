@@ -21,8 +21,8 @@ class TravelPurchase(models.Model):
     
     # Fournisseur
     supplier_id = fields.Many2one('res.partner', string='Fournisseur', 
-                                  domain="[('supplier_rank', '>', 0)]", 
-                                  required=True, tracking=True)
+                                  required=True, tracking=True,
+                                  help="Le partenaire sera automatiquement marqué comme fournisseur s'il ne l'est pas déjà")
     
     # Montants
     amount_untaxed = fields.Monetary('Montant HT', required=True, currency_field='currency_id', tracking=True)
@@ -90,11 +90,29 @@ class TravelPurchase(models.Model):
             record.amount_withholding = amount_withholding
             record.amount_served = amount_served
     
+    @api.onchange('supplier_id')
+    def _onchange_supplier_id(self):
+        """Marquer automatiquement le partenaire comme fournisseur"""
+        if self.supplier_id and self.supplier_id.supplier_rank == 0:
+            self.supplier_id.supplier_rank = 1
+
+    def write(self, vals):
+        """Mettre à jour supplier_rank lors de la sauvegarde"""
+        result = super().write(vals)
+        if 'supplier_id' in vals and vals['supplier_id']:
+            supplier = self.env['res.partner'].browse(vals['supplier_id'])
+            if supplier.supplier_rank == 0:
+                supplier.supplier_rank = 1
+        return result
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'Nouveau') == 'Nouveau':
             vals['name'] = self.env['ir.sequence'].next_by_code('travel.purchase') or 'ACH-00001'
-        return super(TravelPurchase, self).create(vals)
+        record = super(TravelPurchase, self).create(vals)
+        if record.supplier_id and record.supplier_id.supplier_rank == 0:
+            record.supplier_id.supplier_rank = 1
+        return record
     
     def action_confirm(self):
         self.ensure_one()

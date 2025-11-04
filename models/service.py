@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 
 class Service(models.Model):
     _name = 'travel.service'
@@ -16,6 +16,29 @@ class Service(models.Model):
     supplier_id = fields.Many2one('res.partner', string='Fournisseur')
     destination_id = fields.Many2one('travel.destination', string='Voyage')
     note = fields.Text(string='Note')
+
+    @api.onchange('supplier_id')
+    def _onchange_supplier_id(self):
+        """Marquer automatiquement le partenaire comme fournisseur"""
+        if self.supplier_id and self.supplier_id.supplier_rank == 0:
+            self.supplier_id.supplier_rank = 1
+
+    def write(self, vals):
+        """Mettre à jour supplier_rank lors de la sauvegarde"""
+        result = super().write(vals)
+        if 'supplier_id' in vals and vals['supplier_id']:
+            supplier = self.env['res.partner'].browse(vals['supplier_id'])
+            if supplier.supplier_rank == 0:
+                supplier.supplier_rank = 1
+        return result
+
+    @api.model
+    def create(self, vals):
+        """Créer et marquer le fournisseur si nécessaire"""
+        record = super().create(vals)
+        if record.supplier_id and record.supplier_id.supplier_rank == 0:
+            record.supplier_id.supplier_rank = 1
+        return record
 
     def name_get(self):
         result = []
