@@ -8,6 +8,7 @@
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="destination_id"/>
+                <field name="trip_type"/>
                 <field name="check_in"/>
                 <field name="check_out"/>
                 <field name="nights"/>
@@ -37,7 +38,10 @@
                     <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
                     <group>
                         <group string="Client"><field name="member_id"/></group>
-                        <group string="Voyage"><field name="destination_id"/></group>
+                        <group string="Voyage">
+                            <field name="destination_id"/>
+                            <field name="trip_type"/>
+                        </group>
                     </group>
                     <group>
                         <group string="Période"><field name="check_in"/><field name="nights" readonly="1"/><field name="check_out"/></group>
@@ -48,12 +52,22 @@
                         <group string="Chambre"><field name="room_category"/><field name="room_type"/></group>
                     </group>
                     <group string="Tarifs">
-                        <field name="purchase_amount"/>
-                        <field name="sale_amount"/>
-                        <field name="total_price" readonly="1"/>
-                        <field name="use_credit"/>
-                        <field name="credit_used" readonly="1"/>
-                        <field name="remaining_to_pay" readonly="1" class="text-success"/>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                   help="Prix total du voyage pour toutes les nuits (rempli automatiquement depuis le voyage)"/>
+                            <field name="purchase_amount" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                   help="Somme des prix des services du fournisseur choisi (rempli automatiquement)"/>
+                        </group>
+                        <group>
+                            <label for="total_price" string="Total TTC" style="font-weight: bold; font-size: 14px;"/>
+                            <field name="total_price" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                   style="font-weight: bold; font-size: 16px; color: #007cba;"/>
+                            <field name="use_credit"/>
+                            <field name="credit_used" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="remaining_to_pay" readonly="1" class="text-success" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                   style="font-weight: bold;"/>
+                        </group>
                     </group>
                     <notebook>
                         <page string="Services"><field name="service_ids" widget="many2many_tags"/></page>

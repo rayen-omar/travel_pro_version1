@@ -24,6 +24,6 @@ class PurchaseOrder(models.Model):
                 'product_id': product.id,
                 'name': f"{hotel_name} - {reservation.nights} nuits",
                 'product_qty': 1,
-                'price_unit': reservation.purchase_amount * reservation.nights,
+                'price_unit': reservation.purchase_amount if reservation.purchase_amount > 0 else (reservation.price or 0.0),
             })]
         })

@@ -9,6 +9,15 @@ class TravelReservation(models.Model):
     name = fields.Char('Référence', default='Nouveau', readonly=True)
     member_id = fields.Many2one('travel.member', string='Client', required=True)
     destination_id = fields.Many2one('travel.destination', string='Destination', required=True)
+    
+    # Type de voyage
+    trip_type = fields.Selection([
+        ('hotel', 'Hôtel'),
+        ('voyage_organise', 'Voyage Organisé'),
+        ('billetrie', 'Billetrie'),
+        ('autre', 'Autre')
+    ], string='Type de Voyage', required=True, default='hotel', tracking=True)
+    
     check_in = fields.Date('Check In', required=True)
     check_out = fields.Date('Check Out', required=True)
     nights = fields.Integer('Nuitées', compute='_compute_nights', store=True)
@@ -21,9 +30,20 @@ class TravelReservation(models.Model):
     local_or_foreign = fields.Selection([('local', 'Local'), ('foreign', 'Étranger')], string='Type', default='local')
     room_category = fields.Selection([('standard', 'Standard'), ('ls', 'LS'), ('autre', 'Autre')], string='Chambre', required=True, default='standard')
     room_type = fields.Selection([('single', 'Simple'), ('double', 'Double'), ('triple', 'Triple')], string='Type', required=True, default='double')
-    purchase_amount = fields.Float('Achat')
-    sale_amount = fields.Float('Vente')
-    total_price = fields.Float('Total', compute='_compute_total', store=True)
+    
+    # Prix du voyage (prix total pour toutes les nuits)
+    price = fields.Float('Prix du Voyage (Total)', help="Prix total du voyage pour toutes les nuits (rempli automatiquement depuis le voyage sélectionné)")
+    
+    # Prix d'achat (calculé automatiquement depuis le fournisseur)
+    purchase_amount = fields.Float('Prix Achat', compute='_compute_purchase_amount', store=True,
+                                   help="Somme des prix des services du fournisseur choisi (rempli automatiquement)")
+    
+    # Total calculé
+    total_price = fields.Float('Total', compute='_compute_total', store=True, 
+                               help="Total = Prix du Voyage + Services additionnels")
+    currency_id = fields.Many2one('res.currency', string='Devise', 
+                                  default=lambda self: self.env.company.currency_id, 
+                                  required=True)
     service_ids = fields.Many2many('travel.service', string='Services')
     sale_order_id = fields.Many2one('sale.order', string='Devis', readonly=True)
     status = fields.Selection([
@@ -47,10 +67,25 @@ class TravelReservation(models.Model):
         for rec in self:
             rec.participants = rec.adults + rec.children + rec.infants
 
-    @api.depends('nights', 'sale_amount', 'service_ids.price')
+    @api.depends('supplier_id', 'supplier_id.travel_service_ids', 'supplier_id.travel_service_ids.price')
+    def _compute_purchase_amount(self):
+        """Calculer le prix d'achat depuis la somme des prix des services du fournisseur"""
+        for rec in self:
+            if rec.supplier_id and rec.supplier_id.travel_service_ids:
+                # Somme des prix de tous les services du fournisseur
+                rec.purchase_amount = sum(service.price for service in rec.supplier_id.travel_service_ids if service.price)
+            else:
+                rec.purchase_amount = 0.0
+
+    @api.depends('nights', 'price', 'service_ids.price')
     def _compute_total(self):
         for rec in self:
-            rec.total_price = (rec.nights * rec.sale_amount) + sum(s.price for s in rec.service_ids)
+            # Calculer le total : prix du voyage + services additionnels
+            base_price = rec.price or 0.0
+            
+            # Ajouter les services additionnels (ceux qui ne sont pas dans destination.service_ids)
+            services_price = sum(s.price for s in rec.service_ids if s.price)
+            rec.total_price = base_price + services_price
 
     @api.depends('use_credit', 'member_id.credit_balance', 'total_price')
     def _compute_credit_used(self):
@@ -80,11 +115,13 @@ class TravelReservation(models.Model):
 
         lines = [(5, 0, 0)]
         if self.hotel_service_id:
+            # Utiliser price (prix total du voyage)
+            price_unit = self.price or 0.0
             lines.append((0, 0, {
                 'product_id': product.id,
                 'name': f"{self.hotel_service_id.name} - {self.nights} nuits",
                 'product_uom_qty': 1,
-                'price_unit': self.nights * self.sale_amount,
+                'price_unit': price_unit,
             }))
         for s in self.service_ids:
             lines.append((0, 0, {
@@ -123,6 +160,24 @@ class TravelReservation(models.Model):
             'target': 'current',
         }
 
+    @api.onchange('destination_id')
+    def _onchange_destination_id(self):
+        """Remplir automatiquement les informations depuis le voyage sélectionné"""
+        if self.destination_id:
+            # Remplir les dates depuis le voyage
+            if self.destination_id.start_date:
+                self.check_in = self.destination_id.start_date
+            if self.destination_id.end_date:
+                self.check_out = self.destination_id.end_date
+            
+            # Remplir le prix depuis le voyage (prix total pour toutes les nuits)
+            if self.destination_id.price:
+                self.price = self.destination_id.price
+            
+            # Remplir les services depuis le voyage (optionnel)
+            if self.destination_id.service_ids:
+                self.service_ids = [(6, 0, self.destination_id.service_ids.ids)]
+
     @api.onchange('supplier_id')
     def _onchange_supplier_id(self):
         """Marquer automatiquement le partenaire comme fournisseur"""
@@ -140,7 +195,9 @@ class TravelReservation(models.Model):
 
     @api.model
     def create(self, vals):
-        """Créer et marquer le fournisseur si nécessaire"""
+        """Créer la réservation et marquer le fournisseur si nécessaire"""
+        if vals.get('name', 'Nouveau') == 'Nouveau':
+            vals['name'] = self.env['ir.sequence'].next_by_code('travel.reservation') or 'Nouveau'
         record = super().create(vals)
         if record.supplier_id and record.supplier_id.supplier_rank == 0:
             record.supplier_id.supplier_rank = 1
@@ -205,9 +262,3 @@ class TravelReservation(models.Model):
                 'reservation_id': self.id,
             })
         self.status = 'cancel'
-
-    @api.model
-    def create(self, vals):
-        if vals.get('name', 'Nouveau') == 'Nouveau':
-            vals['name'] = self.env['ir.sequence'].next_by_code('travel.reservation') or 'Nouveau'
-        return super().create(vals)

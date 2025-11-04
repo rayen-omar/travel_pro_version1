@@ -19,4 +19,66 @@
         </field>
     </record>
 
+    <!-- Vue formulaire fournisseur avec bouton pour créer un service -->
+    <record id="view_partner_form_supplier" model="ir.ui.view">
+        <field name="name">res.partner.form.supplier</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Ajouter les champs nécessaires (invisibles) pour pouvoir les utiliser dans attrs -->
+            <xpath expr="//field[@name='active']" position="after">
+                <field name="supplier_rank" invisible="1"/>
+                <field name="travel_service_count" invisible="1"/>
+                <field name="travel_service_ids" invisible="1"/>
+            </xpath>
+            
+            <!-- Ajouter un bouton stat pour voir les services si c'est un fournisseur -->
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_services" 
+                        icon="fa-briefcase" attrs="{'invisible': [('supplier_rank', '=', 0)]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="travel_service_count"/></span>
+                        <span class="o_stat_text">Service(s)</span>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- Ajouter une page dans le notebook pour les services du fournisseur -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Services Travel" name="travel_services" attrs="{'invisible': [('supplier_rank', '=', 0)]}">
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_create_service" string="Créer Service" type="object" 
+                                class="btn-primary" icon="fa-plus"/>
+                    </div>
+                    <field name="travel_service_ids" mode="tree,form">
+                        <tree>
+                            <field name="name"/>
+                            <field name="type"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="room_price" widget="monetary"/>
+                            <field name="destination_id"/>
+                        </tree>
+                        <form>
+                            <sheet>
+                                <group>
+                                    <field name="name"/>
+                                    <field name="type"/>
+                                    <field name="supplier_id" invisible="1"/>
+                                </group>
+                                <group>
+                                    <field name="price"/>
+                                    <field name="room_price"/>
+                                    <field name="destination_id"/>
+                                </group>
+                                <group>
+                                    <field name="note" placeholder="Notes..."/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>
