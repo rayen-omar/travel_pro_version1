@@ -6,9 +6,11 @@ class TravelCompany(models.Model):
 
     name = fields.Char('Nom', required=True)
     phone = fields.Char('Téléphone')
+    mobile = fields.Char('Mobile')
     email = fields.Char('Email')
     address = fields.Text('Adresse')
     website = fields.Char('Site Web')
+    vat = fields.Char('Matricule Fiscal (MF)', help='Numéro d\'identification fiscale')
     member_ids = fields.One2many('travel.member', 'company_id', string='Membres')
 
     def action_create_member(self):

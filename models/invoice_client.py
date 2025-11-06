@@ -11,11 +11,44 @@ class TravelInvoiceClient(models.Model):
     name = fields.Char('Numéro Facture', default='Nouveau', readonly=True, copy=False)
     date_invoice = fields.Date('Date Facture', default=fields.Date.context_today, required=True, tracking=True)
     
-    # Client société
-    company_client_id = fields.Many2one('res.partner', string='Société Cliente', 
+    # Société Travel
+    travel_company_id = fields.Many2one('travel.company', string='Société', 
+                                        required=True, tracking=True,
+                                        help="Sélectionnez la société pour filtrer les membres")
+    
+    # Membres de la société (plusieurs membres)
+    member_ids = fields.Many2many('travel.member', 'travel_invoice_client_member_rel', 
+                                 'invoice_id', 'member_id',
+                                 string='Membres', 
+                                 domain="[('company_id', '=', travel_company_id)]",
+                                 tracking=True,
+                                 help="Sélectionnez les membres de la société. Les lignes seront remplies automatiquement à partir de leurs réservations.")
+    
+    # Champ déprécié pour compatibilité (ne plus utiliser)
+    member_id = fields.Many2one('travel.member', string='Membre (Déprécié)', 
+                               compute='_compute_member_id', store=False,
+                               help="Champ déprécié - Utilisez member_ids à la place")
+    
+    @api.depends('member_ids')
+    def _compute_member_id(self):
+        """Champ de compatibilité - retourne le premier membre si disponible"""
+        for record in self:
+            record.member_id = record.member_ids[0] if record.member_ids else False
+    
+    # Client société (pour compatibilité)
+    company_client_id = fields.Many2one('res.partner', string='Société Cliente (Partenaire)', 
                                         domain="[('is_company', '=', True)]", 
-                                        required=True, tracking=True)
+                                        tracking=True,
+                                        help="Partenaire Odoo associé (peut être rempli automatiquement)")
     company_vat = fields.Char('MF Client', related='company_client_id.vat', readonly=True)
+    
+    # Informations société (remplies automatiquement depuis travel.company)
+    company_address = fields.Text('Adresse Société', default='', help="Adresse de la société - rempli automatiquement")
+    company_phone = fields.Char('Téléphone Société', default='', help="Téléphone de la société - rempli automatiquement")
+    company_mobile = fields.Char('Mobile Société', default='', help="Mobile de la société - rempli automatiquement")
+    company_email = fields.Char('Email Société', default='', help="Email de la société - rempli automatiquement")
+    company_vat_number = fields.Char('Matricule Fiscal', default='', help="MF de la société - rempli automatiquement")
+    company_website = fields.Char('Site Web', default='', help="Site web de la société - rempli automatiquement")
     
     # Lignes de facturation (plusieurs passagers)
     invoice_line_ids = fields.One2many('travel.invoice.client.line', 'invoice_id', 
@@ -54,13 +87,13 @@ class TravelInvoiceClient(models.Model):
     note = fields.Text('Notes')
     amount_in_words = fields.Char('Montant en lettres', compute='_compute_amount_in_words')
     
-    # Informations société
-    company_id = fields.Many2one('res.company', string='Société', default=lambda self: self.env.company)
-    company_address = fields.Char('Adresse Société', related='company_id.street', readonly=True)
-    company_vat_seller = fields.Char('Code TVA', related='company_id.vat', readonly=True)
-    company_phone = fields.Char('Téléphone', related='company_id.phone', readonly=True)
-    company_mobile = fields.Char('Mobile', related='company_id.mobile', readonly=True)
-    company_email = fields.Char('Email', related='company_id.email', readonly=True)
+    # Informations société vendeur (Odoo)
+    company_id = fields.Many2one('res.company', string='Société Vendeur', default=lambda self: self.env.company)
+    company_address_seller = fields.Char('Adresse Vendeur', related='company_id.street', readonly=True)
+    company_vat_seller = fields.Char('Code TVA Vendeur', related='company_id.vat', readonly=True)
+    company_phone_seller = fields.Char('Téléphone Vendeur', related='company_id.phone', readonly=True)
+    company_mobile_seller = fields.Char('Mobile Vendeur', related='company_id.mobile', readonly=True)
+    company_email_seller = fields.Char('Email Vendeur', related='company_id.email', readonly=True)
     
     @api.depends('invoice_line_ids.price_subtotal', 'invoice_line_ids.price_tax', 'fiscal_stamp')
     def _compute_amounts(self):
@@ -106,6 +139,21 @@ class TravelInvoiceClient(models.Model):
             else:
                 invoice.amount_in_words = ''
     
+    @api.onchange('travel_company_id')
+    def _onchange_travel_company_id(self):
+        """Remplir automatiquement les informations de société depuis travel.company"""
+        if self.travel_company_id:
+            # Remplir les informations de la société
+            self.company_address = self.travel_company_id.address or ''
+            self.company_phone = self.travel_company_id.phone or ''
+            self.company_mobile = self.travel_company_id.mobile or ''
+            self.company_email = self.travel_company_id.email or ''
+            self.company_vat_number = self.travel_company_id.vat or ''
+            self.company_website = self.travel_company_id.website or ''
+            
+            # Réinitialiser les membres sélectionnés
+            self.member_ids = False
+    
     @api.model
     def create(self, vals):
         if vals.get('name', 'Nouveau') == 'Nouveau':
@@ -134,6 +182,69 @@ class TravelInvoiceClient(models.Model):
         """Imprimer la facture"""
         self.ensure_one()
         return self.env.ref('travel_pro_version1.action_report_travel_invoice_client').report_action(self)
+    
+    def action_fill_lines_from_selected_members(self):
+        """Remplir automatiquement les lignes de facture pour les membres sélectionnés"""
+        self.ensure_one()
+        if not self.travel_company_id:
+            raise UserError("Veuillez sélectionner une société d'abord.")
+        
+        if not self.member_ids:
+            raise UserError("Veuillez sélectionner au moins un membre.")
+        
+        # Utiliser les membres sélectionnés
+        members = self.member_ids
+        
+        # Récupérer les réservations déjà facturées
+        existing_reservation_ids = self.invoice_line_ids.mapped('reservation_id').ids
+        
+        # Créer les lignes de facture pour les membres sélectionnés
+        lines = []
+        for member in members:
+            # Récupérer les réservations confirmées du membre qui ne sont pas déjà facturées
+            reservations = member.reservation_ids.filtered(
+                lambda r: r.status in ['confirmed', 'done'] 
+                and r.total_price > 0 
+                and r.id not in existing_reservation_ids
+            )
+            
+            for reservation in reservations:
+                # Utiliser total_price ou price selon ce qui est disponible
+                price = reservation.total_price if reservation.total_price > 0 else (reservation.price or 0.0)
+                
+                if price > 0:
+                    description = f"Réservation {reservation.name or 'N/A'}"
+                    if reservation.destination_id:
+                        description += f" - {reservation.destination_id.name}"
+                    if reservation.check_in and reservation.check_out:
+                        description += f" ({reservation.check_in} au {reservation.check_out})"
+                    
+                    lines.append((0, 0, {
+                        'passenger_id': member.id,
+                        'reference': f"R-{str(reservation.id).zfill(5)}",
+                        'description': description,
+                        'destination_id': reservation.destination_id.id if reservation.destination_id else False,
+                        'reservation_id': reservation.id,
+                        'quantity': 1.0,
+                        'price_unit': price,
+                        'tax_rate': '7',  # Par défaut 7%, peut être modifié
+                    }))
+        
+        if lines:
+            # Ajouter les nouvelles lignes aux lignes existantes
+            self.write({'invoice_line_ids': lines})
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Lignes remplies',
+                    'message': f'{len(lines)} ligne(s) de facturation ajoutée(s) pour {len(members)} membre(s).',
+                    'type': 'success',
+                    'sticky': False,
+                }
+            }
+        else:
+            raise UserError("Aucune ligne n'a pu être créée. Vérifiez que les membres sélectionnés ont des réservations avec un prix.")
 
 
 class TravelInvoiceClientLine(models.Model):
@@ -145,8 +256,13 @@ class TravelInvoiceClientLine(models.Model):
     invoice_id = fields.Many2one('travel.invoice.client', string='Facture', required=True, ondelete='cascade')
     
     # Référence passager/client
-    passenger_id = fields.Many2one('travel.member', string='Passager/Client', required=True)
+    passenger_id = fields.Many2one('travel.member', string='Membre', 
+                                   required=True)
     reference = fields.Char('Référence', help='Ex: P-00001')
+    
+    # Voyage/Destination
+    destination_id = fields.Many2one('travel.destination', string='Voyage', 
+                                     help="Nom du voyage - rempli automatiquement depuis les réservations du membre")
     
     # Détails du voyage
     description = fields.Text('Description', required=True)
@@ -183,5 +299,60 @@ class TravelInvoiceClientLine(models.Model):
     
     @api.onchange('passenger_id')
     def _onchange_passenger_id(self):
+        """Remplir automatiquement le voyage et le prix depuis les réservations du membre"""
         if self.passenger_id:
             self.reference = f"P-{str(self.passenger_id.id).zfill(5)}"
+            
+            # Récupérer les réservations confirmées du membre avec un prix
+            reservations = self.passenger_id.reservation_ids.filtered(
+                lambda r: r.status in ['confirmed', 'done'] and r.total_price > 0
+            )
+            
+            if reservations:
+                # Prendre la première réservation disponible (ou la plus récente)
+                reservation = reservations.sorted('check_in', reverse=True)[0]
+                
+                # Remplir automatiquement le voyage
+                if reservation.destination_id:
+                    self.destination_id = reservation.destination_id.id
+                
+                # Remplir automatiquement le prix
+                price = reservation.total_price if reservation.total_price > 0 else (reservation.price or 0.0)
+                if price > 0:
+                    self.price_unit = price
+                
+                # Remplir la description
+                description = f"Réservation {reservation.name or 'N/A'}"
+                if reservation.destination_id:
+                    description += f" - {reservation.destination_id.name}"
+                if reservation.check_in and reservation.check_out:
+                    description += f" ({reservation.check_in} au {reservation.check_out})"
+                self.description = description
+                
+                # Lier la réservation
+                self.reservation_id = reservation.id
+            else:
+                # Réinitialiser si aucune réservation trouvée
+                self.destination_id = False
+                self.reservation_id = False
+                self.description = f"Voyage pour {self.passenger_id.name}"
+    
+    @api.onchange('reservation_id')
+    def _onchange_reservation_id(self):
+        """Mettre à jour le voyage et le prix lorsque la réservation change"""
+        if self.reservation_id:
+            if self.reservation_id.destination_id:
+                self.destination_id = self.reservation_id.destination_id.id
+            
+            price = self.reservation_id.total_price if self.reservation_id.total_price > 0 else (self.reservation_id.price or 0.0)
+            if price > 0:
+                self.price_unit = price
+            
+            # Mettre à jour la description
+            description = f"Réservation {self.reservation_id.name or 'N/A'}"
+            if self.reservation_id.destination_id:
+                description += f" - {self.reservation_id.destination_id.name}"
+            if self.reservation_id.check_in and self.reservation_id.check_out:
+                description += f" ({self.reservation_id.check_in} au {self.reservation_id.check_out})"
+            self.description = description
+    

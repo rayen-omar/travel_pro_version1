@@ -9,7 +9,9 @@
                   decoration-success="state=='paid'" decoration-muted="state=='cancel'">
                 <field name="name"/>
                 <field name="date_invoice"/>
-                <field name="company_client_id"/>
+                <field name="travel_company_id"/>
+                <field name="member_ids" widget="many2many_tags" optional="hide"/>
+                <field name="company_client_id" optional="hide"/>
                 <field name="amount_untaxed" sum="Total HT"/>
                 <field name="amount_tax" sum="Total TVA"/>
                 <field name="amount_total" sum="Total TTC"/>
@@ -61,8 +63,14 @@
                     <group>
                         <group>
                             <field name="date_invoice"/>
-                            <field name="company_client_id" options="{'no_create': True, 'no_open': True}"/>
-                            <field name="company_vat"/>
+                            <field name="travel_company_id" options="{'no_create': True}" required="1"/>
+                            <field name="member_ids" widget="many2many_tags" 
+                                   domain="[('company_id', '=', travel_company_id)]"
+                                   options="{'no_create': True}"
+                                   attrs="{'required': [('travel_company_id', '!=', False)]}"/>
+                            <field name="company_client_id" options="{'no_create': True, 'no_open': True}" 
+                                   attrs="{'invisible': [('member_ids', '!=', [])]}"/>
+                            <field name="company_vat" attrs="{'invisible': [('member_ids', '!=', [])]}"/>
                         </group>
                         <group>
                             <field name="currency_id" invisible="1"/>
@@ -72,10 +80,18 @@
                     
                     <notebook>
                         <page string="Lignes de Facturation" name="invoice_lines">
+                            <group>
+                                <button name="action_fill_lines_from_selected_members" string="Remplir depuis les Membres Sélectionnés" 
+                                        type="object" class="oe_highlight"
+                                        attrs="{'invisible': [('member_ids', '=', [])]}"
+                                        help="Remplir automatiquement les lignes de facturation pour les membres sélectionnés avec leurs réservations"/>
+                            </group>
                             <field name="invoice_line_ids" mode="tree,kanban">
                                 <tree string="Lignes" editable="bottom">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="passenger_id" options="{'no_create': True}"/>
+                                    <field name="passenger_id" options="{'no_create': True}" 
+                                           domain="[('company_id', '=', parent.travel_company_id)]"/>
+                                    <field name="destination_id" string="Voyage" options="{'no_create': True}"/>
                                     <field name="reference"/>
                                     <field name="description"/>
                                     <field name="reservation_id" optional="hide"/>
@@ -136,15 +152,27 @@
                         </page>
                         
                         <page string="Informations Société" name="company_info">
-                            <group>
+                            <group string="Informations Société Cliente">
                                 <group>
-                                    <field name="company_address"/>
-                                    <field name="company_vat_seller"/>
-                                    <field name="company_phone"/>
+                                    <field name="company_address" nolabel="1" placeholder="Adresse de la société..."/>
                                 </group>
                                 <group>
-                                    <field name="company_mobile"/>
+                                    <field name="company_phone"/>
                                     <field name="company_email"/>
+                                    <field name="company_vat_number"/>
+                                    <field name="company_website"/>
+                                </group>
+                            </group>
+                            
+                            <group string="Informations Société Vendeur (Odoo)">
+                                <group>
+                                    <field name="company_address_seller"/>
+                                    <field name="company_vat_seller"/>
+                                    <field name="company_phone_seller"/>
+                                </group>
+                                <group>
+                                    <field name="company_mobile_seller"/>
+                                    <field name="company_email_seller"/>
                                 </group>
                             </group>
                         </page>
@@ -170,7 +198,9 @@
         <field name="arch" type="xml">
             <search string="Rechercher Factures">
                 <field name="name" string="Numéro"/>
-                <field name="company_client_id" string="Client"/>
+                <field name="travel_company_id" string="Société"/>
+                <field name="member_ids" string="Membres"/>
+                <field name="company_client_id" string="Client Partenaire"/>
                 <field name="date_invoice"/>
                 <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
