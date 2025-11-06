@@ -24,8 +24,14 @@ class TravelPurchase(models.Model):
                                   required=True, tracking=True,
                                   help="Le partenaire sera automatiquement marqué comme fournisseur s'il ne l'est pas déjà")
     
+    # Services
+    service_ids = fields.Many2many('travel.service', string='Services', 
+                                   domain="[('supplier_id', '=', supplier_id)]",
+                                   help="Sélectionnez les services du fournisseur. Le montant HT sera calculé automatiquement.")
+    
     # Montants
-    amount_untaxed = fields.Monetary('Montant HT', required=True, currency_field='currency_id', tracking=True)
+    amount_untaxed = fields.Monetary('Montant HT', required=True, currency_field='currency_id', tracking=True,
+                                     help="Montant HT calculé automatiquement à partir des services sélectionnés (peut être modifié manuellement)")
     tax_rate = fields.Selection([
         ('0', '0%'),
         ('7', '7%'),
@@ -72,6 +78,16 @@ class TravelPurchase(models.Model):
         ('cancel', 'Annulé')
     ], default='draft', tracking=True, string='État')
     
+    @api.onchange('service_ids')
+    def _onchange_service_ids(self):
+        """Calculer automatiquement le montant HT à partir des services sélectionnés"""
+        if self.service_ids:
+            # Somme des prix de tous les services sélectionnés
+            self.amount_untaxed = sum(service.price for service in self.service_ids if service.price)
+        elif not self.amount_untaxed:
+            # Ne réinitialiser que si le montant est vide
+            self.amount_untaxed = 0.0
+    
     @api.depends('amount_untaxed', 'tax_rate', 'withholding_rate')
     def _compute_amounts(self):
         for record in self:
@@ -92,9 +108,13 @@ class TravelPurchase(models.Model):
     
     @api.onchange('supplier_id')
     def _onchange_supplier_id(self):
-        """Marquer automatiquement le partenaire comme fournisseur"""
-        if self.supplier_id and self.supplier_id.supplier_rank == 0:
-            self.supplier_id.supplier_rank = 1
+        """Marquer automatiquement le partenaire comme fournisseur et réinitialiser les services"""
+        if self.supplier_id:
+            if self.supplier_id.supplier_rank == 0:
+                self.supplier_id.supplier_rank = 1
+            # Réinitialiser les services et le montant HT lorsque le fournisseur change
+            self.service_ids = False
+            self.amount_untaxed = 0.0
 
     def write(self, vals):
         """Mettre à jour supplier_rank lors de la sauvegarde"""

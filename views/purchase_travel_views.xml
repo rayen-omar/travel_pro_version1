@@ -57,6 +57,10 @@
                             <field name="date_creation"/>
                             <field name="purchase_type"/>
                             <field name="supplier_id" options="{'no_create': True}"/>
+                            <field name="service_ids" widget="many2many_tags" 
+                                   domain="[('supplier_id', '=', supplier_id)]"
+                                   options="{'no_create': True}"
+                                   attrs="{'required': [('supplier_id', '!=', False)]}"/>
                             <field name="reservation_id" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                         <group>
