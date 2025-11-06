@@ -35,6 +35,11 @@
         'views/purchase_report_views.xml',
         'views/menu.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'travel_pro_version1/static/src/css/travel_pro_style.css',
+        ],
+    },
     'installable': True,
     'application': True,
     'auto_install': False,

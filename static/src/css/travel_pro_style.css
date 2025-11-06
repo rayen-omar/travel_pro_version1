@@ -1,0 +1,540 @@
+/* TravelPro Professional Styles - Style sobre et professionnel */
+
+/* Variables de couleurs professionnelles */
+:root {
+  --travel-primary: #cc6600;
+  --travel-primary-light: #e67300;
+  --travel-primary-dark: #994d00;
+  --travel-secondary: #cc6600;
+  --travel-success: #28a745;
+  --travel-warning: #ffc107;
+  --travel-danger: #dc3545;
+  --travel-info: #17a2b8;
+  --travel-border: #dee2e6;
+  --travel-border-dark: #adb5bd;
+  --travel-bg-light: #f8f9fa;
+  --travel-bg-white: #ffffff;
+  --travel-text: #212529;
+  --travel-text-light: #6c757d;
+  --travel-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --travel-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Amélioration générale des formulaires */
+.o_form_view .o_form_sheet {
+  background: var(--travel-bg-white);
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--travel-shadow);
+}
+
+/* En-têtes de section */
+.o_form_view .o_group .o_group_label {
+  color: var(--travel-primary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--travel-border-dark);
+}
+
+/* Champs de formulaire */
+.o_form_view input[type="text"],
+.o_form_view input[type="number"],
+.o_form_view textarea,
+.o_form_view select {
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  padding: 9px 14px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  background-color: var(--travel-bg-white);
+}
+
+.o_form_view input[type="text"]:focus,
+.o_form_view input[type="number"]:focus,
+.o_form_view textarea:focus,
+.o_form_view select:focus {
+  border-color: var(--travel-secondary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+/* Badges de statut professionnels */
+.badge {
+  border-radius: 2px;
+  padding: 5px 12px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.badge-success {
+  background-color: var(--travel-success);
+  color: white;
+}
+
+.badge-warning {
+  background-color: var(--travel-warning);
+  color: #212529;
+}
+
+.badge-danger {
+  background-color: var(--travel-danger);
+  color: white;
+}
+
+.badge-info {
+  background-color: var(--travel-info);
+  color: white;
+}
+
+.badge-secondary {
+  background-color: var(--travel-primary-light);
+  color: white;
+}
+
+/* Tableaux professionnels */
+.o_list_view .o_list_table {
+  border: 1px solid var(--travel-border);
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.o_list_view .o_list_table thead {
+  background-color: var(--travel-primary);
+  color: white;
+}
+
+.o_list_view .o_list_table thead th {
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--travel-primary-dark);
+}
+
+.o_list_view .o_list_table tbody tr {
+  border-bottom: 1px solid var(--travel-border);
+  transition: background-color 0.15s ease;
+}
+
+.o_list_view .o_list_table tbody td {
+  padding: 12px 16px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.o_list_view .o_list_table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.o_list_view .o_list_table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+/* Boutons professionnels */
+.btn {
+  border-radius: 2px;
+  padding: 9px 18px;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  letter-spacing: 0.2px;
+  margin: 4px 6px;
+}
+
+.btn-primary {
+  background-color: var(--travel-primary);
+  color: white;
+  border-color: var(--travel-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--travel-primary-light);
+  border-color: var(--travel-primary-light);
+  box-shadow: var(--travel-shadow);
+}
+
+.btn-success {
+  background-color: var(--travel-success);
+  color: white;
+  border-color: var(--travel-success);
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  box-shadow: var(--travel-shadow);
+}
+
+.btn-danger {
+  background-color: var(--travel-danger);
+  color: white;
+  border-color: var(--travel-danger);
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+  box-shadow: var(--travel-shadow);
+}
+
+.btn-secondary {
+  background-color: var(--travel-primary-light);
+  color: white;
+  border-color: var(--travel-primary-light);
+}
+
+.btn-secondary:hover {
+  background-color: var(--travel-primary-dark);
+  border-color: var(--travel-primary-dark);
+  box-shadow: var(--travel-shadow);
+}
+
+/* Widgets monétaires */
+.o_field_monetary {
+  font-weight: 600;
+  color: var(--travel-primary);
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Notebooks (onglets) */
+.o_notebook .nav-tabs {
+  border-bottom: 2px solid var(--travel-border);
+  margin-bottom: 20px;
+}
+
+.o_notebook .nav-tabs .nav-link {
+  border-radius: 0;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--travel-text-light);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 12px 24px;
+  transition: all 0.15s ease;
+  letter-spacing: 0.2px;
+}
+
+.o_notebook .nav-tabs .nav-link:hover {
+  color: var(--travel-primary);
+  background-color: var(--travel-bg-light);
+  border-bottom-color: var(--travel-border-dark);
+}
+
+.o_notebook .nav-tabs .nav-link.active {
+  color: var(--travel-primary);
+  background-color: transparent;
+  border-bottom-color: var(--travel-primary);
+  font-weight: 600;
+}
+
+/* Statutbar professionnel */
+.o_statusbar_buttons {
+  background-color: var(--travel-bg-light);
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.o_statusbar_status {
+  background-color: var(--travel-bg-white);
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
+}
+
+.o_statusbar_status .btn {
+  margin: 4px 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* Champs Many2many tags */
+.o_field_many2many_tags .badge {
+  background-color: var(--travel-secondary);
+  color: white;
+  margin: 2px;
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+/* Messages d'alerte */
+.alert {
+  border-radius: 3px;
+  border-left: 4px solid;
+  padding: 12px 16px;
+  margin-bottom: 15px;
+}
+
+.alert-success {
+  background-color: #d5f4e6;
+  border-left-color: var(--travel-success);
+  color: #155724;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-left-color: var(--travel-warning);
+  color: #856404;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-left-color: var(--travel-danger);
+  color: #721c24;
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  border-left-color: var(--travel-info);
+  color: #0c5460;
+}
+
+/* Amélioration des cartes kanban */
+.o_kanban_view .o_kanban_record {
+  border: 1px solid var(--travel-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.o_kanban_view .o_kanban_record:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Champs de recherche */
+.o_searchview {
+  border: 1px solid var(--travel-border);
+  border-radius: 3px;
+}
+
+/* Statinfo (statistiques) */
+.o_stat_info {
+  border: 1px solid var(--travel-border);
+  border-radius: 4px;
+  padding: 15px;
+  background: white;
+}
+
+.o_stat_info .o_stat_value {
+  color: var(--travel-primary);
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.o_stat_info .o_stat_text {
+  color: var(--travel-text-light);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Amélioration des widgets binaires */
+.o_field_image {
+  border: 1px solid var(--travel-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Scrollbar sobre */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--travel-primary-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--travel-primary);
+}
+
+/* Décoration des lignes de tableau selon statut */
+.o_list_view .o_list_table tbody tr[style*="color: green"] {
+  background-color: #d5f4e6 !important;
+}
+
+.o_list_view .o_list_table tbody tr[style*="color: orange"] {
+  background-color: #fff3cd !important;
+}
+
+.o_list_view .o_list_table tbody tr[style*="color: red"] {
+  background-color: #f8d7da !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .o_form_view .o_form_sheet {
+    padding: 15px;
+  }
+
+  .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Amélioration des groupes de champs */
+.o_form_view .o_group {
+  margin-bottom: 20px;
+}
+
+/* Titres de formulaires */
+.o_form_view .oe_title h1 {
+  color: var(--travel-primary);
+  font-weight: 600;
+  font-size: 26px;
+  margin-bottom: 24px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+/* Amélioration des champs Many2one */
+.o_field_many2one .o_input_dropdown {
+  border-radius: 3px;
+}
+
+/* Style pour les champs requis */
+.o_field_widget.o_required_modifier > label::after {
+  color: var(--travel-danger);
+}
+
+/* Amélioration des tooltips */
+.tooltip {
+  font-size: 12px;
+}
+
+/* Style pour les boutons dans oe_button_box */
+.oe_button_box .btn {
+  margin-left: 5px;
+}
+
+/* Amélioration de la lisibilité générale */
+body {
+  color: var(--travel-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Amélioration des groupes de champs */
+.o_form_view .o_group {
+  margin-bottom: 24px;
+}
+
+.o_form_view .o_group .o_group_col_6 {
+  padding-right: 20px;
+}
+
+/* Amélioration des labels */
+.o_form_view label {
+  font-weight: 500;
+  color: var(--travel-text);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+/* Amélioration des tooltips */
+.tooltip {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Amélioration des messages d'information */
+.o_form_view .o_field_widget .o_input {
+  font-size: 14px;
+}
+
+/* Espacement amélioré pour les champs */
+.o_form_view .o_field_widget {
+  margin-bottom: 16px;
+}
+
+/* Style pour les champs Many2one */
+.o_field_many2one .o_input_dropdown {
+  border-radius: 2px;
+}
+
+/* Amélioration des champs Many2many tags */
+.o_field_many2many_tags .badge {
+  background-color: var(--travel-secondary);
+  color: white;
+  margin: 3px;
+  padding: 5px 11px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Amélioration des cartes kanban */
+.o_kanban_view .o_kanban_record {
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  box-shadow: var(--travel-shadow);
+  transition: all 0.15s ease;
+  background: var(--travel-bg-white);
+}
+
+.o_kanban_view .o_kanban_record:hover {
+  box-shadow: var(--travel-shadow-hover);
+  border-color: var(--travel-border-dark);
+}
+
+/* Amélioration des statinfo */
+.o_stat_info {
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  padding: 16px 20px;
+  background: var(--travel-bg-white);
+  box-shadow: var(--travel-shadow);
+}
+
+.o_stat_info .o_stat_value {
+  color: var(--travel-primary);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.o_stat_info .o_stat_text {
+  color: var(--travel-text-light);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 4px;
+}
+
+/* Amélioration des widgets binaires */
+.o_field_image {
+  border: 1px solid var(--travel-border);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: var(--travel-shadow);
+}
+
+/* Style pour les boutons dans oe_button_box */
+.oe_button_box .btn {
+  margin: 4px 6px;
+}
