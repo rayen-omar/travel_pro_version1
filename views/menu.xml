@@ -34,12 +34,20 @@
     <menuitem id="menu_travel_pro" name="TravelPro" sequence="10"/>
     
     <!-- Sous-menus Principaux -->
-    <menuitem id="menu_company" name="Sociétés" parent="menu_travel_pro" action="action_company" sequence="10"/>
-    <menuitem id="menu_member" name="Membres" parent="menu_travel_pro" action="action_member" sequence="20"/>
-    <menuitem id="menu_supplier" name="Fournisseurs" parent="menu_travel_pro" action="action_supplier" sequence="25"/>
-    <menuitem id="menu_travel" name="Voyages" parent="menu_travel_pro" action="action_travel" sequence="30"/>
-    <menuitem id="menu_service" name="Services" parent="menu_travel_pro" action="action_service" sequence="40"/>
-    <menuitem id="menu_reservation" name="Réservations" parent="menu_travel_pro" action="action_reservation" sequence="50"/>
+    <!-- Menu Sociétés (parent sans action) -->
+    <menuitem id="menu_company_group" name="Sociétés" parent="menu_travel_pro" sequence="10"/>
+    <menuitem id="menu_company" name="Sociétés" parent="menu_company_group" action="action_company" sequence="10"/>
+    <menuitem id="menu_member" name="Membres" parent="menu_company_group" action="action_member" sequence="20"/>
+    
+    <!-- Menu Fournisseurs (parent sans action) -->
+    <menuitem id="menu_supplier_group" name="Fournisseurs" parent="menu_travel_pro" sequence="25"/>
+    <menuitem id="menu_supplier" name="Fournisseurs" parent="menu_supplier_group" action="action_supplier" sequence="10"/>
+    <menuitem id="menu_service" name="Services" parent="menu_supplier_group" action="action_service" sequence="20"/>
+    
+    <!-- Menu Voyages (parent sans action) -->
+    <menuitem id="menu_travel_group" name="Voyages" parent="menu_travel_pro" sequence="30"/>
+    <menuitem id="menu_travel" name="Voyages" parent="menu_travel_group" action="action_travel" sequence="10"/>
+    <menuitem id="menu_reservation" name="Réservations" parent="menu_travel_group" action="action_reservation" sequence="20"/>
     
     <!-- Menu Facturation -->
     <menuitem id="menu_invoicing" name="Facturation" parent="menu_travel_pro" sequence="60"/>
@@ -48,19 +56,14 @@
     <menuitem id="menu_invoice_odoo" name="Factures Odoo" parent="menu_invoicing" 
               action="account.action_move_out_invoice_type" sequence="20"/>
     
-    <!-- Menu Achats -->
-    <menuitem id="menu_purchasing" name="Achats" parent="menu_travel_pro" sequence="70"/>
+    <!-- Menu Factures Fournisseurs (déplacé dans Facturation) -->
+    <menuitem id="menu_purchasing" name="Factures Fournisseurs" parent="menu_invoicing" sequence="30"/>
     <menuitem id="menu_purchase_travel" name="Achats Travel" parent="menu_purchasing" 
               action="action_travel_purchase" sequence="10"/>
     <menuitem id="menu_purchase_odoo" name="Achats Odoo" parent="menu_purchasing" 
               action="purchase.purchase_form_action" sequence="20"/>
     <menuitem id="menu_purchase_report" name="Rapport des Achats" parent="menu_purchasing" 
               action="action_travel_purchase_report_wizard" sequence="30"/>
-    
-    <!-- Menu Retenues -->
-    <menuitem id="menu_withholdings" name="Retenues" parent="menu_travel_pro" sequence="75"/>
-    <menuitem id="menu_withholding" name="Retenues Fournisseurs" parent="menu_withholdings" 
-              action="action_travel_withholding" sequence="10"/>
     
     <!-- Menu Caisse -->
     <menuitem id="menu_pos" name="Caisse (POS)" parent="menu_travel_pro" 

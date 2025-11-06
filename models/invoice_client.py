@@ -89,11 +89,34 @@ class TravelInvoiceClient(models.Model):
     
     # Informations société vendeur (Odoo)
     company_id = fields.Many2one('res.company', string='Société Vendeur', default=lambda self: self.env.company)
-    company_address_seller = fields.Char('Adresse Vendeur', related='company_id.street', readonly=True)
+    company_address_seller = fields.Text('Adresse Vendeur', compute='_compute_company_info_seller', store=False)
     company_vat_seller = fields.Char('Code TVA Vendeur', related='company_id.vat', readonly=True)
     company_phone_seller = fields.Char('Téléphone Vendeur', related='company_id.phone', readonly=True)
     company_mobile_seller = fields.Char('Mobile Vendeur', related='company_id.mobile', readonly=True)
     company_email_seller = fields.Char('Email Vendeur', related='company_id.email', readonly=True)
+    
+    # Informations bancaires
+    company_bank_name = fields.Char('Nom Banque', default='Banque Attijari Bank', help="Nom de la banque")
+    company_bank_iban = fields.Char('IBAN', default='TN59 04 108 0650090101536 27', help="Numéro IBAN")
+    
+    @api.depends('company_id', 'company_id.street', 'company_id.street2', 'company_id.city', 'company_id.phone')
+    def _compute_company_info_seller(self):
+        """Construire l'adresse complète de la société vendeur"""
+        for record in self:
+            if record.company_id:
+                address_parts = []
+                if record.company_id.street:
+                    address_parts.append(record.company_id.street)
+                if record.company_id.street2:
+                    address_parts.append(record.company_id.street2)
+                if record.company_id.city:
+                    address_parts.append(record.company_id.city)
+                if record.company_id.phone:
+                    address_parts.append(record.company_id.phone)
+                
+                record.company_address_seller = '\n'.join(address_parts) if address_parts else ''
+            else:
+                record.company_address_seller = ''
     
     @api.depends('invoice_line_ids.price_subtotal', 'invoice_line_ids.price_tax', 'fiscal_stamp')
     def _compute_amounts(self):

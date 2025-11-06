@@ -166,13 +166,21 @@
                             
                             <group string="Informations Société Vendeur (Odoo)">
                                 <group>
-                                    <field name="company_address_seller"/>
-                                    <field name="company_vat_seller"/>
-                                    <field name="company_phone_seller"/>
+                                    <field name="company_id" readonly="1"/>
+                                    <field name="company_address_seller" nolabel="1" readonly="1" placeholder="Adresse complète de la société vendeur..."/>
+                                    <field name="company_vat_seller" readonly="1"/>
+                                    <field name="company_phone_seller" readonly="1"/>
                                 </group>
                                 <group>
-                                    <field name="company_mobile_seller"/>
-                                    <field name="company_email_seller"/>
+                                    <field name="company_mobile_seller" readonly="1"/>
+                                    <field name="company_email_seller" readonly="1"/>
+                                </group>
+                            </group>
+                            
+                            <group string="Informations Bancaires">
+                                <group>
+                                    <field name="company_bank_name"/>
+                                    <field name="company_bank_iban"/>
                                 </group>
                             </group>
                         </page>
