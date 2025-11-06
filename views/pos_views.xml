@@ -1,14 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vue formulaire commande POS -->
     <record id="view_pos_order_form_inherit_travel" model="ir.ui.view">
         <field name="name">pos.order.form.inherit.travel</field>
         <field name="model">pos.order</field>
         <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="reservation_id" domain="[('member_id.partner_id', '=', partner_id)]"/>
-                <field name="member_id" readonly="1"/>
+                <field name="member_id" options="{'no_create': True}" 
+                       domain="[('partner_id', '=', partner_id)]"
+                       help="Membre associé à cette commande"/>
+                <field name="reservation_id" options="{'no_create': True}" 
+                       domain="[('member_id', '=', member_id), ('status', 'in', ['draft', 'confirmed'])]"
+                       help="Réservation liée à cette commande"/>
+                <field name="destination_id" readonly="1"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Informations Voyage" name="travel_info" attrs="{'invisible': [('reservation_id', '=', False)]}">
+                    <group>
+                        <group>
+                            <field name="reservation_id" readonly="1"/>
+                            <field name="destination_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="member_id" readonly="1"/>
+                        </group>
+                    </group>
+                </page>
             </xpath>
         </field>
+    </record>
+    
+    <!-- Vue liste commandes POS -->
+    <record id="view_pos_order_tree_inherit_travel" model="ir.ui.view">
+        <field name="name">pos.order.tree.inherit.travel</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="member_id" optional="hide"/>
+                <field name="reservation_id" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Action pour ouvrir POS - utilise l'action standard du module point_of_sale -->
+    <record id="action_pos_session_travel" model="ir.actions.act_window">
+        <field name="name">Ouvrir Caisse</field>
+        <field name="res_model">pos.session</field>
+        <field name="view_mode">kanban,tree,form</field>
     </record>
 </odoo>

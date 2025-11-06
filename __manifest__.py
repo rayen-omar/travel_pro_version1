@@ -16,6 +16,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'data/currency_data.xml',
         'data/sequence_data.xml',
         'data/pos_config.xml',
         'views/company_views.xml',

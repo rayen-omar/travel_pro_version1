@@ -11,8 +11,8 @@ class Service(models.Model):
         ('activite','Activité'),
         ('autre','Autre')
     ], string='Type', default='autre')
-    price = fields.Float(string='Prix')
-    room_price = fields.Float(string='Prix par nuit (si hébergement)')
+    price = fields.Float(string='Prix (TND)', digits=(16, 2))
+    room_price = fields.Float(string='Prix par nuit (TND, si hébergement)', digits=(16, 2))
     supplier_id = fields.Many2one('res.partner', string='Fournisseur')
     destination_id = fields.Many2one('travel.destination', string='Voyage')
     note = fields.Text(string='Note')

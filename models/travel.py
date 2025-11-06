@@ -6,7 +6,7 @@ class TravelDestination(models.Model):
 
     name = fields.Char('Nom', required=True)
     description = fields.Text('Description')
-    price = fields.Float('Prix')
+    price = fields.Float('Prix (TND)', digits=(16, 2))
     start_date = fields.Date('Date Début')
     end_date = fields.Date('Date Fin')
     service_ids = fields.Many2many('travel.service', string='Services')

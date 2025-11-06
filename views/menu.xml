@@ -67,5 +67,5 @@
     
     <!-- Menu Caisse -->
     <menuitem id="menu_pos" name="Caisse (POS)" parent="menu_travel_pro" 
-              action="point_of_sale.action_pos_config_kanban" sequence="80"/>
+              action="action_pos_session_travel" sequence="80"/>
 </odoo>

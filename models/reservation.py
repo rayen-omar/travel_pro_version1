@@ -32,17 +32,17 @@ class TravelReservation(models.Model):
     room_type = fields.Selection([('single', 'Simple'), ('double', 'Double'), ('triple', 'Triple')], string='Type', required=True, default='double')
     
     # Prix du voyage (prix total pour toutes les nuits)
-    price = fields.Float('Prix du Voyage (Total)', help="Prix total du voyage pour toutes les nuits (rempli automatiquement depuis le voyage sélectionné)")
+    price = fields.Float('Prix du Voyage (Total TND)', digits=(16, 2), help="Prix total du voyage pour toutes les nuits en TND (rempli automatiquement depuis le voyage sélectionné)")
     
     # Prix d'achat (calculé automatiquement depuis le fournisseur)
-    purchase_amount = fields.Float('Prix Achat', compute='_compute_purchase_amount', store=True,
-                                   help="Somme des prix des services du fournisseur choisi (rempli automatiquement)")
+    purchase_amount = fields.Float('Prix Achat (TND)', digits=(16, 2), compute='_compute_purchase_amount', store=True,
+                                   help="Somme des prix des services du fournisseur choisi en TND (rempli automatiquement)")
     
     # Total calculé
-    total_price = fields.Float('Total', compute='_compute_total', store=True, 
-                               help="Total = Prix du Voyage + Services additionnels")
+    total_price = fields.Float('Total (TND)', digits=(16, 2), compute='_compute_total', store=True, 
+                               help="Total en TND = Prix du Voyage + Services additionnels")
     currency_id = fields.Many2one('res.currency', string='Devise', 
-                                  default=lambda self: self.env.company.currency_id, 
+                                  default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id, 
                                   required=True)
     service_ids = fields.Many2many('travel.service', string='Services')
     sale_order_id = fields.Many2one('sale.order', string='Devis', readonly=True)
@@ -51,8 +51,8 @@ class TravelReservation(models.Model):
     ], default='draft', tracking=True)
 
     use_credit = fields.Boolean('Utiliser crédit')
-    credit_used = fields.Float('Crédit utilisé', compute='_compute_credit_used', store=True)
-    remaining_to_pay = fields.Float('Reste à payer', compute='_compute_remaining', store=True)
+    credit_used = fields.Float('Crédit utilisé (TND)', digits=(16, 2), compute='_compute_credit_used', store=True)
+    remaining_to_pay = fields.Float('Reste à payer (TND)', digits=(16, 2), compute='_compute_remaining', store=True)
 
     @api.depends('check_in', 'check_out')
     def _compute_nights(self):
@@ -233,21 +233,32 @@ class TravelReservation(models.Model):
         return {'type': 'ir.actions.act_window_close'}
 
     def action_open_pos(self):
+        """Ouvrir le POS pour payer la réservation"""
         self.ensure_one()
         if self.remaining_to_pay <= 0:
-            raise UserError("Rien à payer.")
-        config = self.env.ref('travel_pro_version1.pos_config_travel')
+            raise UserError("Rien à payer pour cette réservation.")
+        
+        if not self.member_id.partner_id:
+            raise UserError("Le membre doit avoir un partenaire associé pour utiliser le POS.")
+        
+        config = self.env.ref('travel_pro_version1.pos_config_travel', raise_if_not_found=False)
+        if not config:
+            raise UserError("Configuration POS non trouvée. Veuillez configurer le Point de Vente.")
+        
+        # Vérifier s'il y a une session ouverte
+        session = self.env['pos.session'].search([
+            ('config_id', '=', config.id),
+            ('state', '=', 'opened')
+        ], limit=1)
+        
+        if not session:
+            raise UserError("Aucune session POS ouverte. Veuillez ouvrir une session de caisse d'abord.")
+        
+        # Retourner l'action pour ouvrir le POS
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'pos.session',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': {
-                'default_config_id': config.id,
-                'default_reservation_id': self.id,
-                'default_partner_id': self.member_id.partner_id.id,
-                'default_amount_total': self.remaining_to_pay,
-            },
+            'type': 'ir.actions.act_url',
+            'url': f'/web#action=point_of_sale.action_client_pos_menu&config_id={config.id}',
+            'target': 'self',
         }
 
     def action_cancel_and_credit(self):

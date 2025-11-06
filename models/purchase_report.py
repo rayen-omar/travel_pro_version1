@@ -26,7 +26,7 @@ class TravelPurchaseReport(models.TransientModel):
     total_served = fields.Monetary('Total Servi', compute='_compute_totals', currency_field='currency_id')
     
     currency_id = fields.Many2one('res.currency', string='Devise', 
-                                  default=lambda self: self.env.company.currency_id)
+                                  default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id)
     
     purchase_count = fields.Integer('Nombre d\'achats', compute='_compute_totals')
     

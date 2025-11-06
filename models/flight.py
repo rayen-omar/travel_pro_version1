@@ -62,7 +62,7 @@ class TravelFlight(models.Model):
     sale_price = fields.Float('Prix Vente', required=True, digits='Product Price')
     
     currency_id = fields.Many2one('res.currency', string='Devise', 
-                                   default=lambda self: self.env.company.currency_id)
+                                   default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id)
     
     taxes_included = fields.Boolean('Taxes Incluses', default=True)
     tax_amount = fields.Float('Montant Taxes', digits='Product Price')

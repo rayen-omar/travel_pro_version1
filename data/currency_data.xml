@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Configuration de la devise Dinar Tunisien (TND) -->
+    <!-- Note: TND devrait déjà exister dans Odoo, mais on s'assure qu'il est actif -->
+    <record id="base.TND" model="res.currency">
+        <field name="name">TND</field>
+        <field name="active" eval="True"/>
+    </record>
+    
+    <!-- Configuration de la société pour utiliser TND -->
+    <record id="base.main_company" model="res.company">
+        <field name="currency_id" ref="base.TND"/>
+    </record>
+</odoo>

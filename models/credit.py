@@ -7,7 +7,7 @@ class TravelCreditHistory(models.Model):
 
     member_id = fields.Many2one('travel.member', 'Membre', required=True, ondelete='cascade')
     date = fields.Datetime('Date', default=fields.Datetime.now, required=True)
-    amount = fields.Float('Montant', required=True)
+    amount = fields.Float('Montant (TND)', required=True, digits=(16, 2))
     type = fields.Selection([
         ('recharge', 'Recharge manuelle'),
         ('refund', 'Remboursement annulation'),
@@ -21,13 +21,13 @@ class TravelCreditRecharge(models.TransientModel):
     _description = 'Recharger Crédit Membre'
 
     member_id = fields.Many2one('travel.member', 'Membre', required=True)
-    amount = fields.Float('Montant à ajouter', required=True, digits=(16, 2))
+    amount = fields.Float('Montant à ajouter (TND)', required=True, digits=(16, 2))
 
     def action_recharge(self):
         self.env['travel.credit.history'].create({
             'member_id': self.member_id.id,
             'amount': self.amount,
             'type': 'recharge',
-            'note': f'Recharge manuelle de {self.amount}€',
+            'note': f'Recharge manuelle de {self.amount} TND',
         })
         return {'type': 'ir.actions.act_window_close'}

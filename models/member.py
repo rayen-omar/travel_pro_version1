@@ -11,7 +11,7 @@ class TravelMember(models.Model):
     reservation_ids = fields.One2many('travel.reservation', 'member_id', string='Réservations')
     partner_id = fields.Many2one('res.partner', string='Contact', required=True, ondelete='restrict')
 
-    credit_balance = fields.Float('Solde Crédit', compute='_compute_credit_balance', store=True, readonly=True)
+    credit_balance = fields.Float('Solde Crédit (TND)', digits=(16, 2), compute='_compute_credit_balance', store=True, readonly=True)
     credit_history_ids = fields.One2many('travel.credit.history', 'member_id', string='Historique Crédit')
 
     @api.depends('credit_history_ids.amount')

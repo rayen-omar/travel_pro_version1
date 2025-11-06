@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
+    <!-- Journaux Comptables -->
     <!-- Journal Espèces -->
     <record id="cash_journal_travel" model="account.journal">
         <field name="name">Espèces - Agence Voyage</field>
@@ -8,10 +9,56 @@
         <field name="company_id" ref="base.main_company"/>
     </record>
     
+    <!-- Journal Carte Bancaire -->
+    <record id="bank_journal_card_travel" model="account.journal">
+        <field name="name">Carte Bancaire - Agence Voyage</field>
+        <field name="code">CARD-TRAVEL</field>
+        <field name="type">bank</field>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Journal Chèque -->
+    <record id="bank_journal_check_travel" model="account.journal">
+        <field name="name">Chèque - Agence Voyage</field>
+        <field name="code">CHK-TRAVEL</field>
+        <field name="type">bank</field>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Journal Virement -->
+    <record id="bank_journal_transfer_travel" model="account.journal">
+        <field name="name">Virement - Agence Voyage</field>
+        <field name="code">TRF-TRAVEL</field>
+        <field name="type">bank</field>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Méthodes de paiement -->
     <!-- Méthode de paiement Espèces -->
     <record id="pos_payment_method_cash_travel" model="pos.payment.method">
         <field name="name">Espèces</field>
         <field name="journal_id" ref="cash_journal_travel"/>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Méthode de paiement Carte Bancaire -->
+    <record id="pos_payment_method_card_travel" model="pos.payment.method">
+        <field name="name">Carte Bancaire</field>
+        <field name="journal_id" ref="bank_journal_card_travel"/>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Méthode de paiement Chèque -->
+    <record id="pos_payment_method_check_travel" model="pos.payment.method">
+        <field name="name">Chèque</field>
+        <field name="journal_id" ref="bank_journal_check_travel"/>
+        <field name="company_id" ref="base.main_company"/>
+    </record>
+    
+    <!-- Méthode de paiement Virement -->
+    <record id="pos_payment_method_transfer_travel" model="pos.payment.method">
+        <field name="name">Virement</field>
+        <field name="journal_id" ref="bank_journal_transfer_travel"/>
         <field name="company_id" ref="base.main_company"/>
     </record>
     
@@ -21,7 +68,9 @@
         <field name="module_pos_restaurant" eval="False"/>
         <field name="iface_cashdrawer" eval="True"/>
         <field name="iface_print_via_proxy" eval="True"/>
-        <field name="payment_method_ids" eval="[(4, ref('pos_payment_method_cash_travel'))]"/>
+        <field name="payment_method_ids" eval="[(4, ref('pos_payment_method_cash_travel')), (4, ref('pos_payment_method_card_travel')), (4, ref('pos_payment_method_check_travel')), (4, ref('pos_payment_method_transfer_travel'))]"/>
         <field name="company_id" ref="base.main_company"/>
+        <field name="use_pricelist" eval="True"/>
+        <field name="available_pricelist_ids" eval="[(6, 0, [ref('product.list0')])]"/>
     </record>
 </odoo>

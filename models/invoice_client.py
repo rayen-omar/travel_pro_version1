@@ -72,7 +72,7 @@ class TravelInvoiceClient(models.Model):
     
     # Devise
     currency_id = fields.Many2one('res.currency', string='Devise', 
-                                  default=lambda self: self.env.company.currency_id, 
+                                  default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id, 
                                   required=True)
     
     # État
