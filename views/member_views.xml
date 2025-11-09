@@ -9,6 +9,7 @@
                 <field name="company_id"/>
                 <field name="email"/>
                 <field name="phone"/>
+                <field name="matricule"/>
                 <field name="credit_balance" widget="monetary"/>
             </tree>
         </field>
@@ -30,6 +31,7 @@
                         <field name="partner_id" invisible="1"/>
                         <field name="email"/>
                         <field name="phone"/>
+                        <field name="matricule"/>
                     </group>
                     <group string="Crédit Membre">
                         <field name="credit_balance" widget="monetary"/>
@@ -51,6 +53,24 @@
                     </field>
                 </sheet>
             </form>
+        </field>
+    </record>
+    
+    <!-- Vue recherche -->
+    <record id="view_member_search" model="ir.ui.view">
+        <field name="name">member.search</field>
+        <field name="model">travel.member</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Membres">
+                <field name="name" string="Nom" filter_domain="[('name', 'ilike', self)]"/>
+                <field name="matricule" string="Matricule" filter_domain="[('matricule', 'ilike', self)]"/>
+                <field name="email" string="Email"/>
+                <field name="phone" string="Téléphone"/>
+                <field name="company_id" string="Société"/>
+                <separator/>
+                <field name="name" string="Recherche globale" 
+                       filter_domain="['|', ('name', 'ilike', self), ('matricule', 'ilike', self)]"/>
+            </search>
         </field>
     </record>
 </odoo>

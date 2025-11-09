@@ -8,6 +8,7 @@
                 <field name="name"/>
                 <field name="phone"/>
                 <field name="email"/>
+                <field name="vat"/>
             </tree>
         </field>
     </record>
@@ -27,6 +28,7 @@
                         <field name="email"/>
                         <field name="address"/>
                         <field name="website"/>
+                        <field name="vat"/>
                         <field name="member_ids">
                             <tree>
                                 <field name="name"/>
@@ -36,6 +38,23 @@
                     </group>
                 </sheet>
             </form>
+        </field>
+    </record>
+    
+    <!-- Vue recherche -->
+    <record id="view_company_search" model="ir.ui.view">
+        <field name="name">company.search</field>
+        <field name="model">travel.company</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Sociétés">
+                <field name="name" string="Nom" filter_domain="[('name', 'ilike', self)]"/>
+                <field name="vat" string="Matricule Fiscale" filter_domain="[('vat', 'ilike', self)]"/>
+                <field name="email" string="Email"/>
+                <field name="phone" string="Téléphone"/>
+                <separator/>
+                <field name="name" string="Recherche globale" 
+                       filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
+            </search>
         </field>
     </record>
 </odoo>

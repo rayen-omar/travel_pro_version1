@@ -8,6 +8,7 @@ class TravelMember(models.Model):
     company_id = fields.Many2one('travel.company', string='Société')
     email = fields.Char('Email')
     phone = fields.Char('Téléphone')
+    matricule = fields.Char('Matricule')
     reservation_ids = fields.One2many('travel.reservation', 'member_id', string='Réservations')
     partner_id = fields.Many2one('res.partner', string='Contact', required=True, ondelete='restrict')
 
@@ -76,3 +77,13 @@ class TravelMember(models.Model):
             'target': 'new',
             'context': {'default_member_id': self.id},
         }
+
+    @api.model
+    def _name_search(self, name='', args=None, operator='ilike', limit=100, order=None):
+        """Recherche par nom et matricule"""
+        from odoo.osv import expression
+        args = args or []
+        domain = []
+        if name:
+            domain = ['|', ('name', operator, name), ('matricule', operator, name)]
+        return self._search(expression.AND([domain, args]), limit=limit, order=order)

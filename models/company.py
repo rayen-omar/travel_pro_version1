@@ -1,4 +1,5 @@
-from odoo import models, fields
+from odoo import models, fields, api
+from odoo.osv import expression
 
 class TravelCompany(models.Model):
     _name = 'travel.company'
@@ -10,8 +11,17 @@ class TravelCompany(models.Model):
     email = fields.Char('Email')
     address = fields.Text('Adresse')
     website = fields.Char('Site Web')
-    vat = fields.Char('Matricule Fiscal (MF)', help='Numéro d\'identification fiscale')
+    vat = fields.Char('Matricule Fiscale', help='Numéro d\'identification fiscale')
     member_ids = fields.One2many('travel.member', 'company_id', string='Membres')
+
+    @api.model
+    def _name_search(self, name='', args=None, operator='ilike', limit=100, order=None):
+        """Recherche par nom et matricule fiscale"""
+        args = args or []
+        domain = []
+        if name:
+            domain = ['|', ('name', operator, name), ('vat', operator, name)]
+        return self._search(expression.AND([domain, args]), limit=limit, order=order)
 
     def action_create_member(self):
         return {
