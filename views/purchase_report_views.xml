@@ -62,5 +62,4 @@
         <field name="target">new</field>
         <field name="binding_model_id" ref="model_travel_purchase"/>
     </record>
-
 </odoo>

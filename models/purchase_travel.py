@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api
-from odoo.exceptions import UserError
 import base64
+
+from odoo import api, fields, models
+from odoo.exceptions import UserError
+
 
 class TravelPurchase(models.Model):
     _name = 'travel.purchase'

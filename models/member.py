@@ -1,4 +1,6 @@
-from odoo import models, fields, api
+from odoo import api, fields, models
+from odoo.osv import expression
+
 
 class TravelMember(models.Model):
     _name = 'travel.member'
@@ -81,7 +83,6 @@ class TravelMember(models.Model):
     @api.model
     def _name_search(self, name='', args=None, operator='ilike', limit=100, order=None):
         """Recherche par nom et matricule"""
-        from odoo.osv import expression
         args = args or []
         domain = []
         if name:

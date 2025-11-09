@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import api, fields, models
+
 
 class TravelCreditHistory(models.Model):
     _name = 'travel.credit.history'

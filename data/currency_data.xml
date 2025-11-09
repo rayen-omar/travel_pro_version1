@@ -6,7 +6,7 @@
         <field name="name">TND</field>
         <field name="active" eval="True"/>
     </record>
-    
+
     <!-- Note: Le changement de devise de la société est géré par post_init_hook -->
     <!-- pour éviter l'erreur si des écritures comptables existent déjà -->
 </odoo>

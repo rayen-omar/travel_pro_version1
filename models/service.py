@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import api, fields, models
+
 
 class Service(models.Model):
     _name = 'travel.service'
