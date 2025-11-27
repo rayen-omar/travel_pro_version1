@@ -12,3 +12,5 @@ from . import invoice_client
 from . import withholding
 from . import purchase_travel
 from . import purchase_report
+from . import cash_register
+from . import cash_register_operation

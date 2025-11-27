@@ -14,3 +14,5 @@ access_travel_invoice_client_line,access_travel_invoice_client_line,model_travel
 access_travel_withholding,access_travel_withholding,model_travel_withholding,,1,1,1,1
 access_travel_purchase_travel,access_travel_purchase,model_travel_purchase,,1,1,1,1
 access_travel_purchase_report,access_travel_purchase_report,model_travel_purchase_report,,1,1,1,1
+access_cash_register,cash.register.access,model_cash_register,,1,1,1,1
+access_cash_register_operation,cash.register.operation.access,model_cash_register_operation,,1,1,1,1

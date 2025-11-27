@@ -38,6 +38,8 @@
                             class="oe_highlight" states="draft"/>
                     <button name="action_set_paid" string="Marquer Payé" type="object" 
                             class="oe_highlight" states="confirmed"/>
+                    <button name="action_print_purchase" string="Imprimer" type="object" 
+                            states="confirmed,paid"/>
                     <button name="action_extract_pdf_data" string="Extraire données PDF" type="object" 
                             attrs="{'invisible': [('invoice_pdf', '=', False)]}" states="draft"/>
                     <button name="action_cancel" string="Annuler" type="object" states="draft,confirmed"/>

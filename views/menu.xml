@@ -66,6 +66,11 @@
               action="action_travel_purchase_report_wizard" sequence="30"/>
     
     <!-- Menu Caisse -->
-    <menuitem id="menu_pos" name="Caisse (POS)" parent="menu_travel_pro" 
-              action="action_pos_session_travel" sequence="80"/>
+    <menuitem id="menu_cash_group" name="Caisse" parent="menu_travel_pro" sequence="70"/>
+    <menuitem id="menu_cash_register" name="Caisses" parent="menu_cash_group" 
+              action="action_cash_register" sequence="10"/>
+    <menuitem id="menu_cash_operation" name="Opérations" parent="menu_cash_group" 
+              action="action_cash_register_operation" sequence="20"/>
+    <menuitem id="menu_pos" name="Point de Vente (POS)" parent="menu_cash_group" 
+              action="action_pos_session_travel" sequence="30"/>
 </odoo>

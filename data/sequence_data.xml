@@ -31,4 +31,20 @@
         <field name="padding">5</field>
         <field name="number_next">1</field>
     </record>
+
+    <record id="seq_cash_register" model="ir.sequence">
+        <field name="name">Caisse</field>
+        <field name="code">cash.register</field>
+        <field name="prefix">CAISSE-</field>
+        <field name="padding">3</field>
+        <field name="number_next">1</field>
+    </record>
+
+    <record id="seq_cash_register_operation" model="ir.sequence">
+        <field name="name">Opération de Caisse</field>
+        <field name="code">cash.register.operation</field>
+        <field name="prefix">OP-%(year)s-%(month)s-</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+    </record>
 </odoo>

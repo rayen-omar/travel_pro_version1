@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import base64
+# import base64  # Nécessaire pour l'extraction PDF future
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -129,57 +129,85 @@ class TravelPurchase(models.Model):
 
     @api.model
     def create(self, vals):
+        """Créer un nouvel achat et marquer le fournisseur si nécessaire."""
         if vals.get('name', 'Nouveau') == 'Nouveau':
-            vals['name'] = self.env['ir.sequence'].next_by_code('travel.purchase') or 'ACH-00001'
-        record = super(TravelPurchase, self).create(vals)
+            vals['name'] = (
+                self.env['ir.sequence'].next_by_code('travel.purchase')
+                or 'ACH-00001'
+            )
+        record = super().create(vals)
         if record.supplier_id and record.supplier_id.supplier_rank == 0:
             record.supplier_id.supplier_rank = 1
         return record
     
     def action_confirm(self):
+        """Confirmer l'achat."""
         self.ensure_one()
         self.state = 'confirmed'
-    
+
     def action_set_paid(self):
+        """Marquer l'achat comme payé."""
         self.ensure_one()
         if not self.date_payment:
             self.date_payment = fields.Date.context_today(self)
         self.state = 'paid'
-    
+
     def action_cancel(self):
+        """Annuler l'achat."""
         self.ensure_one()
         self.state = 'cancel'
-    
+
     def action_draft(self):
+        """Remettre l'achat en brouillon."""
         self.ensure_one()
         self.state = 'draft'
     
+    def action_print_purchase(self):
+        """Imprimer l'achat"""
+        self.ensure_one()
+        return self.env.ref('travel_pro_version1.action_report_travel_purchase').report_action(self)
+    
     @api.onchange('invoice_pdf')
     def _onchange_invoice_pdf(self):
-        """Tentative d'extraction automatique des données du PDF"""
+        """
+        Tentative d'extraction automatique des données du PDF.
+        
+        Note: L'extraction automatique nécessite l'installation de bibliothèques
+        comme PyPDF2 ou pdfplumber. Pour l'instant, seule la détection du PDF
+        est effectuée.
+        """
         if self.invoice_pdf:
             try:
                 # Ici vous pouvez intégrer une bibliothèque d'extraction PDF
                 # Pour l'instant, on indique juste que le PDF est attaché
-                self.extracted_data = "PDF attaché. Extraction automatique disponible si format standard détecté."
-                
-                # TODO: Implémenter l'extraction avec PyPDF2 ou pdfplumber
-                # Exemple de structure à extraire:
-                # - Date facture
-                # - Numéro facture
-                # - Montant HT
-                # - TVA
-                # - Total TTC
-                
+                self.extracted_data = (
+                    "PDF attaché. Extraction automatique disponible si format standard détecté."
+                )
+
+                # Note: Pour implémenter l'extraction avec PyPDF2 ou pdfplumber:
+                # 1. Installer la bibliothèque: pip install pdfplumber
+                # 2. Décoder le PDF: pdf_data = base64.b64decode(self.invoice_pdf)
+                # 3. Extraire les données selon le format du PDF
+                # 4. Remplir automatiquement: date_creation, amount_untaxed, etc.
+
             except Exception as e:
                 self.extracted_data = f"Erreur lors de l'extraction: {str(e)}"
-    
+
     def action_extract_pdf_data(self):
-        """Action manuelle pour extraire les données du PDF"""
+        """
+        Action manuelle pour extraire les données du PDF.
+        
+        Note: Cette fonctionnalité nécessite l'installation d'une bibliothèque
+        d'extraction PDF (PyPDF2, pdfplumber, etc.) et la configuration
+        des règles d'extraction selon le format des factures.
+        """
         self.ensure_one()
         if not self.invoice_pdf:
             raise UserError("Aucun PDF attaché.")
-        
-        # TODO: Implémenter l'extraction automatique
-        raise UserError("Fonctionnalité d'extraction automatique en cours de développement. "
-                       "Veuillez saisir les données manuellement.")
+
+        # Note: Implémentation future de l'extraction automatique
+        # Voir _onchange_invoice_pdf pour plus de détails
+        raise UserError(
+            "Fonctionnalité d'extraction automatique en cours de développement. "
+            "Veuillez saisir les données manuellement."
+        )

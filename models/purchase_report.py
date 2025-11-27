@@ -89,9 +89,19 @@ class TravelPurchaseReport(models.TransientModel):
         return self.env.ref('travel_pro_version1.action_report_travel_purchase').report_action(self)
     
     def action_export_excel(self):
-        """Exporter vers Excel"""
+        """
+        Exporter le rapport vers Excel.
+        
+        Note: Cette fonctionnalité nécessite l'installation de la bibliothèque
+        xlsxwriter (pip install xlsxwriter) et la configuration d'une action
+        serveur pour générer le fichier Excel.
+        """
         self.ensure_one()
-        # TODO: Implémenter l'export Excel avec xlsxwriter
+        # Note: Implémentation future avec xlsxwriter
+        # 1. Créer un workbook: workbook = xlsxwriter.Workbook(output)
+        # 2. Créer une feuille: worksheet = workbook.add_worksheet()
+        # 3. Formater les en-têtes et données
+        # 4. Retourner l'action de téléchargement du fichier
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
