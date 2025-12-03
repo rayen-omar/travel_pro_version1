@@ -24,12 +24,6 @@
         <field name="view_mode">tree,form</field>
     </record>
     
-    <record id="action_reservation" model="ir.actions.act_window">
-        <field name="name">Réservations</field>
-        <field name="res_model">travel.reservation</field>
-        <field name="view_mode">tree,form</field>
-    </record>
-    
     <!-- Menu Principal -->
     <menuitem id="menu_travel_pro" name="TravelPro" sequence="10"/>
     

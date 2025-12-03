@@ -47,6 +47,13 @@ class TravelReservation(models.Model):
                                   required=True)
     service_ids = fields.Many2many('travel.service', string='Services')
     sale_order_id = fields.Many2one('sale.order', string='Devis', readonly=True)
+    invoice_ids = fields.One2many('account.move', 'reservation_id', string='Factures')
+    invoice_count = fields.Integer(string='Nombre de Factures', compute='_compute_invoice_count')
+    cash_operation_ids = fields.One2many('cash.register.operation', 'reservation_id', string='Opérations Caisse')
+    cash_operation_count = fields.Integer(string='Opérations Caisse', compute='_compute_cash_operation_count')
+    pos_order_ids = fields.One2many('pos.order', 'reservation_id', string='Commandes POS')
+    pos_order_count = fields.Integer(string='Commandes POS', compute='_compute_pos_order_count')
+    
     status = fields.Selection([
         ('draft', 'Brouillon'), ('confirmed', 'Confirmé'), ('done', 'Terminé'), ('cancel', 'Annulé')
     ], default='draft', tracking=True)
@@ -54,6 +61,24 @@ class TravelReservation(models.Model):
     use_credit = fields.Boolean('Utiliser crédit')
     credit_used = fields.Float('Crédit utilisé (TND)', digits=(16, 2), compute='_compute_credit_used', store=True)
     remaining_to_pay = fields.Float('Reste à payer (TND)', digits=(16, 2), compute='_compute_remaining', store=True)
+    
+    # Champs calculés pour workflow (sans store pour éviter les problèmes de migration)
+    has_sale_order = fields.Boolean(string='A un Devis', compute='_compute_workflow_status', store=False)
+    has_invoice = fields.Boolean(string='A une Facture', compute='_compute_workflow_status', store=False)
+    has_payment = fields.Boolean(string='A un Paiement', compute='_compute_workflow_status', store=False)
+    workflow_progress = fields.Selection([
+        ('0', '0% - Brouillon'),
+        ('25', '25% - Devis créé'),
+        ('50', '50% - Facturé'),
+        ('75', '75% - Partiellement payé'),
+        ('100', '100% - Payé'),
+    ], string='Progression', compute='_compute_workflow_status', store=False)
+    workflow_progress_percent = fields.Integer(
+        string='Progression (%)',
+        compute='_compute_workflow_status',
+        store=False,
+        help='Pourcentage de progression du workflow (0-100) pour le widget progressbar'
+    )
 
     @api.depends('check_in', 'check_out')
     def _compute_nights(self):
@@ -100,6 +125,68 @@ class TravelReservation(models.Model):
     def _compute_remaining(self):
         for rec in self:
             rec.remaining_to_pay = rec.total_price - rec.credit_used
+
+    @api.depends('invoice_ids')
+    def _compute_invoice_count(self):
+        """Calculer le nombre de factures."""
+        for rec in self:
+            rec.invoice_count = len(rec.invoice_ids)
+
+    @api.depends('cash_operation_ids')
+    def _compute_cash_operation_count(self):
+        """Calculer le nombre d'opérations de caisse."""
+        for rec in self:
+            rec.cash_operation_count = len(rec.cash_operation_ids.filtered(lambda o: o.state == 'confirmed'))
+
+    @api.depends('pos_order_ids')
+    def _compute_pos_order_count(self):
+        """Calculer le nombre de commandes POS."""
+        for rec in self:
+            rec.pos_order_count = len(rec.pos_order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced']))
+
+    @api.depends('sale_order_id', 'invoice_ids', 'cash_operation_ids', 'pos_order_ids', 'remaining_to_pay', 'status')
+    def _compute_workflow_status(self):
+        """Calculer l'état du workflow et la progression."""
+        for rec in self:
+            # Utiliser sudo() pour éviter les problèmes de cache
+            rec.has_sale_order = bool(rec.sale_order_id)
+            rec.has_invoice = bool(rec.invoice_ids)
+            
+            # Calculer les paiements (caisse + POS)
+            total_paid = 0.0
+            if rec.cash_operation_ids:
+                receipts = rec.cash_operation_ids.filtered(
+                    lambda o: o.type == 'receipt' and o.state == 'confirmed'
+                )
+                total_paid += sum(receipts.mapped('amount'))
+            
+            if rec.pos_order_ids:
+                paid_orders = rec.pos_order_ids.filtered(
+                    lambda o: o.state in ['paid', 'done', 'invoiced']
+                )
+                total_paid += sum(paid_orders.mapped('amount_total'))
+            
+            rec.has_payment = total_paid > 0
+            
+            # Calculer la progression
+            if rec.status == 'cancel':
+                rec.workflow_progress = '0'
+                rec.workflow_progress_percent = 0
+            elif not rec.has_sale_order:
+                rec.workflow_progress = '0'
+                rec.workflow_progress_percent = 0
+            elif not rec.has_invoice:
+                rec.workflow_progress = '25'
+                rec.workflow_progress_percent = 25
+            elif not rec.has_payment:
+                rec.workflow_progress = '50'
+                rec.workflow_progress_percent = 50
+            elif rec.remaining_to_pay and rec.remaining_to_pay > 0.01:
+                rec.workflow_progress = '75'
+                rec.workflow_progress_percent = 75
+            else:
+                rec.workflow_progress = '100'
+                rec.workflow_progress_percent = 100
 
     def action_create_sale_order(self):
         self.ensure_one()
@@ -218,12 +305,16 @@ class TravelReservation(models.Model):
         }
 
     def action_create_invoice(self):
+        """Créer une facture depuis le devis et mettre à jour le statut."""
         self.ensure_one()
         if not self.sale_order_id:
             raise UserError("Créez un devis d'abord.")
         invoices = self.sale_order_id._create_invoices()
         if invoices:
             invoices[0].write({'reservation_id': self.id})
+            # Mettre à jour le statut si nécessaire
+            if self.status == 'confirmed':
+                self.status = 'done'
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': 'account.move',
@@ -232,6 +323,42 @@ class TravelReservation(models.Model):
                 'target': 'current',
             }
         return {'type': 'ir.actions.act_window_close'}
+
+    def action_view_invoices(self):
+        """Voir toutes les factures de la réservation."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Factures',
+            'res_model': 'account.move',
+            'view_mode': 'tree,form',
+            'domain': [('reservation_id', '=', self.id)],
+            'context': {'default_reservation_id': self.id},
+        }
+
+    def action_view_cash_operations(self):
+        """Voir toutes les opérations de caisse de la réservation."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Opérations de Caisse',
+            'res_model': 'cash.register.operation',
+            'view_mode': 'tree,form',
+            'domain': [('reservation_id', '=', self.id)],
+            'context': {'default_reservation_id': self.id, 'default_type': 'receipt'},
+        }
+
+    def action_view_pos_orders(self):
+        """Voir toutes les commandes POS de la réservation."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Commandes POS',
+            'res_model': 'pos.order',
+            'view_mode': 'tree,form',
+            'domain': [('reservation_id', '=', self.id)],
+            'context': {'default_reservation_id': self.id},
+        }
 
     def action_open_pos(self):
         """Ouvrir le POS pour payer la réservation"""

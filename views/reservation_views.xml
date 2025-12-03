@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Action pour ouvrir les réservations -->
+    <record id="action_reservation" model="ir.actions.act_window">
+        <field name="name">Réservations</field>
+        <field name="res_model">travel.reservation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    
     <record id="view_reservation_tree" model="ir.ui.view">
         <field name="name">reservation.tree</field>
         <field name="model">travel.reservation</field>
         <field name="arch" type="xml">
-            <tree decoration-success="status == 'confirmed'">
+            <tree decoration-success="status == 'confirmed'" decoration-info="status == 'done'" decoration-muted="status == 'cancel'">
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="destination_id"/>
@@ -12,10 +19,11 @@
                 <field name="check_in"/>
                 <field name="check_out"/>
                 <field name="nights"/>
-                <field name="total_price" widget="monetary"/>
+                <field name="total_price" widget="monetary" sum="Total"/>
                 <field name="credit_used" widget="monetary"/>
-                <field name="remaining_to_pay" widget="monetary"/>
-                <field name="status"/>
+                <field name="remaining_to_pay" widget="monetary" decoration-danger="remaining_to_pay > 0"/>
+                <field name="workflow_progress_percent" widget="progressbar"/>
+                <field name="status" widget="badge" decoration-success="status == 'confirmed'" decoration-info="status == 'done'" decoration-muted="status == 'cancel'"/>
             </tree>
         </field>
     </record>
@@ -26,16 +34,50 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <field name="status" widget="statusbar"/>
-                    <button name="action_create_sale_order" type="object" string="Créer Devis" class="btn-primary" attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
-                    <button name="action_view_sale_order" type="object" string="Voir Devis" class="btn-primary" attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
-                    <button name="action_create_purchase" type="object" string="Commander Hôtel" class="btn-secondary" attrs="{'invisible': [('supplier_id', '=', False)]}"/>
-                    <button name="action_create_invoice" type="object" string="Facturer" class="btn-primary" attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
-                    <button name="action_open_pos" type="object" string="Payer Caisse" class="btn-success" attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}"/>
-                    <button name="action_cancel_and_credit" type="object" string="Annuler &amp; Créditer" class="btn-danger" attrs="{'invisible': [('status', 'in', ['done', 'cancel'])]}" confirm="Confirmer ?"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,confirmed,done,cancel"/>
+                    <button name="action_create_sale_order" type="object" string="Créer Devis" 
+                            class="oe_highlight" icon="fa-file-text-o"
+                            attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
+                    <button name="action_view_sale_order" type="object" string="Voir Devis" 
+                            class="oe_highlight" icon="fa-file-text-o"
+                            attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
+                    <button name="action_create_invoice" type="object" string="Facturer" 
+                            class="oe_highlight" icon="fa-file-pdf-o"
+                            attrs="{'invisible': [('sale_order_id', '=', False), ('has_invoice', '=', True)]}"/>
+                    <button name="action_open_pos" type="object" string="Payer Caisse" 
+                            class="oe_highlight" icon="fa-money"
+                            attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}"/>
+                    <button name="action_cancel_and_credit" type="object" string="Annuler &amp; Créditer" 
+                            class="btn-danger" icon="fa-times"
+                            attrs="{'invisible': [('status', 'in', ['done', 'cancel'])]}" 
+                            confirm="Êtes-vous sûr de vouloir annuler cette réservation et créditer le client ?"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_sale_order" 
+                                icon="fa-file-text-o" attrs="{'invisible': [('sale_order_id', '=', False)]}">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Devis</span>
+                                <span class="o_stat_value" attrs="{'invisible': [('sale_order_id', '=', False)]}">✓</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_invoices" 
+                                icon="fa-file-pdf-o" attrs="{'invisible': [('invoice_count', '=', 0)]}">
+                            <field name="invoice_count" widget="statinfo" string="Factures"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_cash_operations" 
+                                icon="fa-money" attrs="{'invisible': [('cash_operation_count', '=', 0)]}">
+                            <field name="cash_operation_count" widget="statinfo" string="Opérations Caisse"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_pos_orders" 
+                                icon="fa-shopping-cart" attrs="{'invisible': [('pos_order_count', '=', 0)]}">
+                            <field name="pos_order_count" widget="statinfo" string="Commandes POS"/>
+                        </button>
+                    </div>
                     <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('workflow_progress_percent', '=', 100)]}">
+                        <strong>Progression du Workflow:</strong> <field name="workflow_progress_percent" widget="progressbar"/>
+                    </div>
                     <group>
                         <group string="Client"><field name="member_id"/></group>
                         <group string="Voyage">
@@ -70,8 +112,42 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Services"><field name="service_ids" widget="many2many_tags"/></page>
-                        <page string="Devis"><field name="sale_order_id" readonly="1"/></page>
+                        <page string="Services" name="services">
+                            <field name="service_ids" widget="many2many_tags" nolabel="1"/>
+                        </page>
+                        <page string="Workflow" name="workflow">
+                            <group>
+                                <group string="Étapes du Workflow">
+                                    <field name="has_sale_order" widget="boolean_toggle" readonly="1"/>
+                                    <label for="has_sale_order" string="Devis créé"/>
+                                    <field name="has_invoice" widget="boolean_toggle" readonly="1"/>
+                                    <label for="has_invoice" string="Facturé"/>
+                                    <field name="has_payment" widget="boolean_toggle" readonly="1"/>
+                                    <label for="has_payment" string="Paiement reçu"/>
+                                </group>
+                                <group string="Progression">
+                                    <field name="workflow_progress_percent" widget="progressbar" readonly="1"/>
+                                    <field name="workflow_progress" readonly="1" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Documents" name="documents">
+                            <group>
+                                <group string="Devis">
+                                    <field name="sale_order_id" readonly="1" options="{'no_create': True}"/>
+                                </group>
+                                <group string="Factures">
+                                    <field name="invoice_ids" readonly="1" nolabel="1">
+                                        <tree>
+                                            <field name="name"/>
+                                            <field name="date"/>
+                                            <field name="amount_total" widget="monetary"/>
+                                            <field name="state" widget="badge"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">

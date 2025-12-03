@@ -117,15 +117,49 @@ class CashRegisterOperation(models.Model):
         self.ensure_one()
         self.write({'state': 'draft'})
 
+    @api.onchange('reservation_id')
+    def _onchange_reservation_id(self):
+        """Remplir automatiquement les informations depuis la réservation."""
+        if self.reservation_id:
+            # Remplir le devis si disponible
+            if self.reservation_id.sale_order_id:
+                self.sale_order_id = self.reservation_id.sale_order_id.id
+                self.quote_number = self.reservation_id.sale_order_id.name
+
+            # Remplir les factures si disponibles
+            if self.reservation_id.invoice_ids:
+                # Prendre la dernière facture
+                last_invoice = self.reservation_id.invoice_ids.sorted('create_date', reverse=True)[0]
+                self.invoice_id = last_invoice.id
+                self.invoice_number = last_invoice.name
+
+            # Remplir le montant depuis le reste à payer
+            if self.type == 'receipt' and self.reservation_id.remaining_to_pay > 0:
+                self.amount = self.reservation_id.remaining_to_pay
+
+            # Remplir la note avec les informations de la réservation
+            note_parts = [f"Réservation: {self.reservation_id.name}"]
+            if self.reservation_id.destination_id:
+                note_parts.append(f"Destination: {self.reservation_id.destination_id.name}")
+            if self.reservation_id.member_id:
+                note_parts.append(f"Client: {self.reservation_id.member_id.name}")
+            self.note = " | ".join(note_parts)
+
     @api.onchange('invoice_id')
     def _onchange_invoice_id(self):
-        """Remplir automatiquement le numéro de facture."""
+        """Remplir automatiquement le numéro de facture et la réservation."""
         if self.invoice_id:
             self.invoice_number = self.invoice_id.name
+            # Lier automatiquement la réservation si disponible
+            if self.invoice_id.reservation_id:
+                self.reservation_id = self.invoice_id.reservation_id.id
 
     @api.onchange('sale_order_id')
     def _onchange_sale_order_id(self):
-        """Remplir automatiquement le numéro de devis."""
+        """Remplir automatiquement le numéro de devis et la réservation."""
         if self.sale_order_id:
             self.quote_number = self.sale_order_id.name
+            # Lier automatiquement la réservation si disponible via le POS
+            if hasattr(self.sale_order_id, 'reservation_id') and self.sale_order_id.reservation_id:
+                self.reservation_id = self.sale_order_id.reservation_id.id
 
