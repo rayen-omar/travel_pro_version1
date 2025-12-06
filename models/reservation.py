@@ -32,12 +32,12 @@ class TravelReservation(models.Model):
     room_category = fields.Selection([('standard', 'Standard'), ('ls', 'LS'), ('autre', 'Autre')], string='Chambre', required=True, default='standard')
     room_type = fields.Selection([('single', 'Simple'), ('double', 'Double'), ('triple', 'Triple')], string='Type', required=True, default='double')
     
-    # Prix du voyage (prix total pour toutes les nuits)
-    price = fields.Float('Prix du Voyage (Total TND)', digits=(16, 2), help="Prix total du voyage pour toutes les nuits en TND (rempli automatiquement depuis le voyage sélectionné)")
+    # Prix du voyage (prix total pour toutes les nuits - TTC)
+    price = fields.Float('Prix du Voyage (Total TTC TND)', digits=(16, 2), help="Prix total TTC du voyage pour toutes les nuits en TND (rempli automatiquement depuis le voyage sélectionné)")
     
-    # Prix d'achat (calculé automatiquement depuis le fournisseur)
-    purchase_amount = fields.Float('Prix Achat (TND)', digits=(16, 2), compute='_compute_purchase_amount', store=True,
-                                   help="Somme des prix des services du fournisseur choisi en TND (rempli automatiquement)")
+    # Prix d'achat (peut être rempli manuellement ou calculé automatiquement depuis le fournisseur)
+    purchase_amount = fields.Float('Prix Achat (TND)', digits=(16, 2),
+                                   help="Prix d'achat en TND (peut être rempli manuellement ou calculé automatiquement depuis les services du fournisseur)")
     
     # Total calculé
     total_price = fields.Float('Total (TND)', digits=(16, 2), compute='_compute_total', store=True, 
@@ -93,15 +93,14 @@ class TravelReservation(models.Model):
         for rec in self:
             rec.participants = rec.adults + rec.children + rec.infants
 
-    @api.depends('supplier_id', 'supplier_id.travel_service_ids', 'supplier_id.travel_service_ids.price')
-    def _compute_purchase_amount(self):
-        """Calculer le prix d'achat depuis la somme des prix des services du fournisseur"""
-        for rec in self:
-            if rec.supplier_id and rec.supplier_id.travel_service_ids:
-                # Somme des prix de tous les services du fournisseur
-                rec.purchase_amount = sum(service.price for service in rec.supplier_id.travel_service_ids if service.price)
-            else:
-                rec.purchase_amount = 0.0
+    def action_compute_purchase_amount(self):
+        """Action pour calculer automatiquement le prix d'achat depuis les services du fournisseur"""
+        self.ensure_one()
+        if self.supplier_id and self.supplier_id.travel_service_ids:
+            self.purchase_amount = sum(service.price for service in self.supplier_id.travel_service_ids if service.price)
+        else:
+            self.purchase_amount = 0.0
+        return True
 
     @api.depends('nights', 'price', 'service_ids.price')
     def _compute_total(self):
@@ -189,63 +188,42 @@ class TravelReservation(models.Model):
                 rec.workflow_progress_percent = 100
 
     def action_create_sale_order(self):
+        """Créer un devis n'est plus nécessaire - vous pouvez facturer directement."""
         self.ensure_one()
-        product = self.env['product.product'].search([('type', '=', 'service')], limit=1)
-        if not product:
-            product = self.env['product.product'].create({'name': 'Service', 'type': 'service'})
-
-        if not self.sale_order_id:
-            order = self.env['sale.order'].create({
-                'partner_id': self.member_id.partner_id.id,
-            })
-            self.sale_order_id = order.id
+        
+        # Mettre à jour le statut pour confirmer la réservation
+        if self.status == 'draft':
             self.status = 'confirmed'
-
-        lines = [(5, 0, 0)]
-        if self.hotel_service_id:
-            # Utiliser price (prix total du voyage)
-            price_unit = self.price or 0.0
-            lines.append((0, 0, {
-                'product_id': product.id,
-                'name': f"{self.hotel_service_id.name} - {self.nights} nuits",
-                'product_uom_qty': 1,
-                'price_unit': price_unit,
-            }))
-        for s in self.service_ids:
-            lines.append((0, 0, {
-                'product_id': product.id,
-                'name': s.name,
-                'product_uom_qty': 1,
-                'price_unit': s.price,
-            }))
-        self.sale_order_id.write({'order_line': lines})
-
-        if self.use_credit and self.credit_used > 0:
-            self.env['travel.credit.history'].create({
-                'member_id': self.member_id.id,
-                'amount': -self.credit_used,
-                'type': 'usage',
-                'reservation_id': self.id,
-            })
-
+        
+        # Afficher un message informatif
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'sale.order',
-            'res_id': self.sale_order_id.id,
-            'view_mode': 'form',
-            'target': 'current',
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Devis non nécessaire',
+                'message': 'Vous pouvez facturer directement cette réservation sans créer de devis. Utilisez le bouton "Facturer".',
+                'type': 'info',
+                'sticky': False,
+                'next': {
+                    'type': 'ir.actions.act_window_close',
+                }
+            }
         }
 
     def action_view_sale_order(self):
+        """Voir le résumé de la réservation au lieu du devis."""
         self.ensure_one()
-        if not self.sale_order_id:
-            raise UserError("Aucun devis associé.")
+        
+        # Retourner simplement la vue formulaire de la réservation
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'sale.order',
-            'res_id': self.sale_order_id.id,
-            'view_mode': 'form',
-            'target': 'current',
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Devis non utilisé',
+                'message': 'Le système de devis n\'est plus utilisé. Vous pouvez voir toutes les informations dans cette réservation et facturer directement.',
+                'type': 'info',
+                'sticky': False,
+            }
         }
 
     @api.onchange('destination_id')
@@ -268,9 +246,16 @@ class TravelReservation(models.Model):
 
     @api.onchange('supplier_id')
     def _onchange_supplier_id(self):
-        """Marquer automatiquement le partenaire comme fournisseur"""
+        """Marquer automatiquement le partenaire comme fournisseur et proposer de calculer le prix d'achat"""
         if self.supplier_id and self.supplier_id.supplier_rank == 0:
             self.supplier_id.supplier_rank = 1
+        # Calculer automatiquement le prix d'achat si le fournisseur a des services (optionnel)
+        if self.supplier_id and self.supplier_id.travel_service_ids:
+            # Somme des prix de tous les services du fournisseur
+            self.purchase_amount = sum(service.price for service in self.supplier_id.travel_service_ids if service.price)
+        elif not self.purchase_amount:
+            # Ne réinitialiser que si le montant est vide
+            self.purchase_amount = 0.0
 
     def write(self, vals):
         """Mettre à jour supplier_rank lors de la sauvegarde"""
@@ -305,35 +290,69 @@ class TravelReservation(models.Model):
         }
 
     def action_create_invoice(self):
-        """Créer une facture depuis le devis et mettre à jour le statut."""
+        """Créer une facture client Travel depuis la réservation."""
         self.ensure_one()
-        if not self.sale_order_id:
-            raise UserError("Créez un devis d'abord.")
-        invoices = self.sale_order_id._create_invoices()
-        if invoices:
-            invoices[0].write({'reservation_id': self.id})
-            # Mettre à jour le statut si nécessaire
-            if self.status == 'confirmed':
-                self.status = 'done'
-            return {
-                'type': 'ir.actions.act_window',
-                'res_model': 'account.move',
-                'res_id': invoices[0].id,
-                'view_mode': 'form',
-                'target': 'current',
-            }
-        return {'type': 'ir.actions.act_window_close'}
+        
+        # Vérifier que le membre a une société associée
+        if not self.member_id:
+            raise UserError("Le membre est requis pour créer une facture.")
+        
+        if not self.member_id.company_id:
+            raise UserError("Le membre doit avoir une société associée pour créer une facture.")
+        
+        # Créer la facture client Travel
+        invoice_vals = {
+            'travel_company_id': self.member_id.company_id.id,
+            'member_ids': [(6, 0, [self.member_id.id])],
+            'date_invoice': fields.Date.context_today(self),
+        }
+        
+        invoice = self.env['travel.invoice.client'].create(invoice_vals)
+        
+        # Créer les lignes de facture depuis la réservation
+        line_vals = {
+            'invoice_id': invoice.id,
+            'passenger_id': self.member_id.id,
+            'reference': f"R-{str(self.id).zfill(5)}",
+            'description': f"Réservation {self.name or 'N/A'} - {self.destination_id.name if self.destination_id else ''}",
+            'destination_id': self.destination_id.id if self.destination_id else False,
+            'reservation_id': self.id,
+            'quantity': 1.0,
+            'price_ttc': self.total_price,  # Le prix de la réservation est TTC
+            'tax_rate': '7',  # Par défaut 7%, peut être modifié
+        }
+        
+        self.env['travel.invoice.client.line'].create(line_vals)
+        
+        # Mettre à jour le statut si nécessaire
+        if self.status == 'confirmed':
+            self.status = 'done'
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'travel.invoice.client',
+            'res_id': invoice.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
     def action_view_invoices(self):
         """Voir toutes les factures de la réservation."""
         self.ensure_one()
+        
+        # Rechercher les factures travel.invoice.client qui contiennent cette réservation
+        invoice_lines = self.env['travel.invoice.client.line'].search([
+            ('reservation_id', '=', self.id)
+        ])
+        invoice_ids = invoice_lines.mapped('invoice_id').ids
+        
         return {
             'type': 'ir.actions.act_window',
             'name': 'Factures',
-            'res_model': 'account.move',
+            'res_model': 'travel.invoice.client',
             'view_mode': 'tree,form',
-            'domain': [('reservation_id', '=', self.id)],
-            'context': {'default_reservation_id': self.id},
+            'domain': [('id', 'in', invoice_ids)],
+            'context': {},
         }
 
     def action_view_cash_operations(self):
@@ -361,32 +380,28 @@ class TravelReservation(models.Model):
         }
 
     def action_open_pos(self):
-        """Ouvrir le POS pour payer la réservation"""
+        """Enregistrer un paiement en caisse pour la réservation"""
         self.ensure_one()
         if self.remaining_to_pay <= 0:
             raise UserError("Rien à payer pour cette réservation.")
         
         if not self.member_id.partner_id:
-            raise UserError("Le membre doit avoir un partenaire associé pour utiliser le POS.")
+            raise UserError("Le membre doit avoir un partenaire associé.")
         
-        config = self.env.ref('travel_pro_version1.pos_config_travel', raise_if_not_found=False)
-        if not config:
-            raise UserError("Configuration POS non trouvée. Veuillez configurer le Point de Vente.")
-        
-        # Vérifier s'il y a une session ouverte
-        session = self.env['pos.session'].search([
-            ('config_id', '=', config.id),
-            ('state', '=', 'opened')
-        ], limit=1)
-        
-        if not session:
-            raise UserError("Aucune session POS ouverte. Veuillez ouvrir une session de caisse d'abord.")
-        
-        # Retourner l'action pour ouvrir le POS
+        # Créer directement une opération de caisse (reçu)
         return {
-            'type': 'ir.actions.act_url',
-            'url': f'/web#action=point_of_sale.action_client_pos_menu&config_id={config.id}',
-            'target': 'self',
+            'type': 'ir.actions.act_window',
+            'name': 'Enregistrer un Paiement',
+            'res_model': 'cash.register.operation',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_type': 'receipt',
+                'default_reservation_id': self.id,
+                'default_partner_id': self.member_id.partner_id.id,
+                'default_amount': self.remaining_to_pay,
+                'default_description': f'Paiement pour {self.name} - {self.destination_id.name if self.destination_id else ""}',
+            },
         }
 
     def action_cancel_and_credit(self):

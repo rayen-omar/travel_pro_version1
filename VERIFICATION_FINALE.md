@@ -134,3 +134,6 @@ sudo systemctl restart odoo
 **Tous les problèmes de dépendances XML sont résolus !**
 
 Le module est prêt pour l'installation sur Ubuntu Server sans erreurs de dépendances XML.
+
+
+

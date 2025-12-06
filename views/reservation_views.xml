@@ -35,15 +35,10 @@
             <form>
                 <header>
                     <field name="status" widget="statusbar" statusbar_visible="draft,confirmed,done,cancel"/>
-                    <button name="action_create_sale_order" type="object" string="Créer Devis" 
-                            class="oe_highlight" icon="fa-file-text-o"
-                            attrs="{'invisible': [('sale_order_id', '!=', False)]}"/>
-                    <button name="action_view_sale_order" type="object" string="Voir Devis" 
-                            class="oe_highlight" icon="fa-file-text-o"
-                            attrs="{'invisible': [('sale_order_id', '=', False)]}"/>
+
                     <button name="action_create_invoice" type="object" string="Facturer" 
                             class="oe_highlight" icon="fa-file-pdf-o"
-                            attrs="{'invisible': [('sale_order_id', '=', False), ('has_invoice', '=', True)]}"/>
+                            attrs="{'invisible': [('status', '=', 'draft')]}"/>
                     <button name="action_open_pos" type="object" string="Payer Caisse" 
                             class="oe_highlight" icon="fa-money"
                             attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}"/>
@@ -54,13 +49,7 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" type="object" name="action_view_sale_order" 
-                                icon="fa-file-text-o" attrs="{'invisible': [('sale_order_id', '=', False)]}">
-                            <div class="o_stat_info">
-                                <span class="o_stat_text">Devis</span>
-                                <span class="o_stat_value" attrs="{'invisible': [('sale_order_id', '=', False)]}">✓</span>
-                            </div>
-                        </button>
+
                         <button class="oe_stat_button" type="object" name="action_view_invoices" 
                                 icon="fa-file-pdf-o" attrs="{'invisible': [('invoice_count', '=', 0)]}">
                             <field name="invoice_count" widget="statinfo" string="Factures"/>
@@ -98,8 +87,12 @@
                             <field name="currency_id" invisible="1"/>
                             <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}" 
                                    help="Prix total du voyage pour toutes les nuits (rempli automatiquement depuis le voyage)"/>
-                            <field name="purchase_amount" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}" 
-                                   help="Somme des prix des services du fournisseur choisi (rempli automatiquement)"/>
+                            <field name="purchase_amount" widget="monetary" options="{'currency_field': 'currency_id'}" 
+                                   help="Prix d'achat en TND (peut être rempli manuellement ou calculé automatiquement depuis les services du fournisseur)"/>
+                            <button name="action_compute_purchase_amount" string="Calculer depuis Fournisseur" type="object" 
+                                    class="btn-secondary" icon="fa-calculator"
+                                    attrs="{'invisible': [('supplier_id', '=', False)]}"
+                                    help="Calculer automatiquement le prix d'achat depuis les services du fournisseur sélectionné"/>
                         </group>
                         <group>
                             <label for="total_price" string="Total TTC" style="font-weight: bold; font-size: 14px;"/>
@@ -118,8 +111,6 @@
                         <page string="Workflow" name="workflow">
                             <group>
                                 <group string="Étapes du Workflow">
-                                    <field name="has_sale_order" widget="boolean_toggle" readonly="1"/>
-                                    <label for="has_sale_order" string="Devis créé"/>
                                     <field name="has_invoice" widget="boolean_toggle" readonly="1"/>
                                     <label for="has_invoice" string="Facturé"/>
                                     <field name="has_payment" widget="boolean_toggle" readonly="1"/>
@@ -133,9 +124,7 @@
                         </page>
                         <page string="Documents" name="documents">
                             <group>
-                                <group string="Devis">
-                                    <field name="sale_order_id" readonly="1" options="{'no_create': True}"/>
-                                </group>
+
                                 <group string="Factures">
                                     <field name="invoice_ids" readonly="1" nolabel="1">
                                         <tree>

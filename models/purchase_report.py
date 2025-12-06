@@ -4,7 +4,7 @@ from odoo import api, fields, models
 
 class TravelPurchaseReport(models.TransientModel):
     _name = 'travel.purchase.report'
-    _description = 'Rapport des Achats Travel'
+    _description = 'Rapport des Factures Fournisseurs'
 
     date_from = fields.Date('Date Début', required=True, default=fields.Date.context_today)
     date_to = fields.Date('Date Fin', required=True, default=fields.Date.context_today)
@@ -29,7 +29,7 @@ class TravelPurchaseReport(models.TransientModel):
     currency_id = fields.Many2one('res.currency', string='Devise', 
                                   default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id)
     
-    purchase_count = fields.Integer('Nombre d\'achats', compute='_compute_totals')
+    purchase_count = fields.Integer('Nombre de factures', compute='_compute_totals')
     
     @api.depends('date_from', 'date_to', 'purchase_type', 'supplier_id')
     def _compute_totals(self):
@@ -56,7 +56,7 @@ class TravelPurchaseReport(models.TransientModel):
             wizard.purchase_count = len(purchases)
     
     def action_view_purchases(self):
-        """Afficher la liste des achats filtrés"""
+        """Afficher la liste des factures fournisseurs filtrées"""
         self.ensure_one()
         
         domain = [
@@ -72,7 +72,7 @@ class TravelPurchaseReport(models.TransientModel):
             domain.append(('supplier_id', '=', self.supplier_id.id))
         
         return {
-            'name': 'Achats - Période du {} au {}'.format(
+            'name': 'Factures Fournisseurs - Période du {} au {}'.format(
                 self.date_from.strftime('%d/%m/%Y'),
                 self.date_to.strftime('%d/%m/%Y')
             ),

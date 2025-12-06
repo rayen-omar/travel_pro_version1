@@ -65,3 +65,6 @@ Le module devrait maintenant s'installer correctement sur le serveur Linux sans 
 1. **Tester l'installation** sur le serveur Linux
 2. **Vérifier** que toutes les actions fonctionnent correctement
 3. Si d'autres erreurs apparaissent, elles seront probablement liées aux modèles Python ou aux données, pas aux dépendances XML
+
+
+

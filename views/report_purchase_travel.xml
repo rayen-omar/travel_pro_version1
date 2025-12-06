@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Template QWeb pour le rapport d'achat travel -->
+    <!-- Template QWeb pour le rapport de facture fournisseur travel -->
     <template id="report_travel_purchase">
-        <t t-set="company" t-value="res_company"/>
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-            <t t-call="web.external_layout">
-                <div class="page" style="padding: 30px; font-family: Arial, sans-serif;">
+            <div class="article">
+                <div class="page" style="padding: 15px 20px; font-family: Arial, sans-serif; font-size: 12px;">
+                <!-- Logo de l'entreprise -->
+                <div class="row mb-2" style="margin-bottom: 15px;">
+                    <div class="col-12 text-center">
+                        <img src="/travel_pro_version1/static/src/img/logo_we_can_travel.png" alt="Logo We Can Travel" style="max-width: 300px; max-height: 120px;"/>
+                    </div>
+                </div>
+                
                 <!-- En-tête principal -->
-                <div class="row mb-4" style="border-bottom: 1px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 30px;">
+                <div class="row mb-2" style="border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 15px;">
                     <div class="col-8">
-                        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #333;">
-                            Bon d'Achat - <span t-field="o.name"/>
+                        <h1 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">
+                            Facture Fournisseur - <span t-field="o.name"/>
                         </h1>
-                        <div style="margin-top: 10px;">
+                        <div style="margin-top: 5px;">
                             <span style="display: inline-block; padding: 4px 12px; background-color: #2196F3; color: white; border-radius: 12px; font-size: 12px; font-weight: 500;">
                                 <span t-if="o.state == 'draft'">Brouillon</span>
                                 <span t-if="o.state == 'confirmed'">Confirmé</span>
@@ -23,13 +29,13 @@
                         </div>
                     </div>
                     <div class="col-4 text-end">
-                        <div style="margin-bottom: 8px;">
-                            <span style="color: #666; font-size: 13px;">Date:</span>
-                            <span style="font-weight: 500; margin-left: 5px;" t-field="o.date_creation"/>
+                        <div style="margin-bottom: 4px;">
+                            <span style="color: #666; font-size: 11px;">Date:</span>
+                            <span style="font-weight: 500; margin-left: 5px; font-size: 11px;" t-field="o.date_creation"/>
                         </div>
                         <div>
-                            <span style="color: #666; font-size: 13px;">Date de Paiement:</span>
-                            <span style="font-weight: 500; margin-left: 5px;">
+                            <span style="color: #666; font-size: 11px;">Date de Paiement:</span>
+                            <span style="font-weight: 500; margin-left: 5px; font-size: 11px;">
                                 <span t-if="o.date_payment" t-field="o.date_payment"/>
                                 <span t-if="not o.date_payment">Non payé</span>
                             </span>
@@ -38,43 +44,44 @@
                 </div>
                 
                 <!-- Informations société et fournisseur -->
-                <div class="row mb-4">
-                    <!-- Informations société -->
-                    <div class="col-6" style="padding-right: 30px;">
-                        <div style="margin-bottom: 15px;">
-                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Société</div>
-                            <div style="font-weight: 600; font-size: 15px; margin-bottom: 8px;" t-if="company.name">
-                                <span t-field="company.name"/>
+                <div class="row mb-2">
+                    <!-- Informations société (Vendeur - We Can Travel) -->
+                    <div class="col-6" style="padding-right: 15px;">
+                        <div style="margin-bottom: 8px;">
+                            <div style="color: #666; font-size: 10px; margin-bottom: 3px;">Vendeur</div>
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;" t-if="o.company_name_seller">
+                                <span t-field="o.company_name_seller"/>
                             </div>
-                            <div style="color: #666; font-size: 13px; line-height: 1.6;">
-                                <div t-if="company.street" t-esc="company.street or ''"/>
-                                <div t-if="company.street2" t-esc="company.street2 or ''"/>
-                                <div t-if="company.city" t-esc="company.city or ''"/>
-                                <div t-if="company.vat" style="margin-top: 8px;">
-                                    <strong>Code TVA:</strong> <span t-field="company.vat"/>
+                            <div style="color: #666; font-size: 11px; line-height: 1.4;">
+                                <div t-if="o.company_address_seller" t-esc="o.company_address_seller"/>
+                                <div t-if="o.company_vat_seller" style="margin-top: 4px;">
+                                    <strong>Code TVA:</strong> <span t-field="o.company_vat_seller"/>
                                 </div>
-                                <div t-if="company.phone">
-                                    <strong>Tél:</strong> <span t-field="company.phone"/>
+                                <div t-if="o.company_phone_seller">
+                                    <strong>Tél:</strong> <span t-field="o.company_phone_seller"/>
                                 </div>
-                                <div t-if="company.email">
-                                    <strong>Email:</strong> <span t-field="company.email"/>
+                                <div t-if="o.company_mobile_seller">
+                                    <strong>Mobile:</strong> <span t-field="o.company_mobile_seller"/>
+                                </div>
+                                <div t-if="o.company_email_seller">
+                                    <strong>Email:</strong> <span t-field="o.company_email_seller"/>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Informations fournisseur -->
-                    <div class="col-6" style="padding-left: 30px;">
-                        <div style="margin-bottom: 15px;">
-                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Fournisseur</div>
-                            <div style="font-weight: 600; font-size: 15px; margin-bottom: 8px;" t-if="o.supplier_id">
+                    <div class="col-6" style="padding-left: 15px;">
+                        <div style="margin-bottom: 8px;">
+                            <div style="color: #666; font-size: 10px; margin-bottom: 3px;">Fournisseur</div>
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;" t-if="o.supplier_id">
                                 <span t-field="o.supplier_id.name"/>
                             </div>
-                            <div style="color: #666; font-size: 13px; line-height: 1.6;">
+                            <div style="color: #666; font-size: 11px; line-height: 1.4;">
                                 <div t-if="o.supplier_id.street" t-esc="o.supplier_id.street or ''"/>
                                 <div t-if="o.supplier_id.street2" t-esc="o.supplier_id.street2 or ''"/>
                                 <div t-if="o.supplier_id.city" t-esc="o.supplier_id.city or ''"/>
-                                <div t-if="o.supplier_id.vat" style="margin-top: 8px;">
+                                <div t-if="o.supplier_id.vat" style="margin-top: 4px;">
                                     <strong>Code TVA:</strong> <span t-field="o.supplier_id.vat"/>
                                 </div>
                                 <div t-if="o.supplier_id.phone">
@@ -88,7 +95,7 @@
                     </div>
                 </div>
                 
-                <!-- Type d'achat -->
+                <!-- Type de facture -->
                 <div class="row mb-4" t-if="o.purchase_type">
                     <div class="col-12">
                         <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Type</div>
@@ -106,29 +113,49 @@
                         <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                             <thead>
                                 <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; font-size: 13px; color: #333;">Libellé</th>
-                                    <th style="padding: 12px 8px; text-align: right; font-weight: 600; font-size: 13px; color: #333;">Prix</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; font-size: 13px; color: #333;">Type</th>
-                                    <th style="padding: 12px 8px; text-align: right; font-weight: 600; font-size: 13px; color: #333;">Total</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 22%;">Service</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 10%;">Type</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 14%;">Voyage</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Prix TTC Saisi</th>
+                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 5%;">TVA</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 14%;">Total HT</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 14%;">Montant TVA</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="o.service_ids" t-as="service">
                                     <tr style="border-bottom: 1px solid #e0e0e0;">
-                                        <td style="padding: 12px 8px; font-size: 13px;">
-                                            <div style="font-weight: 500;" t-esc="service.name or ''"/>
+                                        <td style="padding: 6px 4px; font-size: 11px;">
+                                            <span t-field="service.name"/>
+                                            <div style="font-size: 9px; color: #666; margin-top: 2px;" t-if="service.note">
+                                                <span t-field="service.note"/>
+                                            </div>
                                         </td>
-                                        <td style="padding: 12px 8px; text-align: right; font-size: 13px;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="service.price"/>
-                                        </td>
-                                        <td style="padding: 12px 8px; font-size: 13px; color: #666;">
+                                        <td style="padding: 6px 4px; font-size: 11px;">
                                             <span t-if="service.type == 'hebergement'">Hébergement</span>
                                             <span t-if="service.type == 'transport'">Transport</span>
                                             <span t-if="service.type == 'activite'">Activité</span>
                                             <span t-if="service.type == 'autre'">Autre</span>
                                         </td>
-                                        <td style="padding: 12px 8px; text-align: right; font-size: 13px; font-weight: 500;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="service.price"/>
+                                        <td style="padding: 6px 4px; font-size: 11px;">
+                                            <span t-field="service.destination_id.name"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <span t-field="service.price" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
+                                            <span t-esc="o.tax_rate"/>%
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <!-- TVA = TTC * Taux / (1 + Taux) si TVA en dedans, mais ici formule utilisateur TVA = TTC * Taux -->
+                                            <!-- Donc HT = TTC - (TTC * Taux) ? Non, attendons. -->
+                                            <!-- La formule utilisateur est: TVA est un pourcentage du TTC. Donc TVA = TTC * 0.07. HT = TTC - TVA -->
+                                            <t t-set="line_tax" t-value="service.price * (float(o.tax_rate) / 100.0)"/>
+                                            <t t-set="line_ht" t-value="service.price - line_tax"/>
+                                            <span t-esc="line_ht" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <span t-esc="line_tax" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                     </tr>
                                 </t>
@@ -164,12 +191,25 @@
                                     <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_tax"/>
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="padding: 8px 0; text-align: right; font-size: 13px; color: #666; font-weight: 600;">Total TTC</td>
+                                <td style="padding: 8px 0; text-align: right; font-size: 13px; font-weight: 600; padding-left: 20px;">
+                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_ttc"/>
+                                </td>
+                            </tr>
+                            <tr t-if="o.fiscal_stamp and o.fiscal_stamp &gt; 0">
+                                <td style="padding: 8px 0; text-align: right; font-size: 13px; color: #666;">Timbre Fiscal</td>
+                                <td style="padding: 8px 0; text-align: right; font-size: 13px; font-weight: 500; padding-left: 20px;">
+                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.fiscal_stamp"/>
+                                </td>
+                            </tr>
                             <tr style="border-top: 2px solid #333;">
-                                <td style="padding: 12px 0; text-align: right; font-size: 15px; font-weight: 600;">Total TTC</td>
+                                <td style="padding: 12px 0; text-align: right; font-size: 15px; font-weight: 600;">Montant Final (HT + TVA + Timbre)</td>
                                 <td style="padding: 12px 0; text-align: right; font-size: 15px; font-weight: 600; padding-left: 20px;">
                                     <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_total"/>
                                 </td>
                             </tr>
+
                             <tr>
                                 <td colspan="2" style="padding: 8px 0; border-top: 1px solid #e0e0e0;"></td>
                             </tr>
@@ -195,31 +235,43 @@
                     </div>
                 </div>
                 
-                <!-- Informations supplémentaires -->
-                <div class="row mt-4" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                    <div class="col-6" t-if="o.reservation_id">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 8px; font-weight: 600;">Réservation liée</div>
-                        <div style="font-size: 13px; line-height: 1.6;">
-                            <span t-esc="o.reservation_id.name or ''"/>
-                            <t t-if="o.reservation_id.member_id">
-                                - <span t-esc="o.reservation_id.member_id.name or ''"/>
-                            </t>
+                <!-- Montant en lettres -->
+                <div class="row mt-2" t-if="o.amount_in_words">
+                    <div class="col-12" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                        <div style="font-size: 11px; color: #666;">
+                            <strong>Arrêté la présente facture à la somme de:</strong> 
+                            <span style="color: #333;" t-field="o.amount_in_words"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informations bancaires et notes -->
+                <div class="row mt-2" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                    <div class="col-6" t-if="o.company_bank_name or o.company_bank_iban">
+                        <div style="color: #666; font-size: 10px; margin-bottom: 4px; font-weight: 600;">Informations bancaires</div>
+                        <div style="font-size: 11px; line-height: 1.4;">
+                            <div t-if="o.company_bank_name" style="margin-bottom: 3px;">
+                                <strong>Banque:</strong> <span t-field="o.company_bank_name"/>
+                            </div>
+                            <div t-if="o.company_bank_iban" style="margin-bottom: 3px;">
+                                <strong>IBAN:</strong> <span t-field="o.company_bank_iban"/>
+                            </div>
                         </div>
                     </div>
                     <div class="col-6" t-if="o.note">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 8px; font-weight: 600;">Notes</div>
-                        <div style="font-size: 13px; line-height: 1.6; color: #333;" t-esc="o.note"/>
+                        <div style="color: #666; font-size: 10px; margin-bottom: 4px; font-weight: 600;">Notes</div>
+                        <div style="font-size: 11px; line-height: 1.4; color: #333;" t-esc="o.note"/>
                     </div>
                 </div>
+                </div>
             </div>
-            </t>
             </t>
         </t>
     </template>
     
     <!-- Action de rapport -->
     <record id="action_report_travel_purchase" model="ir.actions.report">
-        <field name="name">Achat Travel</field>
+        <field name="name">Facture Fournisseur Travel</field>
         <field name="model">travel.purchase</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">travel_pro_version1.report_travel_purchase</field>

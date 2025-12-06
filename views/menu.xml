@@ -24,6 +24,12 @@
         <field name="view_mode">tree,form</field>
     </record>
     
+    <record id="action_reservation" model="ir.actions.act_window">
+        <field name="name">Réservations</field>
+        <field name="res_model">travel.reservation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    
     <!-- Menu Principal -->
     <menuitem id="menu_travel_pro" name="TravelPro" sequence="10"/>
     
@@ -47,16 +53,9 @@
     <menuitem id="menu_invoicing" name="Facturation" parent="menu_travel_pro" sequence="60"/>
     <menuitem id="menu_invoice_client" name="Factures Clients" parent="menu_invoicing" 
               action="action_travel_invoice_client" sequence="10"/>
-    <menuitem id="menu_invoice_odoo" name="Factures Odoo" parent="menu_invoicing" 
-              action="account.action_move_out_invoice_type" sequence="20"/>
-    
-    <!-- Menu Factures Fournisseurs (déplacé dans Facturation) -->
-    <menuitem id="menu_purchasing" name="Factures Fournisseurs" parent="menu_invoicing" sequence="30"/>
-    <menuitem id="menu_purchase_travel" name="Achats Travel" parent="menu_purchasing" 
-              action="action_travel_purchase" sequence="10"/>
-    <menuitem id="menu_purchase_odoo" name="Achats Odoo" parent="menu_purchasing" 
-              action="purchase.purchase_form_action" sequence="20"/>
-    <menuitem id="menu_purchase_report" name="Rapport des Achats" parent="menu_purchasing" 
+    <menuitem id="menu_purchase_travel" name="Factures Fournisseurs" parent="menu_invoicing" 
+              action="action_travel_purchase" sequence="20"/>
+    <menuitem id="menu_purchase_report" name="Rapport des Achats" parent="menu_invoicing" 
               action="action_travel_purchase_report_wizard" sequence="30"/>
     
     <!-- Menu Caisse -->
@@ -65,6 +64,4 @@
               action="action_cash_register" sequence="10"/>
     <menuitem id="menu_cash_operation" name="Opérations" parent="menu_cash_group" 
               action="action_cash_register_operation" sequence="20"/>
-    <menuitem id="menu_pos" name="Point de Vente (POS)" parent="menu_cash_group" 
-              action="action_pos_session_travel" sequence="30"/>
 </odoo>

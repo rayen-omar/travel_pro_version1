@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue liste achats -->
+    <!-- Vue liste factures fournisseurs -->
     <record id="view_travel_purchase_tree" model="ir.ui.view">
         <field name="name">travel.purchase.tree</field>
         <field name="model">travel.purchase</field>
         <field name="arch" type="xml">
-            <tree string="Achats Travel" decoration-info="state=='draft'" 
+            <tree string="Factures Fournisseurs" decoration-info="state=='draft'" 
                   decoration-success="state=='paid'" decoration-muted="state=='cancel'"
                   decoration-warning="state=='confirmed'">
                 <field name="name"/>
@@ -27,12 +27,12 @@
         </field>
     </record>
 
-    <!-- Vue formulaire achats -->
+    <!-- Vue formulaire factures fournisseurs -->
     <record id="view_travel_purchase_form" model="ir.ui.view">
         <field name="name">travel.purchase.form</field>
         <field name="model">travel.purchase</field>
         <field name="arch" type="xml">
-            <form string="Achat Travel">
+            <form string="Facture Fournisseur">
                 <header>
                     <button name="action_confirm" string="Confirmer" type="object" 
                             class="oe_highlight" states="draft"/>
@@ -40,8 +40,7 @@
                             class="oe_highlight" states="confirmed"/>
                     <button name="action_print_purchase" string="Imprimer" type="object" 
                             states="confirmed,paid"/>
-                    <button name="action_extract_pdf_data" string="Extraire données PDF" type="object" 
-                            attrs="{'invisible': [('invoice_pdf', '=', False)]}" states="draft"/>
+
                     <button name="action_cancel" string="Annuler" type="object" states="draft,confirmed"/>
                     <button name="action_draft" string="Remettre en brouillon" type="object" states="cancel"/>
                     <field name="state" widget="statusbar" 
@@ -56,7 +55,7 @@
                     
                     <group>
                         <group>
-                            <field name="date_creation"/>
+                            <field name="date_creation" string="Date Facture"/>
                             <field name="purchase_type"/>
                             <field name="supplier_id" options="{'no_create': True}"/>
                             <field name="service_ids" widget="many2many_tags" 
@@ -75,42 +74,28 @@
                         <page string="Montants" name="amounts">
                             <group>
                                 <group string="Montants de Base">
-                                    <field name="amount_untaxed" widget="monetary"/>
+                                    <field name="amount_ttc" widget="monetary"/>
                                     <field name="tax_rate"/>
-                                    <field name="amount_tax" widget="monetary"/>
-                                    <field name="amount_total" widget="monetary" 
+                                    <field name="amount_untaxed" widget="monetary" readonly="1"/>
+                                    <field name="amount_tax" widget="monetary" readonly="1"/>
+                                    <field name="fiscal_stamp" widget="monetary"/>
+                                    <field name="amount_total" widget="monetary" readonly="1"
                                            style="font-weight: bold;"/>
                                 </group>
                                 <group string="Retenue à la Source">
                                     <field name="withholding_rate"/>
-                                    <field name="amount_withholding" widget="monetary"/>
-                                    <field name="amount_served" widget="monetary" 
+                                    <field name="amount_withholding" widget="monetary" readonly="1"/>
+                                    <field name="amount_served" widget="monetary" readonly="1"
                                            style="font-weight: bold; color: green;"/>
                                 </group>
                             </group>
                             
                             <group>
-                                <field name="description" placeholder="Description de l'achat..."/>
+                                <field name="description" placeholder="Description de la facture..."/>
                             </group>
                         </page>
                         
-                        <page string="Facture PDF" name="invoice_pdf">
-                            <group>
-                                <field name="invoice_pdf" filename="invoice_pdf_filename" 
-                                       widget="binary"/>
-                                <field name="invoice_pdf_filename" invisible="1"/>
-                            </group>
-                            
-                            <group string="Données Extraites" attrs="{'invisible': [('extracted_data', '=', False)]}">
-                                <field name="extracted_data" readonly="1" nolabel="1"/>
-                            </group>
-                            
-                            <div class="alert alert-info" role="alert" 
-                                 attrs="{'invisible': [('invoice_pdf', '!=', False)]}">
-                                <p><strong>Astuce :</strong> Attachez le PDF de la facture fournisseur. 
-                                Le système tentera d'extraire automatiquement les données si le format est standard.</p>
-                            </div>
-                        </page>
+
                         
                         <page string="Notes" name="notes">
                             <field name="note" placeholder="Notes internes..."/>
@@ -131,7 +116,7 @@
         <field name="name">travel.purchase.search</field>
         <field name="model">travel.purchase</field>
         <field name="arch" type="xml">
-            <search string="Rechercher Achats">
+            <search string="Rechercher Factures Fournisseurs">
                 <field name="name" string="Numéro"/>
                 <field name="supplier_id" string="Fournisseur"/>
                 <field name="purchase_type" string="Type"/>
@@ -145,7 +130,6 @@
                 <filter string="Hôtels" name="type_hotel" domain="[('purchase_type', '=', 'hotel')]"/>
                 <filter string="Plateformes" name="type_platform" domain="[('purchase_type', '=', 'platform')]"/>
                 <separator/>
-                <filter string="Avec PDF" name="with_pdf" domain="[('invoice_pdf', '!=', False)]"/>
                 <filter string="Non payés" name="unpaid" domain="[('date_payment', '=', False)]"/>
                 <group expand="0" string="Grouper Par">
                     <filter string="Type" name="group_type" context="{'group_by': 'purchase_type'}"/>
@@ -159,16 +143,16 @@
 
     <!-- Action -->
     <record id="action_travel_purchase" model="ir.actions.act_window">
-        <field name="name">Achats Travel</field>
+        <field name="name">Factures Fournisseurs</field>
         <field name="res_model">travel.purchase</field>
         <field name="view_mode">tree,form</field>
         <field name="context">{'search_default_confirmed': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Créer un nouvel achat
+                Créer une nouvelle facture fournisseur
             </p>
             <p>
-                Enregistrez vos achats auprès des fournisseurs, hôtels et plateformes.
+                Enregistrez les factures de vos fournisseurs, hôtels et plateformes.
                 Vous pouvez attacher les factures PDF et le système extraira automatiquement les données si possible.
             </p>
         </field>

@@ -12,6 +12,9 @@ class TravelInvoiceClient(models.Model):
     name = fields.Char('Numéro Facture', default='Nouveau', readonly=True, copy=False)
     date_invoice = fields.Date('Date Facture', default=fields.Date.context_today, required=True, tracking=True)
     
+    # Société Odoo (pour multi-société)
+    company_id = fields.Many2one('res.company', string='Société Odoo', default=lambda self: self.env.company, readonly=True)
+    
     # Société Travel
     travel_company_id = fields.Many2one('travel.company', string='Société', 
                                         required=True, tracking=True,
@@ -86,38 +89,52 @@ class TravelInvoiceClient(models.Model):
     
     # Notes
     note = fields.Text('Notes')
-    amount_in_words = fields.Char('Montant en lettres', compute='_compute_amount_in_words')
+    amount_in_words_fr = fields.Char('Montant en lettres FR', compute='_compute_amount_in_words_fr', store=False)
+
+    @api.depends('amount_total', 'currency_id')
+    def _compute_amount_in_words_fr(self):
+        """Convertir le montant total en lettres (Français) - Force num2words"""
+        from num2words import num2words
+        
+        for record in self:
+            if record.amount_total:
+                # Conversion explicite en français
+                try:
+                    text = num2words(record.amount_total, lang='fr')
+                    # Ajout de la devise et majuscule
+                    record.amount_in_words_fr = f"{text} Dinars".capitalize()
+                except Exception as e:
+                    # Fallback ultime et log erreur
+                    record.amount_in_words_fr = "ERREUR CONVERSION: " + str(e)
+            else:
+                record.amount_in_words_fr = ''
     
-    # Informations société vendeur (Odoo)
-    company_id = fields.Many2one('res.company', string='Société Vendeur', default=lambda self: self.env.company)
-    company_address_seller = fields.Text('Adresse Vendeur', compute='_compute_company_info_seller', store=False)
-    company_vat_seller = fields.Char('Code TVA Vendeur', related='company_id.vat', readonly=True)
-    company_phone_seller = fields.Char('Téléphone Vendeur', related='company_id.phone', readonly=True)
-    company_mobile_seller = fields.Char('Mobile Vendeur', related='company_id.mobile', readonly=True)
-    company_email_seller = fields.Char('Email Vendeur', related='company_id.email', readonly=True)
+    # Informations société vendeur (STE WE CAN TRAVEL) - valeurs fixes
+    company_name_seller = fields.Char('Nom Société Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_address_seller = fields.Text('Adresse Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_phone_seller = fields.Char('Téléphone Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_mobile_seller = fields.Char('Mobile Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_email_seller = fields.Char('Email Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_vat_seller = fields.Char('Code TVA Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
     
     # Informations bancaires
-    company_bank_name = fields.Char('Nom Banque', default='Banque Attijari Bank', help="Nom de la banque")
-    company_bank_iban = fields.Char('IBAN', default='TN59 04 108 0650090101536 27', help="Numéro IBAN")
+    company_bank_name = fields.Char('Nom Banque', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_bank_iban = fields.Char('IBAN', compute='_compute_company_info_seller', store=False, readonly=True)
     
-    @api.depends('company_id', 'company_id.street', 'company_id.street2', 'company_id.city', 'company_id.phone')
+    @api.depends()
     def _compute_company_info_seller(self):
-        """Construire l'adresse complète de la société vendeur"""
+        """Retourner les informations fixes de Agence WE CAN TRAVEL"""
         for record in self:
-            if record.company_id:
-                address_parts = []
-                if record.company_id.street:
-                    address_parts.append(record.company_id.street)
-                if record.company_id.street2:
-                    address_parts.append(record.company_id.street2)
-                if record.company_id.city:
-                    address_parts.append(record.company_id.city)
-                if record.company_id.phone:
-                    address_parts.append(record.company_id.phone)
-                
-                record.company_address_seller = '\n'.join(address_parts) if address_parts else ''
-            else:
-                record.company_address_seller = ''
+            record.company_name_seller = 'Agence WE CAN TRAVEL'
+            record.company_address_seller = 'rue bachir aljaziri manzel gabes\ngabes'
+            record.company_phone_seller = '+21625100035'
+            record.company_mobile_seller = '+21623713387'
+            record.company_email_seller = 'sales@we-cantravel.com'
+            record.company_vat_seller = '1670453m'
+            record.company_bank_name = 'Banque Attijari Bank'
+            record.company_bank_iban = 'TN59 04 108 0650090101536 27'
+    
+
     
     @api.depends('invoice_line_ids.price_subtotal', 'invoice_line_ids.price_tax', 'fiscal_stamp')
     def _compute_amounts(self):
@@ -127,6 +144,7 @@ class TravelInvoiceClient(models.Model):
             
             invoice.amount_untaxed = amount_untaxed
             invoice.amount_tax = amount_tax
+            # Montant total = HT + TVA + Timbre Fiscal
             invoice.amount_total = amount_untaxed + amount_tax + invoice.fiscal_stamp
     
     @api.depends('amount_total', 'amount_tax', 'fiscal_stamp', 'apply_withholding_tax', 'apply_vat_withholding')
@@ -250,7 +268,7 @@ class TravelInvoiceClient(models.Model):
                         'destination_id': reservation.destination_id.id if reservation.destination_id else False,
                         'reservation_id': reservation.id,
                         'quantity': 1.0,
-                        'price_unit': price,
+                        'price_ttc': price,  # Le prix de la réservation est TTC
                         'tax_rate': '7',  # Par défaut 7%, peut être modifié
                     }))
         
@@ -295,7 +313,10 @@ class TravelInvoiceClientLine(models.Model):
     # Quantité et Prix
     quantity = fields.Float('Quantité', default=1.0, required=True)
     uom = fields.Char('Unité', default='d', help='Unité de mesure (ex: j pour jour)')
-    price_unit = fields.Monetary('PU HT', required=True, currency_field='currency_id')
+    price_ttc = fields.Monetary('Prix TTC Saisi', required=True, currency_field='currency_id', 
+                                help="Prix TTC (Total avec taxe) saisi dans la réservation")
+    price_unit = fields.Monetary('PU HT', compute='_compute_price_ht', store=True, currency_field='currency_id',
+                                 help="Prix HT calculé = Prix TTC - 7%")
     
     # TVA
     tax_rate = fields.Selection([
@@ -310,16 +331,50 @@ class TravelInvoiceClientLine(models.Model):
     
     currency_id = fields.Many2one('res.currency', related='invoice_id.currency_id', store=True, readonly=True)
     
-    @api.depends('quantity', 'price_unit', 'tax_rate')
-    def _compute_price(self):
+    @api.depends('quantity', 'price_ttc', 'tax_rate')
+    def _compute_price_ht(self):
+        """Calculer le prix HT à partir du prix TTC
+        Formule correcte selon utilisateur:
+        1. TVA = TTC × 7%
+        2. HT = TTC - TVA
+        """
         for line in self:
-            subtotal = line.quantity * line.price_unit
-            tax_percent = float(line.tax_rate or '0') / 100.0
-            tax_amount = subtotal * tax_percent
-            
-            line.price_subtotal = subtotal
-            line.price_tax = tax_amount
-            line.price_total = subtotal + tax_amount
+            if line.price_ttc:
+                # Calculer la TVA sur le TTC
+                tax_percent = float(line.tax_rate or '0') / 100.0
+                tva_amount = line.price_ttc * tax_percent
+                # HT = TTC - TVA
+                line.price_unit = line.price_ttc - tva_amount
+            else:
+                line.price_unit = 0.0
+    
+    @api.depends('quantity', 'price_unit', 'price_ttc', 'tax_rate')
+    def _compute_price(self):
+        """Calculer les montants de la ligne
+        Formule: 
+        - TVA = TTC × taux_tva
+        - HT = TTC - TVA
+        - Total = HT + TVA = TTC (cohérent!)
+        """
+        for line in self:
+            if line.price_ttc:
+                # Calculer depuis le TTC
+                tax_percent = float(line.tax_rate or '0') / 100.0
+                total_ttc = line.quantity * line.price_ttc
+                
+                # TVA = TTC × taux
+                tax_amount = total_ttc * tax_percent
+                
+                # HT = TTC - TVA
+                subtotal = total_ttc - tax_amount
+                
+                line.price_subtotal = subtotal
+                line.price_tax = tax_amount
+                line.price_total = total_ttc  # Le total est égal au TTC
+            else:
+                line.price_subtotal = 0.0
+                line.price_tax = 0.0
+                line.price_total = 0.0
     
     @api.onchange('passenger_id')
     def _onchange_passenger_id(self):
@@ -340,10 +395,10 @@ class TravelInvoiceClientLine(models.Model):
                 if reservation.destination_id:
                     self.destination_id = reservation.destination_id.id
                 
-                # Remplir automatiquement le prix
+                # Remplir automatiquement le prix TTC
                 price = reservation.total_price if reservation.total_price > 0 else (reservation.price or 0.0)
                 if price > 0:
-                    self.price_unit = price
+                    self.price_ttc = price  # Le prix de la réservation est maintenant considéré comme TTC
                 
                 # Remplir la description
                 description = f"Réservation {reservation.name or 'N/A'}"
@@ -370,7 +425,7 @@ class TravelInvoiceClientLine(models.Model):
             
             price = self.reservation_id.total_price if self.reservation_id.total_price > 0 else (self.reservation_id.price or 0.0)
             if price > 0:
-                self.price_unit = price
+                self.price_ttc = price  # Le prix de la réservation est maintenant considéré comme TTC
             
             # Mettre à jour la description
             description = f"Réservation {self.reservation_id.name or 'N/A'}"

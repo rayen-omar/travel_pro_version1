@@ -5,11 +5,11 @@
         <field name="name">travel.purchase.report.form</field>
         <field name="model">travel.purchase.report</field>
         <field name="arch" type="xml">
-            <form string="Rapport des Achats">
+            <form string="Rapport des Factures Fournisseurs">
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <span>Rapport des Achats</span>
+                            <span>Rapport des Factures Fournisseurs</span>
                         </h1>
                     </div>
                     
@@ -41,7 +41,7 @@
                     </group>
                     
                     <footer>
-                        <button name="action_view_purchases" string="Voir les Achats" type="object" 
+                        <button name="action_view_purchases" string="Voir les Factures" type="object" 
                                 class="btn-primary"/>
                         <button name="action_print_report" string="Imprimer Rapport" type="object" 
                                 class="btn-secondary"/>
@@ -56,7 +56,7 @@
 
     <!-- Action wizard -->
     <record id="action_travel_purchase_report_wizard" model="ir.actions.act_window">
-        <field name="name">Rapport des Achats</field>
+        <field name="name">Rapport des Factures Fournisseurs</field>
         <field name="res_model">travel.purchase.report</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

@@ -4,7 +4,7 @@
     <template id="report_travel_invoice_client">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-            <t t-call="web.external_layout">
+            <div class="article">
                 <style>
                     @media print {
                         .page { page-break-inside: avoid; }
@@ -14,6 +14,13 @@
                     }
                 </style>
                 <div class="page" style="padding: 15px 20px; font-family: Arial, sans-serif; font-size: 12px;">
+                <!-- Logo de l'entreprise -->
+                <div class="row mb-2" style="margin-bottom: 15px;">
+                    <div class="col-12 text-center">
+                        <img src="/travel_pro_version1/static/src/img/logo_we_can_travel.png" alt="Logo We Can Travel" style="max-width: 300px; max-height: 120px;"/>
+                    </div>
+                </div>
+                
                 <!-- En-tête principal -->
                 <div class="row mb-2" style="border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 15px;">
                     <div class="col-8">
@@ -34,10 +41,7 @@
                             <span style="color: #666; font-size: 11px;">Date:</span>
                             <span style="font-weight: 500; margin-left: 5px; font-size: 11px;" t-field="o.date_invoice"/>
                         </div>
-                        <div>
-                            <span style="color: #666; font-size: 11px;">Date d'échéance:</span>
-                            <span style="font-weight: 500; margin-left: 5px; font-size: 11px;" t-field="o.date_invoice"/>
-                        </div>
+
                     </div>
                 </div>
                 
@@ -47,18 +51,19 @@
                     <div class="col-6" style="padding-right: 15px;">
                         <div style="margin-bottom: 8px;">
                             <div style="color: #666; font-size: 10px; margin-bottom: 3px;">Vendeur</div>
-                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;" t-if="o.company_id.name">
-                                <span t-field="o.company_id.name"/>
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;" t-if="o.company_name_seller">
+                                <span t-field="o.company_name_seller"/>
                             </div>
                             <div style="color: #666; font-size: 11px; line-height: 1.4;">
-                                <div t-if="o.company_id.street" t-esc="o.company_id.street or ''"/>
-                                <div t-if="o.company_id.street2" t-esc="o.company_id.street2 or ''"/>
-                                <div t-if="o.company_id.city" t-esc="o.company_id.city or ''"/>
+                                <div t-if="o.company_address_seller" t-esc="o.company_address_seller"/>
                                 <div t-if="o.company_vat_seller" style="margin-top: 4px;">
                                     <strong>Code TVA:</strong> <span t-field="o.company_vat_seller"/>
                                 </div>
                                 <div t-if="o.company_phone_seller">
                                     <strong>Tél:</strong> <span t-field="o.company_phone_seller"/>
+                                </div>
+                                <div t-if="o.company_mobile_seller">
+                                    <strong>Mobile:</strong> <span t-field="o.company_mobile_seller"/>
                                 </div>
                                 <div t-if="o.company_email_seller">
                                     <strong>Email:</strong> <span t-field="o.company_email_seller"/>
@@ -112,36 +117,42 @@
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <thead>
                                 <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333;">Libellé</th>
-                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333;">Prix</th>
-                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333;">Qté.</th>
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333;">Unité</th>
-                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333;">Total</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Membre</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Voyage</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 10%;">Référence</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 22%;">Description</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 11%;">Prix TTC Saisi</th>
+                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 5%;">TVA</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 14%;">Total HT</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 14%;">Montant TVA</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="o.invoice_line_ids" t-as="line">
                                     <tr style="border-bottom: 1px solid #e0e0e0;">
                                         <td style="padding: 6px 4px; font-size: 11px;">
-                                            <div style="font-weight: 500; margin-bottom: 2px;" t-esc="line.description or ''"/>
-                                            <div style="color: #666; font-size: 10px;" t-if="line.passenger_id">
-                                                Passager: <span t-esc="line.passenger_id.name or ''"/>
-                                            </div>
-                                            <div style="color: #666; font-size: 10px;" t-if="line.reference">
-                                                Réf: <span t-esc="line.reference or ''"/>
-                                            </div>
+                                            <span t-field="line.passenger_id.name"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; font-size: 11px;">
+                                            <span t-field="line.destination_id.name"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; font-size: 11px;">
+                                            <span t-field="line.reference"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; font-size: 11px;">
+                                            <span t-field="line.description"/>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="line.price_unit"/>
+                                            <span t-field="line.price_ttc" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
-                                            <span t-esc="line.quantity"/>
+                                            <span t-field="line.tax_rate"/>%
                                         </td>
-                                        <td style="padding: 6px 4px; font-size: 11px; color: #666;">
-                                            <span t-esc="line.uom or 'Forfait'"/>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <span t-field="line.price_subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
-                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px; font-weight: 500;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="line.price_total"/>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <span t-field="line.price_tax" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                     </tr>
                                 </t>
@@ -163,7 +174,7 @@
                             </tr>
                             <tr>
                                 <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">
-                                    Montant TVA 
+                                    Montant TVA
                                     <span t-if="o.invoice_line_ids">
                                         (<span t-esc="o.invoice_line_ids[0].tax_rate if o.invoice_line_ids else '0'"/>%)
                                     </span>
@@ -172,12 +183,25 @@
                                     <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_tax"/>
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666; font-weight: 600;">Total TTC</td>
+                                <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 600; padding-left: 15px;">
+                                    <span t-esc="o.amount_untaxed + o.amount_tax" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                            </tr>
                             <tr t-if="o.fiscal_stamp and o.fiscal_stamp > 0">
                                 <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">Timbre Fiscal</td>
                                 <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 500; padding-left: 15px;">
                                     <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.fiscal_stamp"/>
                                 </td>
                             </tr>
+                            <tr style="border-top: 1px solid #333;">
+                                <td style="padding: 8px 0; text-align: right; font-size: 12px; font-weight: 700;">Montant Final (HT + TVA + Timbre)</td>
+                                <td style="padding: 8px 0; text-align: right; font-size: 12px; font-weight: 700; padding-left: 15px;">
+                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_total"/>
+                                </td>
+                            </tr>
+
                             <t t-if="o.apply_withholding_tax or o.apply_vat_withholding">
                                 <tr>
                                     <td colspan="2" style="padding: 4px 0; border-top: 1px solid #e0e0e0;"></td>
@@ -205,12 +229,7 @@
                                     </td>
                                 </tr>
                             </t>
-                            <tr style="border-top: 2px solid #333;">
-                                <td style="padding: 6px 0; text-align: right; font-size: 13px; font-weight: 600;">Total TTC</td>
-                                <td style="padding: 6px 0; text-align: right; font-size: 13px; font-weight: 600; padding-left: 15px;">
-                                    <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.amount_total"/>
-                                </td>
-                            </tr>
+
                             <t t-if="o.apply_withholding_tax or o.apply_vat_withholding">
                                 <tr style="border-top: 2px solid #4CAF50; background-color: #f1f8f4;">
                                     <td style="padding: 6px 0; text-align: right; font-size: 13px; font-weight: 600; color: #2e7d32;">Net à Payer</td>
@@ -224,11 +243,11 @@
                 </div>
                 
                 <!-- Montant en lettres -->
-                <div class="row mt-2" t-if="o.amount_in_words">
+                <div class="row mt-2" t-if="o.amount_in_words_fr">
                     <div class="col-12" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
                         <div style="font-size: 11px; color: #666;">
                             <strong>Arrêté la présente facture à la somme de:</strong> 
-                            <span style="color: #333;" t-field="o.amount_in_words"/>
+                            <span style="color: #333;" t-field="o.amount_in_words_fr"/>
                         </div>
                     </div>
                 </div>
@@ -251,8 +270,8 @@
                         <div style="font-size: 11px; line-height: 1.4; color: #333;" t-esc="o.note"/>
                     </div>
                 </div>
+                </div>
             </div>
-            </t>
             </t>
         </t>
     </template>

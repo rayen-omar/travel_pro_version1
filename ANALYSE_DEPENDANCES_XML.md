@@ -280,3 +280,6 @@ L'ordre actuel est **CORRECT** après avoir déplacé `action_reservation` de `m
 L'ordre de chargement dans `__manifest__.py` est correct et toutes les actions sont définies avant d'être utilisées.
 
 **Prochaine étape** : Tester l'installation du module sur le serveur Linux.
+
+
+
