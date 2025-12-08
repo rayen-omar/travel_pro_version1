@@ -103,6 +103,15 @@ class CashRegisterOperation(models.Model):
             )
 
         self.write({'state': 'confirmed'})
+        
+        # Si c'est une recette, retourner l'action d'impression du reçu
+        if self.type == 'receipt':
+            return self.action_print_receipt()
+
+    def action_print_receipt(self):
+        """Imprimer le reçu de caisse."""
+        self.ensure_one()
+        return self.env.ref('travel_pro_version1.action_report_cash_receipt').report_action(self)
 
     def action_cancel(self):
         """Annuler l'opération."""

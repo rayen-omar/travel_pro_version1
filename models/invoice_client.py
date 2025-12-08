@@ -335,16 +335,14 @@ class TravelInvoiceClientLine(models.Model):
     def _compute_price_ht(self):
         """Calculer le prix HT à partir du prix TTC
         Formule correcte selon utilisateur:
-        1. TVA = TTC × 7%
-        2. HT = TTC - TVA
+        1. HT = TTC / (1 + taux_tva) (ex: TTC / 1.07)
+        2. TVA = HT * taux_tva
         """
         for line in self:
             if line.price_ttc:
-                # Calculer la TVA sur le TTC
                 tax_percent = float(line.tax_rate or '0') / 100.0
-                tva_amount = line.price_ttc * tax_percent
-                # HT = TTC - TVA
-                line.price_unit = line.price_ttc - tva_amount
+                # HT = TTC / (1 + TVA)
+                line.price_unit = line.price_ttc / (1 + tax_percent)
             else:
                 line.price_unit = 0.0
     
@@ -352,9 +350,9 @@ class TravelInvoiceClientLine(models.Model):
     def _compute_price(self):
         """Calculer les montants de la ligne
         Formule: 
-        - TVA = TTC × taux_tva
-        - HT = TTC - TVA
-        - Total = HT + TVA = TTC (cohérent!)
+        - HT = (TTC * quantite) / (1 + taux_tva)
+        - TVA = HT * taux_tva
+        - Total = HT + TVA
         """
         for line in self:
             if line.price_ttc:
@@ -362,15 +360,16 @@ class TravelInvoiceClientLine(models.Model):
                 tax_percent = float(line.tax_rate or '0') / 100.0
                 total_ttc = line.quantity * line.price_ttc
                 
-                # TVA = TTC × taux
-                tax_amount = total_ttc * tax_percent
+                # HT = TTC / (1 + TVA)
+                # On utilise round() pour éviter les problèmes d'arrondi sur les affichages
+                subtotal = total_ttc / (1 + tax_percent)
                 
-                # HT = TTC - TVA
-                subtotal = total_ttc - tax_amount
+                # TVA = HT * taux
+                tax_amount = subtotal * tax_percent
                 
                 line.price_subtotal = subtotal
                 line.price_tax = tax_amount
-                line.price_total = total_ttc  # Le total est égal au TTC
+                line.price_total = subtotal + tax_amount
             else:
                 line.price_subtotal = 0.0
                 line.price_tax = 0.0

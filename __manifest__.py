@@ -36,7 +36,9 @@
         'views/purchase_travel_views.xml',
         'views/report_purchase_travel.xml',
         'views/purchase_report_views.xml',
+        'views/report_reservation_quote.xml',
         'views/cash_register_views.xml',
+        'views/report_cash_receipt.xml',
         'views/menu.xml',
     ],
     'assets': {

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_reservation_quote_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="article">
+                    <style>
+                        @media print {
+                            .page { page-break-inside: avoid; }
+                            .row { page-break-inside: avoid; }
+                        }
+                    </style>
+                    <div class="page" style="padding: 15px 20px; font-family: Arial, sans-serif; font-size: 12px;">
+                        
+                        <!-- Logo -->
+                        <div class="row mb-2">
+                             <div class="col-12 text-center">
+                                <img src="/travel_pro_version1/static/src/img/logo_we_can_travel.png" alt="Logo We Can Travel" style="max-width: 300px; max-height: 120px;"/>
+                            </div>
+                        </div>
+
+                        <!-- Titre -->
+                        <div class="row mb-4" style="border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
+                            <div class="col-8">
+                                <h1 style="margin: 0; font-size: 22px; color: #2196F3;">DEVIS DE VOYAGE</h1>
+                                <div style="margin-top: 5px; font-size: 14px;"><strong>Réf:</strong> <span t-field="o.name"/></div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div style="font-size: 12px;"><strong>Date:</strong> <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/></div>
+                            </div>
+                        </div>
+
+                        <!-- Info Clients & Agence -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <strong style="color: #666; font-size: 11px;">AGENCE</strong><br/>
+                                <span style="font-weight: bold; font-size: 13px;">Agence WE CAN TRAVEL</span><br/>
+                                <span style="font-size: 11px;">rue bachir aljaziri manzel gabes</span><br/>
+                                <span style="font-size: 11px;">gabes</span><br/>
+                                <span style="font-size: 11px;">Tél: +21625100035</span><br/>
+                                <span style="font-size: 11px;">Email: sales@we-cantravel.com</span>
+                            </div>
+                            <div class="col-6">
+                                <strong style="color: #666; font-size: 11px;">CLIENT</strong><br/>
+                                <span style="font-weight: bold; font-size: 13px;" t-if="o.member_id.partner_id.name" t-field="o.member_id.partner_id.name"/><br/>
+                                <span t-if="o.member_id.partner_id.street" t-field="o.member_id.partner_id.street"/><br/>
+                                <span t-if="o.member_id.partner_id.city" t-field="o.member_id.partner_id.city"/><br/>
+                                <span t-if="o.member_id.partner_id.phone">Tél: <span t-field="o.member_id.partner_id.phone"/></span>
+                            </div>
+                        </div>
+
+                        <!-- Détails Voyage -->
+                        <div class="row mb-4" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                            <div class="col-12">
+                                <h3 style="color: #2196F3; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Détails du Voyage</h3>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Destination:</strong> <span t-field="o.destination_id.name"/><br/>
+                                        <strong>Hôtel:</strong> <span t-field="o.hotel_service_id.name"/><br/>
+                                        <strong>Type Chambre:</strong> <span t-field="o.room_category"/> / <span t-field="o.room_type"/>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Arrivée:</strong> <span t-field="o.check_in"/><br/>
+                                        <strong>Départ:</strong> <span t-field="o.check_out"/><br/>
+                                        <strong>Durée:</strong> <span t-field="o.nights"/> Nuits
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <strong>Voyageurs:</strong> 
+                                        <span t-field="o.adults"/> Adultes, 
+                                        <span t-field="o.children"/> Enfants, 
+                                        <span t-field="o.infants"/> Bébés 
+                                        (Total: <span t-field="o.participants"/>)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services & Prix -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <table class="table table-sm" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="background-color: #f1f1f1;">
+                                        <tr>
+                                            <th style="padding: 8px; text-align: left; border-bottom: 2px solid #ddd;">Description</th>
+                                            <th style="padding: 8px; text-align: right; border-bottom: 2px solid #ddd;">Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                                Séjour <span t-field="o.check_in"/> au <span t-field="o.check_out"/><br/>
+                                                <small t-esc="o.destination_id.name"/>
+                                            </td>
+                                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">
+                                                <span t-field="o.price" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                        <tr t-foreach="o.service_ids" t-as="svc">
+                                            <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                                <span t-field="svc.name"/>
+                                            </td>
+                                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #eee;">
+                                                <span t-field="svc.price" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px; font-weight: bold; text-align: right;">Total TTC</td>
+                                            <td style="padding: 10px; font-weight: bold; text-align: right; font-size: 14px; background-color: #f1f1f1;">
+                                                <span t-field="o.total_price" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Footer / Conditions -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-center" style="font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 10px;">
+                                <p>Ce devis est valable pour une durée de 7 jours. Les prix sont sujets à changement selon disponibilité.</p>
+                                <p>Merci de votre confiance.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_reservation_quote" model="ir.actions.report">
+        <field name="name">Devis Voyage</field>
+        <field name="model">travel.reservation</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">travel_pro_version1.report_reservation_quote_document</field>
+        <field name="report_file">travel_pro_version1.report_reservation_quote_document</field>
+        <field name="print_report_name">'Devis_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_travel_reservation"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

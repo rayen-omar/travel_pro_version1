@@ -210,6 +210,11 @@ class TravelReservation(models.Model):
             }
         }
 
+    def action_print_quote(self):
+        """Imprimer le devis de réservation."""
+        self.ensure_one()
+        return self.env.ref('travel_pro_version1.action_report_reservation_quote').report_action(self)
+
     def action_view_sale_order(self):
         """Voir le résumé de la réservation au lieu du devis."""
         self.ensure_one()
@@ -416,3 +421,12 @@ class TravelReservation(models.Model):
                 'reservation_id': self.id,
             })
         self.status = 'cancel'
+
+    def action_confirm(self):
+        self.write({'status': 'confirmed'})
+
+    def action_done(self):
+        self.write({'status': 'done'})
+
+    def action_cancel(self):
+        self.write({'status': 'cancel'})

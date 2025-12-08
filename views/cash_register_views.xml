@@ -207,6 +207,9 @@
                 <header>
                     <button name="action_confirm" string="Confirmer" type="object" 
                             class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_print_receipt" string="Imprimer Reçu" type="object" 
+                            class="oe_highlight" icon="fa-print"
+                            attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('type', '!=', 'receipt')]}"/>
                     <button name="action_cancel" string="Annuler" type="object" 
                             attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
                     <button name="action_draft" string="Remettre en Brouillon" type="object" 
