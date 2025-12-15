@@ -48,6 +48,57 @@
                             </div>
                         </div>
 
+                        <!-- Références Liées -->
+                        <div class="row mb-3" t-if="o.reservation_id or o.invoice_number or o.sale_order_id or o.invoice_id or o.quote_number or o.note">
+                            <div class="col-12">
+                                <div class="card" style="border: 1px solid #17a2b8;">
+                                    <div class="card-header" style="padding: 5px 10px; background-color: #d1ecf1; border-bottom: 1px solid #17a2b8; font-size: 18px;">
+                                        <strong style="color: #0c5460;">📋 Références Liées</strong>
+                                    </div>
+                                    <div class="card-body" style="padding: 10px;">
+                                        <table style="width: 100%; font-size: 14px;">
+                                            <t t-if="o.reservation_id">
+                                                <tr>
+                                                    <td style="padding: 4px 8px; width: 40%;"><strong>📌 Réservation:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.reservation_id.name"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="o.invoice_number">
+                                                <tr>
+                                                    <td style="padding: 4px 8px;"><strong>🧾 Numéro Facture:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.invoice_number"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="o.sale_order_id">
+                                                <tr>
+                                                    <td style="padding: 4px 8px;"><strong>📝 Devis:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.sale_order_id.name"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="o.invoice_id">
+                                                <tr>
+                                                    <td style="padding: 4px 8px;"><strong>📄 Facture:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.invoice_id.name"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="o.quote_number">
+                                                <tr>
+                                                    <td style="padding: 4px 8px;"><strong>📋 Numéro Devis:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.quote_number"/></td>
+                                                </tr>
+                                            </t>
+                                            <t t-if="o.note">
+                                                <tr>
+                                                    <td style="padding: 4px 8px;"><strong>📝 Note/Référence:</strong></td>
+                                                    <td style="padding: 4px 8px;"><span t-field="o.note"/></td>
+                                                </tr>
+                                            </t>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Détails Réservation -->
                         <div class="row mb-3" t-if="o.reservation_id">
                             <div class="col-12">
@@ -66,29 +117,47 @@
                             </div>
                         </div>
 
+                        <!-- Info Paiement Crédit -->
+                        <div class="row mb-3" t-if="o.reservation_id and o.reservation_id.use_credit and o.reservation_id.credit_used > 0">
+                            <div class="col-12">
+                                <div class="card" style="border: 1px solid #28a745;">
+                                    <div class="card-header" style="padding: 5px 10px; background-color: #d4edda; border-bottom: 1px solid #28a745; font-size: 18px;">
+                                        <strong style="color: #155724;">💳 Info Paiement Crédit</strong>
+                                    </div>
+                                    <div class="card-body" style="padding: 10px; background-color: #f1f8f4;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 16px;"><strong>Crédit Utilisé:</strong></span>
+                                            <span style="color: #28a745; font-weight: 600; font-size: 16px;">
+                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.credit_used)"/> DT
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 16px;"><strong>✅ Montant Payé:</strong></span>
+                                            <span style="color: #28a745; font-weight: 600; font-size: 16px;">
+                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.credit_used)"/> DT
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="font-size: 16px;"><strong>🔴 Reste à Payer:</strong></span>
+                                            <span style="color: #dc3545; font-weight: 600; font-size: 16px;">
+                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.remaining_to_pay)"/> DT
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Montant ( Compact ) -->
                         <div class="row mb-3" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #dee2e6;">
                             <div class="col-12 text-center">
-                                <h3 style="margin: 0; color: #212529; font-size: 32px;">Montant: <span t-field="o.amount" t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/></h3>
+                                <h3 style="margin: 0; color: #212529; font-size: 32px;">Montant: <span t-esc="'{:,.3f}'.format(o.amount)"/> DT</h3>
                             </div>
                         </div>
 
-                        <!-- Note -->
-                        <div class="row mb-3" t-if="o.note">
-                            <div class="col-12">
-                                <strong>Note:</strong><br/>
-                                <span t-field="o.note"/>
-                            </div>
-                        </div>
-
-                        <!-- Signatures -->
+                        <!-- Signature Caissier -->
                         <div class="row mt-4" style="margin-top: 30px;">
-                            <div class="col-6 text-center">
-                                <strong>Signature Client</strong>
-                                <br/><br/><br/>
-                                ____________________
-                            </div>
-                            <div class="col-6 text-center">
+                            <div class="col-12 text-center">
                                 <strong>Signature Caissier</strong>
                                 <br/><br/><br/>
                                 ____________________

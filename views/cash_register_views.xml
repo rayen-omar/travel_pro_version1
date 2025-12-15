@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Actions (définies en premier pour être disponibles dans les vues) -->
-    <!-- Action pour les Opérations -->
+    <!-- Actions -->
     <record id="action_cash_register_operation" model="ir.actions.act_window">
         <field name="name">Opérations de Caisse</field>
         <field name="res_model">cash.register.operation</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,form</field>
         <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -17,12 +16,10 @@
         </field>
     </record>
 
-    <!-- Action pour les Caisses (définie avant les vues qui l'utilisent) -->
-    <!-- Note: search_view_id sera ajouté plus tard après la définition de view_cash_register_search -->
     <record id="action_cash_register" model="ir.actions.act_window">
         <field name="name">Caisses</field>
         <field name="res_model">cash.register</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,form</field>
         <field name="context">{'search_default_opened': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -30,8 +27,6 @@
             </p>
             <p>
                 Les caisses permettent de gérer les recettes et dépenses de l'agence.
-                Le système comprend une caisse principale et exactement deux sous-caisses.
-                La caisse principale contrôle l'ouverture et la fermeture de toutes les sous-caisses.
             </p>
         </field>
     </record>
@@ -41,19 +36,73 @@
         <field name="name">cash.register.tree</field>
         <field name="model">cash.register</field>
         <field name="arch" type="xml">
-            <tree string="Caisses" decoration-info="is_main == True" decoration-muted="state == 'closed'">
+            <tree string="Caisses" 
+                  decoration-info="is_main == True" 
+                  decoration-muted="state == 'closed'"
+                  decoration-success="state == 'opened'">
+                <field name="name" string="🏦 Caisse"/>
+                <field name="code" string="🔖 Code"/>
+                <field name="is_main" invisible="1"/>
+                <field name="main_cash_id" string="Caisse Principale" optional="show"/>
+                <field name="sub_cash_count" string="📊 Sous-Caisses" attrs="{'invisible': [('is_main', '=', False)]}"/>
+                <field name="user_id" string="👤 Responsable"/>
+                <field name="state" string="État" widget="badge"/>
+                <field name="opening_balance" string="💵 Ouverture" widget="monetary"/>
+                <field name="total_receipts" string="📥 Recettes" sum="Total Recettes" widget="monetary" decoration-success="True"/>
+                <field name="total_expenses" string="📤 Dépenses" sum="Total Dépenses" widget="monetary" decoration-danger="True"/>
+                <field name="balance" string="💰 Solde" sum="Solde Total" widget="monetary" 
+                       decoration-success="balance > 0" decoration-danger="balance &lt; 0" decoration-bf="True"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue Kanban des Caisses -->
+    <record id="view_cash_register_kanban" model="ir.ui.view">
+        <field name="name">cash.register.kanban</field>
+        <field name="model">cash.register</field>
+        <field name="arch" type="xml">
+            <kanban>
                 <field name="name"/>
                 <field name="code"/>
-                <field name="is_main" invisible="1"/>
-                <field name="main_cash_id"/>
-                <field name="sub_cash_count" string="Sous-Caisses" attrs="{'invisible': [('is_main', '=', False)]}"/>
-                <field name="user_id"/>
-                <field name="state" widget="badge" decoration-success="state == 'opened'" decoration-danger="state == 'closed'"/>
-                <field name="opening_balance"/>
-                <field name="total_receipts" sum="Total Recettes"/>
-                <field name="total_expenses" sum="Total Dépenses"/>
-                <field name="balance" sum="Solde Total"/>
-            </tree>
+                <field name="is_main"/>
+                <field name="state"/>
+                <field name="balance"/>
+                <field name="total_receipts"/>
+                <field name="total_expenses"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="oe_kanban_details p-3">
+                                <strong class="o_kanban_record_title fs-5 text-primary">
+                                    <t t-if="record.is_main.raw_value">🏦</t>
+                                    <t t-else="">💰</t>
+                                    <field name="name"/>
+                                </strong>
+                                <div class="mt-2">
+                                    <span t-attf-class="badge fs-6 #{record.state.raw_value == 'opened' ? 'bg-success' : 'bg-secondary'}">
+                                        <field name="state"/>
+                                    </span>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-success">
+                                        📥 <field name="total_receipts" widget="monetary"/>
+                                    </span>
+                                </div>
+                                <div class="mt-1">
+                                    <span class="badge bg-danger">
+                                        📤 <field name="total_expenses" widget="monetary"/>
+                                    </span>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary fs-6">
+                                        💵 Solde: <field name="balance" widget="monetary"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -64,22 +113,23 @@
         <field name="arch" type="xml">
             <form string="Caisse">
                 <header>
-                    <button name="action_open_cash" string="Ouvrir la Caisse" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('state', '=', 'opened')]}"/>
-                    <button name="action_close_cash" string="Fermer la Caisse" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', False)]}"/>
-                    <button name="action_close_sub_cash" string="Fermer la Sous-Caisse" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', True)]}"/>
+                    <button name="action_open_cash" string="🔓 Ouvrir la Caisse" type="object" 
+                            class="btn-success" attrs="{'invisible': [('state', '=', 'opened')]}"/>
+                    <button name="action_close_cash" string="🔒 Fermer la Caisse" type="object" 
+                            class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', False)]}"/>
+                    <button name="action_close_sub_cash" string="🔒 Fermer la Sous-Caisse" type="object" 
+                            class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', True)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="opened,closed"/>
                 </header>
                 <sheet>
+                    <!-- Boutons statistiques -->
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" type="action" name="%(travel_pro_version1.action_cash_register_operation)d" 
-                                icon="fa-money" context="{'default_cash_register_id': active_id, 'default_type': 'receipt', 'search_default_cash_register_id': active_id}">
+                                icon="fa-arrow-down" context="{'default_cash_register_id': active_id, 'default_type': 'receipt', 'search_default_cash_register_id': active_id}">
                             <field name="total_receipts" widget="statinfo" string="Recettes"/>
                         </button>
                         <button class="oe_stat_button" type="action" name="%(travel_pro_version1.action_cash_register_operation)d" 
-                                icon="fa-credit-card" context="{'default_cash_register_id': active_id, 'default_type': 'expense', 'search_default_cash_register_id': active_id}">
+                                icon="fa-arrow-up" context="{'default_cash_register_id': active_id, 'default_type': 'expense', 'search_default_cash_register_id': active_id}">
                             <field name="total_expenses" widget="statinfo" string="Dépenses"/>
                         </button>
                         <button class="oe_stat_button" type="action" name="%(travel_pro_version1.action_cash_register)d" 
@@ -88,57 +138,88 @@
                             <field name="sub_cash_count" widget="statinfo" string="Sous-Caisses"/>
                         </button>
                     </div>
-                    <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="code"/>
-                            <field name="sequence_id" options="{'no_create': True, 'no_create_edit': True}"/>
-                            <field name="is_main"/>
-                            <field name="main_cash_id" attrs="{'required': [('is_main', '=', False)], 'invisible': [('is_main', '=', True)]}"/>
-                            <field name="user_id"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
-                        </group>
-                        <group>
-                            <field name="opening_date" readonly="1"/>
-                            <field name="opening_user_id" readonly="1"/>
-                            <field name="opening_balance"/>
-                            <field name="closing_date" readonly="1"/>
-                            <field name="closing_user_id" readonly="1"/>
-                            <field name="closing_balance" readonly="1"/>
-                            <field name="balance" readonly="1"/>
-                        </group>
-                    </group>
-                    <notebook>
-                        <page string="Sous-Caisses" name="sub_cashes" attrs="{'invisible': [('is_main', '=', False)]}">
-                            <field name="sub_cash_ids" nolabel="1">
-                                <tree string="Sous-Caisses" create="1" delete="1">
-                                    <field name="name"/>
-                                    <field name="code"/>
-                                    <field name="user_id"/>
-                                    <field name="state" widget="badge" decoration-success="state == 'opened'" decoration-danger="state == 'closed'"/>
-                                    <field name="opening_balance"/>
-                                    <field name="total_receipts" sum="Total Recettes"/>
-                                    <field name="total_expenses" sum="Total Dépenses"/>
-                                    <field name="balance" sum="Solde Total"/>
-                                </tree>
-                            </field>
-                        </page>
-                        <page string="Opérations" name="operations">
-                            <field name="operation_ids" nolabel="1">
-                                <tree string="Opérations">
-                                    <field name="name"/>
-                                    <field name="date"/>
-                                    <field name="type" widget="badge" decoration-success="type == 'receipt'" decoration-danger="type == 'expense'"/>
-                                    <field name="amount" sum="Total"/>
-                                    <field name="payment_method"/>
-                                    <field name="invoice_number"/>
-                                    <field name="quote_number"/>
-                                    <field name="user_id"/>
-                                    <field name="state" widget="badge"/>
-                                </tree>
-                            </field>
-                        </page>
-                    </notebook>
+                    
+                    <!-- En-tête -->
+                    <div class="oe_title mb-2">
+                        <h1>
+                            <field name="name" placeholder="Nom de la caisse" required="1" class="text-primary"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Section Informations & Ouverture -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📋 Informations">
+                                <field name="code" string="🔖 Code"/>
+                                <field name="sequence_id" string="Séquence" options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="is_main" string="🏦 Caisse Principale"/>
+                                <field name="main_cash_id" string="Caisse Parente" 
+                                       attrs="{'required': [('is_main', '=', False)], 'invisible': [('is_main', '=', True)]}"
+                                       options="{'no_create': True}"/>
+                                <field name="user_id" string="👤 Responsable"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="📅 Ouverture/Fermeture">
+                                <field name="opening_date" string="📅 Date Ouverture" readonly="1"/>
+                                <field name="opening_user_id" string="👤 Ouvert par" readonly="1"/>
+                                <field name="opening_balance" string="💵 Solde Ouverture" widget="monetary"/>
+                                <field name="closing_date" string="📅 Date Fermeture" readonly="1"/>
+                                <field name="closing_user_id" string="👤 Fermé par" readonly="1"/>
+                                <field name="closing_balance" string="💵 Solde Fermeture" widget="monetary" readonly="1"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <!-- Solde actuel -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-primary text-center py-3">
+                                <h4 class="mb-0">💰 Solde Actuel</h4>
+                                <h2 class="mb-0 text-primary fw-bold">
+                                    <field name="balance" widget="monetary" nolabel="1"/>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <separator string="📊 SOUS-CAISSES" class="mt-4" attrs="{'invisible': [('is_main', '=', False)]}"/>
+                    
+                    <!-- Sous-caisses -->
+                    <field name="sub_cash_ids" nolabel="1" attrs="{'invisible': [('is_main', '=', False)]}">
+                        <tree string="Sous-Caisses" create="1" delete="1" 
+                              decoration-success="state == 'opened'" decoration-muted="state == 'closed'">
+                            <field name="name" string="🏦 Nom"/>
+                            <field name="code" string="🔖 Code"/>
+                            <field name="user_id" string="👤 Responsable"/>
+                            <field name="state" string="État" widget="badge"/>
+                            <field name="opening_balance" string="💵 Ouverture" widget="monetary"/>
+                            <field name="total_receipts" string="📥 Recettes" sum="Total" widget="monetary"/>
+                            <field name="total_expenses" string="📤 Dépenses" sum="Total" widget="monetary"/>
+                            <field name="balance" string="💰 Solde" sum="Total" widget="monetary"/>
+                        </tree>
+                    </field>
+                    
+                    <separator string="📋 OPÉRATIONS" class="mt-4"/>
+                    
+                    <!-- Opérations -->
+                    <field name="operation_ids" nolabel="1">
+                        <tree string="Opérations" 
+                              decoration-success="type == 'receipt' and state == 'confirmed'" 
+                              decoration-danger="type == 'expense' and state == 'confirmed'"
+                              decoration-muted="state == 'cancelled'">
+                            <field name="name" string="📋 Réf"/>
+                            <field name="date" string="📅 Date"/>
+                            <field name="type" string="Type" widget="badge"/>
+                            <field name="amount" string="💵 Montant" sum="Total" widget="monetary"/>
+                            <field name="payment_method" string="💳 Mode"/>
+                            <field name="invoice_number" string="📄 N° Facture" optional="show"/>
+                            <field name="quote_number" string="📋 N° Devis" optional="show"/>
+                            <field name="user_id" string="👤 Utilisateur"/>
+                            <field name="state" string="État" widget="badge"/>
+                        </tree>
+                    </field>
                 </sheet>
             </form>
         </field>
@@ -153,20 +234,19 @@
                 <field name="name"/>
                 <field name="code"/>
                 <field name="user_id"/>
-                <filter string="Ouvertes" name="opened" domain="[('state', '=', 'opened')]"/>
-                <filter string="Fermées" name="closed" domain="[('state', '=', 'closed')]"/>
-                <filter string="Caisses Principales" name="main" domain="[('is_main', '=', True)]"/>
-                <filter string="Sous-Caisses" name="sub" domain="[('is_main', '=', False)]"/>
                 <separator/>
-                <filter string="Mes Caisses" name="my_cashes" domain="[('user_id', '=', uid)]"/>
-                <filter string="Caisse Principale" name="main_cash_filter" 
-                        domain="[('main_cash_id', '=', active_id)]" 
-                        context="{'search_default_main_cash_filter': active_id}"/>
-                <group expand="0" string="Grouper par">
+                <filter string="🟢 Ouvertes" name="opened" domain="[('state', '=', 'opened')]"/>
+                <filter string="🔴 Fermées" name="closed" domain="[('state', '=', 'closed')]"/>
+                <separator/>
+                <filter string="🏦 Caisses Principales" name="main" domain="[('is_main', '=', True)]"/>
+                <filter string="📊 Sous-Caisses" name="sub" domain="[('is_main', '=', False)]"/>
+                <separator/>
+                <filter string="👤 Mes Caisses" name="my_cashes" domain="[('user_id', '=', uid)]"/>
+                <separator/>
+                <group expand="0" string="Grouper Par">
                     <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Utilisateur" name="group_user" context="{'group_by': 'user_id'}"/>
-                    <filter string="Caisse Principale" name="group_main" context="{'group_by': 'is_main'}"/>
-                    <filter string="Caisse Principale Parente" name="group_main_cash" context="{'group_by': 'main_cash_id'}"/>
+                    <filter string="Responsable" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Type" name="group_main" context="{'group_by': 'is_main'}"/>
                 </group>
             </search>
         </field>
@@ -182,19 +262,62 @@
         <field name="name">cash.register.operation.tree</field>
         <field name="model">cash.register.operation</field>
         <field name="arch" type="xml">
-            <tree string="Opérations" decoration-success="type == 'receipt' and state == 'confirmed'" decoration-danger="type == 'expense' and state == 'confirmed'" decoration-muted="state == 'cancelled'">
+            <tree string="Opérations" 
+                  decoration-success="type == 'receipt' and state == 'confirmed'" 
+                  decoration-danger="type == 'expense' and state == 'confirmed'" 
+                  decoration-muted="state == 'cancelled'">
+                <field name="name" string="📋 Réf"/>
+                <field name="date" string="📅 Date"/>
+                <field name="cash_register_id" string="🏦 Caisse"/>
+                <field name="reservation_id" string="✈️ Réservation" optional="show"/>
+                <field name="type" string="Type" widget="badge"/>
+                <field name="amount" string="💵 Montant" sum="Total" widget="monetary" decoration-bf="True"/>
+                <field name="payment_method" string="💳 Mode"/>
+                <field name="invoice_number" string="📄 N° Facture" optional="show"/>
+                <field name="invoice_id" string="Facture" optional="hide"/>
+                <field name="sale_order_id" string="Devis" optional="hide"/>
+                <field name="user_id" string="👤 Utilisateur"/>
+                <field name="state" string="État" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue Kanban des Opérations -->
+    <record id="view_cash_register_operation_kanban" model="ir.ui.view">
+        <field name="name">cash.register.operation.kanban</field>
+        <field name="model">cash.register.operation</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="type">
                 <field name="name"/>
                 <field name="date"/>
-                <field name="cash_register_id"/>
-                <field name="reservation_id" optional="show"/>
-                <field name="type" widget="badge" decoration-success="type == 'receipt'" decoration-danger="type == 'expense'"/>
-                <field name="amount" sum="Total" widget="monetary"/>
-                <field name="payment_method"/>
-                <field name="invoice_id" optional="show"/>
-                <field name="sale_order_id" optional="show"/>
-                <field name="user_id"/>
-                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-muted="state == 'cancelled'"/>
-            </tree>
+                <field name="type"/>
+                <field name="amount"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="oe_kanban_details p-3">
+                                <strong class="o_kanban_record_title text-primary">
+                                    <t t-if="record.type.raw_value == 'receipt'">📥</t>
+                                    <t t-else="">📤</t>
+                                    <field name="name"/>
+                                </strong>
+                                <div class="text-muted mt-1">
+                                    📅 <field name="date"/>
+                                </div>
+                                <div class="mt-3">
+                                    <span t-attf-class="badge fs-6 #{record.type.raw_value == 'receipt' ? 'bg-success' : 'bg-danger'}">
+                                        💰 <field name="amount" widget="monetary"/>
+                                    </span>
+                                </div>
+                                <div class="mt-2">
+                                    <field name="state" widget="badge"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -205,60 +328,92 @@
         <field name="arch" type="xml">
             <form string="Opération de Caisse">
                 <header>
-                    <button name="action_confirm" string="Confirmer" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                    <button name="action_print_receipt" string="Imprimer Reçu" type="object" 
-                            class="oe_highlight" icon="fa-print"
+                    <button name="action_confirm" string="✅ Confirmer" type="object" 
+                            class="btn-success" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_print_receipt" string="🖨️ Imprimer Reçu" type="object" 
+                            class="btn-secondary"
                             attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('type', '!=', 'receipt')]}"/>
-                    <button name="action_cancel" string="Annuler" type="object" 
+                    <button name="action_cancel" string="❌ Annuler" type="object" 
                             attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
-                    <button name="action_draft" string="Remettre en Brouillon" type="object" 
+                    <button name="action_draft" string="🔄 Brouillon" type="object" 
                             attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
+                    <!-- Boutons statistiques -->
                     <div class="oe_button_box" name="button_box" attrs="{'invisible': [('reservation_id', '=', False)]}">
                         <button class="oe_stat_button" type="action" name="%(travel_pro_version1.action_reservation)d" 
                                 icon="fa-plane" attrs="{'invisible': [('reservation_id', '=', False)]}"
-                                context="{'default_reservation_id': reservation_id, 'search_default_reservation_id': reservation_id}">
+                                context="{'default_reservation_id': reservation_id}">
                             <div class="o_stat_info">
-                                <span class="o_stat_text">Réservation</span>
-                                <span class="o_stat_value" attrs="{'invisible': [('reservation_id', '=', False)]}">
-                                    <field name="reservation_id" readonly="1" widget="statinfo"/>
-                                </span>
+                                <span class="o_stat_text">✈️ Réservation</span>
                             </div>
                         </button>
                     </div>
+                    
+                    <!-- En-tête -->
+                    <div class="oe_title mb-2">
+                        <h1>
+                            <field name="name" readonly="1" class="text-primary"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Section Informations & Paiement -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📋 Informations">
+                                <field name="cash_register_id" string="🏦 Caisse" options="{'no_create': True}"/>
+                                <field name="date" string="📅 Date"/>
+                                <field name="user_id" string="👤 Utilisateur"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="💵 Détails Paiement">
+                                <field name="type" string="Type" widget="radio" options="{'horizontal': true}"/>
+                                <field name="payment_method" string="💳 Mode de Paiement"/>
+                            </group>
+                            <div class="alert alert-primary text-center py-3">
+                                <h4 class="mb-0">💵 Montant</h4>
+                                <h2 class="mb-0 text-primary fw-bold">
+                                    <field name="amount" widget="monetary" nolabel="1"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <separator string="🔗 RÉFÉRENCES LIÉES" class="mt-4"/>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group>
+                                <field name="reservation_id" string="✈️ Réservation"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       options="{'no_create': True}"/>
+                                <field name="invoice_number" string="📄 N° Facture" 
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="quote_number" string="📋 N° Devis" 
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group>
+                                <field name="sale_order_id" string="🛒 Commande"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       options="{'no_create': True}"/>
+                                <field name="invoice_id" string="📄 Facture Odoo"
+                                       domain="[('move_type', 'in', ['out_invoice', 'out_refund'])]"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
+                                       options="{'no_create': True}"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="📝 NOTE" class="mt-4"/>
+                    
                     <group>
-                        <group>
-                            <field name="name" readonly="1"/>
-                            <field name="cash_register_id" options="{'no_create': True}"/>
-                            <field name="date"/>
-                            <field name="type" widget="radio" options="{'horizontal': true}"/>
-                            <field name="amount" widget="monetary" 
-                                   attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                            <field name="payment_method"/>
-                        </group>
-                        <group>
-                            <field name="user_id"/>
-                            <field name="reservation_id" 
-                                   attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                   options="{'no_create': True}"
-                                   context="{'default_type': type}"/>
-                            <field name="sale_order_id" 
-                                   attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                   options="{'no_create': True}"/>
-                            <field name="invoice_id" 
-                                   domain="[('move_type', 'in', ['out_invoice', 'out_refund'])]"
-                                   attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                   options="{'no_create': True}"/>
-                            <field name="invoice_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                            <field name="quote_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="note" placeholder="Références de cet argent..." 
-                               attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        <field name="note" placeholder="Références ou notes sur cette opération..." 
+                               nolabel="1" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                     </group>
                 </sheet>
             </form>
@@ -275,16 +430,24 @@
                 <field name="cash_register_id"/>
                 <field name="invoice_number"/>
                 <field name="quote_number"/>
-                <filter string="Recettes" name="receipts" domain="[('type', '=', 'receipt')]"/>
-                <filter string="Dépenses" name="expenses" domain="[('type', '=', 'expense')]"/>
-                <filter string="Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <field name="reservation_id"/>
                 <separator/>
-                <group expand="0" string="Grouper par">
+                <filter string="📥 Recettes" name="receipts" domain="[('type', '=', 'receipt')]"/>
+                <filter string="📤 Dépenses" name="expenses" domain="[('type', '=', 'expense')]"/>
+                <separator/>
+                <filter string="✅ Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="📝 Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="❌ Annulées" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="📅 Aujourd'hui" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 Ce mois" name="this_month" domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <group expand="0" string="Grouper Par">
                     <filter string="Type" name="group_type" context="{'group_by': 'type'}"/>
                     <filter string="Caisse" name="group_cash" context="{'group_by': 'cash_register_id'}"/>
-                    <filter string="Mode de Paiement" name="group_payment" context="{'group_by': 'payment_method'}"/>
-                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Mode Paiement" name="group_payment" context="{'group_by': 'payment_method'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'date:day'}"/>
+                    <filter string="Mois" name="group_month" context="{'group_by': 'date:month'}"/>
                 </group>
             </search>
         </field>

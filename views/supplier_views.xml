@@ -1,66 +1,282 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vue formulaire étendue pour res.partner (Fournisseurs) -->
-    <record id="view_partner_form_supplier" model="ir.ui.view">
-        <field name="name">res.partner.form.supplier</field>
+    <!-- Vue formulaire personnalisée pour les Fournisseurs Travel -->
+    <record id="view_travel_supplier_form" model="ir.ui.view">
+        <field name="name">travel.supplier.form</field>
         <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">100</field>
         <field name="arch" type="xml">
-            <!-- Ajouter un onglet Services dans le formulaire -->
-            <xpath expr="//notebook" position="inside">
-                <page string="Services Travel" name="travel_services">
+            <form string="Fournisseur">
+                <sheet>
+                    <field name="company_type" invisible="1"/>
+                    <field name="is_company" invisible="1"/>
                     <field name="supplier_rank" invisible="1"/>
+                    <field name="supplier_currency_id" invisible="1"/>
+                    
+                    <!-- En-tête avec image et nom -->
+                    <div class="oe_title mb-3">
+                        <div class="d-flex align-items-start">
+                            <field name="image_1920" widget="image" class="oe_avatar me-3" 
+                                   options="{'preview_image': 'image_128'}"/>
+                            <div class="flex-grow-1">
+                                <h1 class="mb-0">
+                                    <field name="name" placeholder="Nom du Fournisseur" required="1" 
+                                           class="text-primary"/>
+                                </h1>
+                                <div class="mt-2">
+                                    <field name="category_id" widget="many2many_tags" 
+                                           placeholder="Tags..." options="{'color_field': 'color'}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section 1: Contact & Adresse -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📞 CONTACT">
+                                <field name="phone" string="Téléphone" placeholder="+216 XX XXX XXX" widget="phone"/>
+                                <field name="mobile" string="Mobile" placeholder="+216 XX XXX XXX" widget="phone"/>
+                                <field name="email" string="Email" placeholder="email@exemple.com" widget="email"/>
+                                <field name="website" string="Site Web" placeholder="www.exemple.com" widget="url"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="📍 ADRESSE">
+                                <field name="street" placeholder="Rue"/>
+                                <field name="city" placeholder="Ville"/>
+                                <field name="country_id" placeholder="Pays" options="{'no_create': True}"/>
+                                <field name="vat" string="Matricule Fiscal" placeholder="1234567/A/M/000"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="🛎️ SERVICES À FACTURER" class="mt-4"/>
+                    
+                    <!-- Section 2: Services à facturer (comme facture client) -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-info fs-6 me-2">
+                                        <field name="travel_service_count"/> Services du fournisseur
+                                    </span>
+                                </div>
+                                <div>
+                                    <button name="action_load_services" string="🔄 Charger Services" type="object" 
+                                            class="btn btn-success btn-sm me-2"
+                                            attrs="{'invisible': [('travel_service_count', '=', 0)]}"
+                                            title="Charger automatiquement tous les services de ce fournisseur"/>
+                                    <button name="action_create_service" string="➕ Créer Service" type="object" 
+                                            class="btn btn-primary btn-sm"/>
+                                </div>
+                            </div>
+                            
+                            <!-- Tableau de sélection des services (comme facture client) -->
+                            <field name="supplier_invoice_service_ids" nolabel="1">
+                                <tree editable="bottom" decoration-success="price > 0" decoration-info="type == 'hebergement'">
+                                    <field name="name" string="🛎️ Service" options="{'no_create': True}"/>
+                                    <field name="type" string="Type" widget="badge" readonly="1"/>
+                                    <field name="destination_id" string="✈️ Destination" optional="show" readonly="1"/>
+                                    <field name="room_price" string="💵 Prix/Nuit" widget="monetary" optional="hide" readonly="1"/>
+                                    <field name="price" string="💰 Prix" widget="monetary" sum="Total" readonly="1"/>
+                                </tree>
+                            </field>
+                            
+                            <p class="text-muted mt-2 small">
+                                💡 <strong>Add a line</strong> : sélectionner un service existant | 
+                                <strong>🔄 Charger Services</strong> : ajouter tous les services de ce fournisseur
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <separator string="💰 FACTURATION" class="mt-4"/>
+                    
+                    <!-- Section 3: Facturation -->
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <group string="📊 MONTANTS">
+                                <field name="supplier_service_id" invisible="1"/>
+                                <field name="supplier_reservation_id" string="📋 Réservation liée" 
+                                       options="{'no_create': True}"/>
+                                <div class="alert alert-info text-center py-2 mt-2">
+                                    <span class="text-muted">💵 Montant TTC (auto)</span>
+                                    <h3 class="mb-0 text-info fw-bold">
+                                        <field name="supplier_amount_ttc" nolabel="1"/> DT
+                                    </h3>
+                                </div>
+                                <field name="supplier_tax_rate" string="📈 Taux TVA"/>
+                                <label for="supplier_fiscal_stamp" string="🏛️ Timbre Fiscal"/>
+                                <div class="o_row">
+                                    <field name="supplier_fiscal_stamp" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted ms-1">DT</span>
+                                </div>
+                            </group>
+                        </div>
+                        <div class="col-lg-4">
+                            <group string="📈 CALCULS">
+                                <field name="supplier_amount_untaxed" string="Montant HT" readonly="1"
+                                       widget="monetary"/>
+                                <field name="supplier_amount_tax" string="Montant TVA" readonly="1"
+                                       widget="monetary"/>
+                            </group>
+                            <div class="alert alert-primary text-center py-3">
+                                <span class="text-muted">💵 Total Facture</span>
+                                <h3 class="mb-0 text-primary fw-bold">
+                                    <field name="supplier_amount_total" widget="monetary" nolabel="1"/>
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <group string="📉 RETENUE À LA SOURCE">
+                                <field name="supplier_withholding_rate" string="Taux Retenue (%)"/>
+                                <field name="supplier_amount_withholding" string="Montant Retenue" readonly="1"
+                                       widget="monetary" class="text-danger"/>
+                            </group>
+                            <div class="alert alert-success text-center py-3">
+                                <span class="text-muted">✅ Montant Servi</span>
+                                <h3 class="mb-0 text-success fw-bold">
+                                    <field name="supplier_amount_served" widget="monetary" nolabel="1"/>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <separator string="📝 NOTES" class="mt-4"/>
+                    
+                    <!-- Section 4: Notes -->
                     <group>
-                        <group>
-                            <field name="travel_service_count" widget="statinfo" string="Nombre de Services"/>
-                        </group>
-                        <group>
-                            <button name="action_create_service" string="Créer un Service" type="object" 
-                                    class="oe_highlight" 
-                                    attrs="{'invisible': [('supplier_rank', '=', 0)]}"/>
-                            <button name="action_view_services" string="Voir les Services" type="object" 
-                                    attrs="{'invisible': [('travel_service_count', '=', 0)]}"/>
-                        </group>
+                        <field name="supplier_description" string="Notes Facturation" 
+                               placeholder="Notes sur la facturation..." nolabel="1"/>
+                        <field name="comment" string="Notes Générales" 
+                               placeholder="Notes internes sur ce fournisseur..." nolabel="1"/>
                     </group>
-                    <field name="travel_service_ids" nolabel="1" readonly="1">
-                        <tree>
-                            <field name="name"/>
-                            <field name="type"/>
-                            <field name="price"/>
-                            <field name="destination_id"/>
-                        </tree>
-                    </field>
-                </page>
-            </xpath>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
         </field>
     </record>
 
-    <!-- Vue liste pour les fournisseurs -->
-    <record id="view_partner_tree_supplier" model="ir.ui.view">
-        <field name="name">res.partner.tree.supplier</field>
+    <!-- Vue liste personnalisée pour les Fournisseurs -->
+    <record id="view_travel_supplier_tree" model="ir.ui.view">
+        <field name="name">travel.supplier.tree</field>
         <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="priority">100</field>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='display_name']" position="after">
-                <field name="travel_service_count" string="Services" optional="hide"/>
-            </xpath>
+            <tree string="Fournisseurs" decoration-info="travel_service_count > 0">
+                <field name="name" string="🏢 Fournisseur"/>
+                <field name="phone" string="📞 Téléphone"/>
+                <field name="email" string="✉️ Email"/>
+                <field name="city" string="📍 Ville"/>
+                <field name="travel_service_count" string="🛎️ Services"/>
+                <field name="supplier_amount_total" string="💰 Total Facture" widget="monetary"/>
+                <field name="supplier_amount_served" string="✅ Montant Servi" widget="monetary"/>
+            </tree>
+        </field>
+    </record>
+    
+    <!-- Vue Kanban personnalisée pour les Fournisseurs -->
+    <record id="view_travel_supplier_kanban" model="ir.ui.view">
+        <field name="name">travel.supplier.kanban</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="image_128"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="city"/>
+                <field name="travel_service_count"/>
+                <field name="supplier_amount_served"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <img t-att-src="kanban_image('res.partner', 'image_128', record.id.raw_value)" alt="Fournisseur"/>
+                            </div>
+                            <div class="oe_kanban_details p-2">
+                                <strong class="o_kanban_record_title text-primary">
+                                    🏢 <field name="name"/>
+                                </strong>
+                                <div t-if="record.phone.value" class="mt-1">
+                                    📞 <field name="phone"/>
+                                </div>
+                                <div t-if="record.email.value">
+                                    ✉️ <field name="email"/>
+                                </div>
+                                <div t-if="record.city.value">
+                                    📍 <field name="city"/>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary">
+                                        🛎️ <field name="travel_service_count"/> Services
+                                    </span>
+                                </div>
+                                <div class="mt-1" t-if="record.supplier_amount_served.raw_value > 0">
+                                    <span class="badge bg-success">
+                                        💰 <field name="supplier_amount_served" widget="monetary"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
-    <!-- Action pour les fournisseurs -->
+    <!-- Vue recherche personnalisée pour les Fournisseurs -->
+    <record id="view_travel_supplier_search" model="ir.ui.view">
+        <field name="name">travel.supplier.search</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Fournisseurs">
+                <field name="name" string="Nom"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="city"/>
+                <field name="vat" string="Matricule Fiscal"/>
+                <separator/>
+                <filter string="Avec Services" name="with_services" domain="[('travel_service_ids', '!=', False)]"/>
+                <filter string="Sans Services" name="without_services" domain="[('travel_service_ids', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Grouper Par">
+                    <filter string="Ville" name="group_city" context="{'group_by': 'city'}"/>
+                    <filter string="Pays" name="group_country" context="{'group_by': 'country_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action pour les fournisseurs avec vues personnalisées -->
     <record id="action_supplier" model="ir.actions.act_window">
         <field name="name">Fournisseurs</field>
         <field name="res_model">res.partner</field>
-        <field name="view_mode">tree,form,kanban</field>
+        <field name="view_mode">tree,kanban,form</field>
         <field name="domain">[('supplier_rank', '>', 0)]</field>
-        <field name="context">{'default_supplier_rank': 1, 'default_is_company': True, 'res_partner_search_mode': 'supplier'}</field>
+        <field name="context">{
+            'default_supplier_rank': 1, 
+            'default_is_company': True,
+            'default_company_type': 'company'
+        }</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_travel_supplier_tree')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_travel_supplier_kanban')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_travel_supplier_form')})]"/>
+        <field name="search_view_id" ref="view_travel_supplier_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créer un nouveau fournisseur
             </p>
             <p>
-                Gérez vos fournisseurs et leurs services associés. 
-                Vous pouvez créer des services pour chaque fournisseur et les utiliser dans vos achats travel.
+                Gérez vos fournisseurs de services voyage : hôtels, compagnies aériennes, 
+                agences locales, etc. Créez des services et suivez la facturation.
             </p>
         </field>
     </record>

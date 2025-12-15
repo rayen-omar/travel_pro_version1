@@ -1,44 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vue Liste Voyages -->
     <record id="view_travel_tree" model="ir.ui.view">
         <field name="name">travel.tree</field>
         <field name="model">travel.destination</field>
         <field name="arch" type="xml">
-            <tree>
-                <field name="name"/>
-                <field name="price"/>
-                <field name="start_date"/>
-                <field name="end_date"/>
+            <tree string="Voyages" decoration-info="reservation_count > 0">
+                <field name="name" string="✈️ Voyage"/>
+                <field name="price" string="💵 Prix/Personne" widget="monetary" decoration-bf="True"/>
+                <field name="start_date" string="🛫 Début"/>
+                <field name="end_date" string="🛬 Fin"/>
+                <field name="reservation_count" string="📋 Réservations" decoration-bf="reservation_count > 0"/>
             </tree>
         </field>
     </record>
     
+    <!-- Vue Formulaire Voyages -->
     <record id="view_travel_form" model="ir.ui.view">
         <field name="name">travel.form</field>
         <field name="model">travel.destination</field>
         <field name="arch" type="xml">
-            <form>
+            <form string="Voyage">
                 <sheet>
-                    <div class="oe_button_box">
-                        <button name="action_create_reservation" type="object" string="Réserver ce Voyage" class="oe_highlight btn-primary"/>
+                    <!-- En-tête -->
+                    <div class="oe_title mb-3">
+                        <h1>
+                            <field name="name" placeholder="Nom du voyage / destination" required="1" class="text-primary"/>
+                        </h1>
                     </div>
-                    <group>
-                        <field name="name"/>
-                        <field name="description"/>
-                        <field name="price"/>
-                        <field name="start_date"/>
-                        <field name="end_date"/>
-                        <field name="service_ids" widget="many2many_tags"/>
-                        <field name="reservation_ids">
-                            <tree>
-                                <field name="name"/>
-                                <field name="member_id"/>
-                                <field name="status"/>
-                            </tree>
-                        </field>
-                    </group>
+                    
+                    <!-- Section Description & Période -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📋 Informations">
+                                <field name="description" string="📝 Description" placeholder="Description du voyage..."/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="📅 Période">
+                                <field name="start_date" string="🛫 Date Début"/>
+                                <field name="end_date" string="🛬 Date Fin"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Tarif & Services -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="💰 TARIF">
+                                <div class="alert alert-primary text-center py-3" role="alert">
+                                    <h4 class="mb-0">Prix par Personne</h4>
+                                    <h2 class="mb-0 text-primary fw-bold">
+                                        <field name="price" widget="monetary" nolabel="1"/>
+                                    </h2>
+                                </div>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="🛎️ Services Inclus">
+                                <field name="service_ids" widget="many2many_tags" nolabel="1" 
+                                       options="{'color_field': 'color'}"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="✈️ RÉSERVATIONS" class="mt-4"/>
+                    
+                    <!-- Section Réservations -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-info fs-6 me-2">
+                                        <field name="reservation_count"/> Réservations
+                                    </span>
+                                </div>
+                                <div>
+                                    <button name="action_create_reservation" type="object" 
+                                            string="➕ Nouvelle Réservation" class="btn btn-primary btn-sm"/>
+                                </div>
+                            </div>
+                            <field name="reservation_ids" nolabel="1">
+                                <tree decoration-success="status == 'confirmed'" 
+                                      decoration-info="status == 'done'" 
+                                      decoration-muted="status == 'cancel'">
+                                    <field name="name" string="📋 Réf"/>
+                                    <field name="member_id" string="👤 Client"/>
+                                    <field name="check_in" string="🛬 Arrivée"/>
+                                    <field name="check_out" string="🛫 Départ"/>
+                                    <field name="participants" string="👥 Pax"/>
+                                    <field name="total_price" string="💵 Total" widget="monetary"/>
+                                    <field name="status" string="État" widget="badge"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </div>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
+        </field>
+    </record>
+    
+    <!-- Vue Kanban Voyages -->
+    <record id="view_travel_kanban" model="ir.ui.view">
+        <field name="name">travel.kanban</field>
+        <field name="model">travel.destination</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="price"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="reservation_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="oe_kanban_details p-3">
+                                <strong class="o_kanban_record_title fs-5 text-primary">
+                                    ✈️ <field name="name"/>
+                                </strong>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary fs-6">
+                                        💰 <field name="price" widget="monetary"/>
+                                    </span>
+                                </div>
+                                <div class="mt-2 text-muted" t-if="record.start_date.value">
+                                    📅 <field name="start_date"/> → <field name="end_date"/>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-info">
+                                        📋 <field name="reservation_count"/> Réservations
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    
+    <!-- Vue Recherche -->
+    <record id="view_travel_search" model="ir.ui.view">
+        <field name="name">travel.search</field>
+        <field name="model">travel.destination</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Voyages">
+                <field name="name" string="Nom"/>
+                <separator/>
+                <filter string="🟢 En cours" name="current" 
+                        domain="[('start_date', '&lt;=', context_today().strftime('%Y-%m-%d')), ('end_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="🔵 À venir" name="upcoming" 
+                        domain="[('start_date', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="⚪ Passés" name="past" 
+                        domain="[('end_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Avec Réservations" name="with_reservations" domain="[('reservation_ids', '!=', False)]"/>
+                <separator/>
+                <group expand="0" string="Grouper Par">
+                    <filter string="Mois Début" name="group_month" context="{'group_by': 'start_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_travel" model="ir.actions.act_window">
+        <field name="name">Voyages</field>
+        <field name="res_model">travel.destination</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau voyage
+            </p>
+            <p>
+                Gérez vos destinations et voyages proposés aux clients avec les services inclus.
+            </p>
         </field>
     </record>
 </odoo>

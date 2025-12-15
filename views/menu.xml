@@ -53,8 +53,7 @@
     <menuitem id="menu_invoicing" name="Facturation" parent="menu_travel_pro" sequence="60"/>
     <menuitem id="menu_invoice_client" name="Factures Clients" parent="menu_invoicing" 
               action="action_travel_invoice_client" sequence="10"/>
-    <menuitem id="menu_purchase_travel" name="Factures Fournisseurs" parent="menu_invoicing" 
-              action="action_travel_purchase" sequence="20"/>
+    <!-- Factures Fournisseurs supprimé - intégré dans le formulaire Fournisseur -->
     <menuitem id="menu_purchase_report" name="Rapport des Achats" parent="menu_invoicing" 
               action="action_travel_purchase_report_wizard" sequence="30"/>
     

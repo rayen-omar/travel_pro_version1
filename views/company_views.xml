@@ -1,43 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vue Liste Sociétés -->
     <record id="view_company_tree" model="ir.ui.view">
         <field name="name">company.tree</field>
         <field name="model">travel.company</field>
         <field name="arch" type="xml">
-            <tree>
-                <field name="name"/>
-                <field name="phone"/>
-                <field name="email"/>
-                <field name="vat"/>
+            <tree string="Sociétés" decoration-info="member_count > 0">
+                <field name="name" string="🏢 Société"/>
+                <field name="vat" string="Matricule Fiscal"/>
+                <field name="phone" string="📞 Téléphone"/>
+                <field name="email" string="✉️ Email"/>
+                <field name="address" string="📍 Adresse" optional="show"/>
+                <field name="member_count" string="👥 Membres" decoration-bf="member_count > 0"/>
             </tree>
         </field>
     </record>
     
+    <!-- Vue Formulaire Sociétés -->
     <record id="view_company_form" model="ir.ui.view">
         <field name="name">company.form</field>
         <field name="model">travel.company</field>
         <field name="arch" type="xml">
-            <form>
+            <form string="Société">
                 <sheet>
-                    <div class="oe_button_box">
-                        <button name="action_create_member" type="object" string="Créer Membre" class="oe_highlight btn-primary"/>
+                    <!-- En-tête avec nom -->
+                    <div class="oe_title mb-3">
+                        <h1>
+                            <field name="name" placeholder="Nom de la société" required="1" class="text-primary"/>
+                        </h1>
                     </div>
+                    
+                    <!-- Section Contact & Fiscalité -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📋 Informations Société">
+                                <field name="vat" string="🏢 Matricule Fiscal" placeholder="1234567/A/M/000"/>
+                                <field name="website" string="🌐 Site Web" widget="url" placeholder="www.exemple.com"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="📞 Contact">
+                                <field name="email" string="✉️ Email" widget="email" placeholder="contact@societe.com"/>
+                                <field name="phone" string="📞 Téléphone" widget="phone" placeholder="+216 XX XXX XXX"/>
+                                <field name="mobile" string="📱 Mobile" widget="phone" placeholder="+216 XX XXX XXX"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="📍 ADRESSE" class="mt-4"/>
+                    
                     <group>
-                        <field name="name"/>
-                        <field name="phone"/>
-                        <field name="email"/>
-                        <field name="address"/>
-                        <field name="website"/>
-                        <field name="vat"/>
-                        <field name="member_ids">
-                            <tree>
-                                <field name="name"/>
-                                <field name="email"/>
-                            </tree>
-                        </field>
+                        <field name="address" placeholder="Adresse complète de la société..." nolabel="1"/>
                     </group>
+                    
+                    <separator string="👥 MEMBRES DE LA SOCIÉTÉ" class="mt-4"/>
+                    
+                    <!-- Section Membres -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary fs-6 me-2">
+                                        <field name="member_count"/> Membres
+                                    </span>
+                                </div>
+                                <div>
+                                    <button name="action_create_member" type="object" 
+                                            string="➕ Nouveau Membre" class="btn btn-primary btn-sm"/>
+                                </div>
+                            </div>
+                            
+                            <!-- Tableau des membres de la société -->
+                            <field name="selected_member_ids" nolabel="1"
+                                   domain="['|', ('company_id', '=', False), ('company_id', '=', id)]"
+                                   options="{'no_create': True}">
+                                <tree editable="bottom" decoration-success="credit_balance > 0">
+                                    <field name="name" string="👤 Membre"/>
+                                    <field name="matricule" string="🔖 Matricule" readonly="1"/>
+                                    <field name="email" string="✉️ Email" readonly="1"/>
+                                    <field name="phone" string="📞 Téléphone" readonly="1"/>
+                                    <field name="credit_balance" string="💰 Crédit" widget="monetary"
+                                           decoration-success="credit_balance > 0" readonly="1"/>
+                                </tree>
+                            </field>
+                            
+                            <p class="text-muted mt-2 small">
+                                💡 <strong>Ajouter une ligne</strong> : sélectionner un membre existant (sans société) | 
+                                <strong>➕ Nouveau Membre</strong> : créer un nouveau membre pour cette société
+                            </p>
+                        </div>
+                    </div>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
+        </field>
+    </record>
+    
+    <!-- Vue Kanban Sociétés -->
+    <record id="view_company_kanban" model="ir.ui.view">
+        <field name="name">company.kanban</field>
+        <field name="model">travel.company</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="vat"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="member_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="oe_kanban_details p-3">
+                                <strong class="o_kanban_record_title fs-5 text-primary">
+                                    🏢 <field name="name"/>
+                                </strong>
+                                <div class="mt-2" t-if="record.vat.value">
+                                    <span class="text-muted">MF:</span> <field name="vat"/>
+                                </div>
+                                <div class="mt-1" t-if="record.phone.value">
+                                    📞 <field name="phone"/>
+                                </div>
+                                <div t-if="record.email.value">
+                                    ✉️ <field name="email"/>
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary fs-6">
+                                        👥 <field name="member_count"/> Membres
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
     
@@ -47,14 +146,29 @@
         <field name="model">travel.company</field>
         <field name="arch" type="xml">
             <search string="Rechercher Sociétés">
-                <field name="name" string="Nom" filter_domain="[('name', 'ilike', self)]"/>
-                <field name="vat" string="Matricule Fiscale" filter_domain="[('vat', 'ilike', self)]"/>
+                <field name="name" string="Nom"/>
+                <field name="vat" string="Matricule Fiscal"/>
                 <field name="email" string="Email"/>
                 <field name="phone" string="Téléphone"/>
                 <separator/>
-                <field name="name" string="Recherche globale" 
-                       filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
+                <filter string="Avec Membres" name="with_members" domain="[('member_ids', '!=', False)]"/>
+                <filter string="Sans Membres" name="without_members" domain="[('member_ids', '=', False)]"/>
             </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_company" model="ir.actions.act_window">
+        <field name="name">Sociétés</field>
+        <field name="res_model">travel.company</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer une nouvelle société
+            </p>
+            <p>
+                Gérez vos sociétés clientes et leurs membres pour les réservations de voyages.
+            </p>
         </field>
     </record>
 </odoo>

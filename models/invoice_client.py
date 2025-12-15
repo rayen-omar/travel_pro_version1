@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
+"""
+Modèle de facturation client pour TravelPro.
+
+Gère les factures clients de l'agence de voyage avec calcul
+automatique de la TVA, remises, retenues et montants en lettres.
+"""
+import logging
+
+from num2words import num2words
+
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class TravelInvoiceClient(models.Model):
@@ -60,6 +72,25 @@ class TravelInvoiceClient(models.Model):
     
     # Totaux
     amount_untaxed = fields.Monetary('Total HT', compute='_compute_amounts', store=True, currency_field='currency_id')
+    
+    # Remise configurable (après Total HT)
+    discount_type = fields.Selection([
+        ('none', 'Pas de remise'),
+        ('percent', 'Pourcentage (%)'),
+        ('fixed', 'Montant fixe')
+    ], string='Type de Remise', default='none', tracking=True,
+       help="Choisissez le type de remise à appliquer sur le Total HT")
+    discount_rate = fields.Float('Taux Remise (%)', default=0.0, 
+                                  help="Pourcentage de remise à appliquer (ex: 10 pour 10%)")
+    discount_fixed = fields.Monetary('Montant Remise Fixe', default=0.0, currency_field='currency_id',
+                                      help="Montant fixe de remise à appliquer")
+    discount_amount = fields.Monetary('Montant Remise', compute='_compute_amounts', store=True, 
+                                       currency_field='currency_id',
+                                       help="Montant de la remise calculée")
+    amount_after_discount = fields.Monetary('Total HT Après Remise', compute='_compute_amounts', 
+                                             store=True, currency_field='currency_id',
+                                             help="Total HT après application de la remise")
+    
     amount_tax = fields.Monetary('Total TVA', compute='_compute_amounts', store=True, currency_field='currency_id')
     fiscal_stamp = fields.Monetary('Timbre Fiscal', default=1.0, currency_field='currency_id')
     amount_total = fields.Monetary('Total TTC', compute='_compute_amounts', store=True, currency_field='currency_id')
@@ -93,19 +124,18 @@ class TravelInvoiceClient(models.Model):
 
     @api.depends('amount_total', 'currency_id')
     def _compute_amount_in_words_fr(self):
-        """Convertir le montant total en lettres (Français) - Force num2words"""
-        from num2words import num2words
-        
+        """Convertir le montant total en lettres (Français)."""
         for record in self:
             if record.amount_total:
-                # Conversion explicite en français
                 try:
                     text = num2words(record.amount_total, lang='fr')
-                    # Ajout de la devise et majuscule
                     record.amount_in_words_fr = f"{text} Dinars".capitalize()
                 except Exception as e:
-                    # Fallback ultime et log erreur
-                    record.amount_in_words_fr = "ERREUR CONVERSION: " + str(e)
+                    _logger.error(
+                        "Erreur conversion montant en lettres pour facture %s: %s",
+                        record.name, str(e)
+                    )
+                    record.amount_in_words_fr = f"{record.amount_total:.3f} Dinars"
             else:
                 record.amount_in_words_fr = ''
     
@@ -136,16 +166,44 @@ class TravelInvoiceClient(models.Model):
     
 
     
-    @api.depends('invoice_line_ids.price_subtotal', 'invoice_line_ids.price_tax', 'fiscal_stamp')
+    @api.depends('invoice_line_ids.price_ttc', 'invoice_line_ids.tax_rate', 'fiscal_stamp',
+                 'discount_type', 'discount_rate', 'discount_fixed')
     def _compute_amounts(self):
         for invoice in self:
-            amount_untaxed = sum(line.price_subtotal for line in invoice.invoice_line_ids)
-            amount_tax = sum(line.price_tax for line in invoice.invoice_line_ids)
+            # Calculer le Total HT depuis les prix TTC des lignes
+            # Formule : HT = TTC / (1 + taux_tva)
+            amount_untaxed = 0.0
+            tax_rate_for_invoice = 0.07  # Par défaut 7%
+            
+            for line in invoice.invoice_line_ids:
+                if line.price_ttc:
+                    tax_percent = float(line.tax_rate or '7') / 100.0
+                    # HT = TTC / (1 + TVA)
+                    line_ht = (line.quantity * line.price_ttc) / (1 + tax_percent)
+                    amount_untaxed += line_ht
+                    tax_rate_for_invoice = tax_percent  # Prendre le dernier taux
+            
+            # Calcul de la remise selon le type (sur le Total HT)
+            discount_amount = 0.0
+            if invoice.discount_type == 'percent' and invoice.discount_rate > 0:
+                # Remise en pourcentage sur le Total HT
+                discount_amount = amount_untaxed * (invoice.discount_rate / 100.0)
+            elif invoice.discount_type == 'fixed' and invoice.discount_fixed > 0:
+                # Remise fixe (ne peut pas dépasser le Total HT)
+                discount_amount = min(invoice.discount_fixed, amount_untaxed)
+            
+            # Total HT après remise (MT HT)
+            amount_after_discount = amount_untaxed - discount_amount
+            
+            # IMPORTANT : La TVA est calculée APRÈS la remise sur le MT HT
+            amount_tax = amount_after_discount * tax_rate_for_invoice
             
             invoice.amount_untaxed = amount_untaxed
+            invoice.discount_amount = discount_amount
+            invoice.amount_after_discount = amount_after_discount
             invoice.amount_tax = amount_tax
-            # Montant total = HT + TVA + Timbre Fiscal
-            invoice.amount_total = amount_untaxed + amount_tax + invoice.fiscal_stamp
+            # Montant total = MT HT + TVA (calculée après remise) + Timbre Fiscal
+            invoice.amount_total = amount_after_discount + amount_tax + invoice.fiscal_stamp
     
     @api.depends('amount_total', 'amount_tax', 'fiscal_stamp', 'apply_withholding_tax', 'apply_vat_withholding')
     def _compute_withholding(self):
@@ -224,6 +282,65 @@ class TravelInvoiceClient(models.Model):
         """Imprimer la facture"""
         self.ensure_one()
         return self.env.ref('travel_pro_version1.action_report_travel_invoice_client').report_action(self)
+    
+    def action_pay_cash(self):
+        """Ouvrir un formulaire pour enregistrer le paiement en caisse"""
+        self.ensure_one()
+        
+        # Vérifier qu'il y a un montant à payer
+        if self.amount_total <= 0:
+            raise UserError("Le montant de la facture doit être supérieur à zéro.")
+        
+        # Préparer la description pour l'opération de caisse
+        description = f"Paiement facture {self.name}"
+        if self.travel_company_id:
+            description += f" - {self.travel_company_id.name}"
+        
+        # Récupérer la première réservation liée et ses informations
+        reservation_id = False
+        sale_order_id = False
+        quote_number = False
+        
+        if self.invoice_line_ids:
+            for line in self.invoice_line_ids:
+                if line.reservation_id:
+                    reservation = line.reservation_id
+                    reservation_id = reservation.id
+                    
+                    # Récupérer le devis lié à la réservation
+                    if reservation.sale_order_id:
+                        sale_order_id = reservation.sale_order_id.id
+                        quote_number = reservation.sale_order_id.name
+                    break
+        
+        # Préparer le contexte avec toutes les valeurs par défaut
+        context = {
+            'default_type': 'receipt',
+            'default_amount': self.net_to_pay if self.total_withholding > 0 else self.amount_total,
+            'default_note': description,
+            'default_invoice_number': self.name,
+            'default_payment_method': 'cash',
+        }
+        
+        # Ajouter la réservation si disponible
+        if reservation_id:
+            context['default_reservation_id'] = reservation_id
+        
+        # Ajouter le devis si disponible
+        if sale_order_id:
+            context['default_sale_order_id'] = sale_order_id
+        if quote_number:
+            context['default_quote_number'] = quote_number
+        
+        # Ouvrir le formulaire de création d'opération de caisse
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Enregistrer Paiement Caisse',
+            'res_model': 'cash.register.operation',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': context,
+        }
     
     def action_fill_lines_from_selected_members(self):
         """Remplir automatiquement les lignes de facture pour les membres sélectionnés"""
@@ -309,6 +426,8 @@ class TravelInvoiceClientLine(models.Model):
     # Détails du voyage
     description = fields.Text('Description', required=True)
     reservation_id = fields.Many2one('travel.reservation', string='Réservation liée')
+    credit_info = fields.Text('Info Crédit', compute='_compute_credit_info', store=False,
+                              help="Information sur l'utilisation du crédit depuis la réservation")
     
     # Quantité et Prix
     quantity = fields.Float('Quantité', default=1.0, required=True)
@@ -330,6 +449,19 @@ class TravelInvoiceClientLine(models.Model):
     price_total = fields.Monetary('Total TTC', compute='_compute_price', store=True, currency_field='currency_id')
     
     currency_id = fields.Many2one('res.currency', related='invoice_id.currency_id', store=True, readonly=True)
+    
+    @api.depends('reservation_id', 'reservation_id.use_credit', 'reservation_id.credit_used', 
+                 'reservation_id.total_price', 'reservation_id.remaining_to_pay')
+    def _compute_credit_info(self):
+        """Calculer les informations de crédit depuis la réservation"""
+        for line in self:
+            if line.reservation_id and line.reservation_id.use_credit and line.reservation_id.credit_used > 0:
+                info = f"Crédit: {line.reservation_id.credit_used:.3f} DT"
+                info += f"\nPayé: {line.reservation_id.credit_used:.3f} DT"
+                info += f"\nReste: {line.reservation_id.remaining_to_pay:.3f} DT"
+                line.credit_info = info
+            else:
+                line.credit_info = False
     
     @api.depends('quantity', 'price_ttc', 'tax_rate')
     def _compute_price_ht(self):

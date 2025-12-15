@@ -5,24 +5,67 @@
         <field name="name">travel.invoice.client.tree</field>
         <field name="model">travel.invoice.client</field>
         <field name="arch" type="xml">
-            <tree string="Factures Clients" decoration-info="state=='draft'" 
-                  decoration-success="state=='paid'" decoration-muted="state=='cancel'">
+            <tree string="Factures Clients" 
+                  decoration-info="state=='draft'" 
+                  decoration-success="state=='paid'" 
+                  decoration-muted="state=='cancel'"
+                  decoration-warning="state=='confirmed'">
+                <field name="name" string="📄 N° Facture"/>
+                <field name="date_invoice" string="📅 Date"/>
+                <field name="travel_company_id" string="🏢 Société"/>
+                <field name="member_ids" string="👥 Membres" widget="many2many_tags" optional="hide"/>
+                <field name="amount_untaxed" string="H.T" sum="Total HT" widget="monetary"/>
+                <field name="discount_amount" string="🏷️ Remise" sum="Remise" optional="show" widget="monetary"/>
+                <field name="amount_tax" string="TVA" sum="Total TVA" widget="monetary"/>
+                <field name="amount_total" string="💵 TTC" sum="Total TTC" widget="monetary" decoration-bf="True"/>
+                <field name="total_withholding" string="📉 Retenues" sum="Total Retenues" widget="monetary" optional="show"/>
+                <field name="net_to_pay" string="✅ Net à Payer" sum="Net à Payer" widget="monetary" 
+                       decoration-bf="True" decoration-success="True"/>
+                <field name="state" string="État" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vue Kanban factures clients -->
+    <record id="view_travel_invoice_client_kanban" model="ir.ui.view">
+        <field name="name">travel.invoice.client.kanban</field>
+        <field name="model">travel.invoice.client</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
                 <field name="name"/>
                 <field name="date_invoice"/>
                 <field name="travel_company_id"/>
-                <field name="member_ids" widget="many2many_tags" optional="hide"/>
-                <field name="company_client_id" optional="hide"/>
-                <field name="amount_untaxed" sum="Total HT"/>
-                <field name="amount_tax" sum="Total TVA"/>
-                <field name="amount_total" sum="Total TTC"/>
-                <field name="total_withholding" sum="Total Retenues"/>
-                <field name="net_to_pay" sum="Net à Payer"/>
-                <field name="state" widget="badge" 
-                       decoration-info="state=='draft'" 
-                       decoration-success="state=='paid'"
-                       decoration-warning="state=='confirmed'"
-                       decoration-danger="state=='cancel'"/>
-            </tree>
+                <field name="amount_total"/>
+                <field name="net_to_pay"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="oe_kanban_details p-3">
+                                <strong class="o_kanban_record_title text-primary">
+                                    📄 <field name="name"/>
+                                </strong>
+                                <div class="text-muted mt-1">
+                                    📅 <field name="date_invoice"/>
+                                </div>
+                                <div class="mt-1" t-if="record.travel_company_id.value">
+                                    🏢 <field name="travel_company_id"/>
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary fs-6">
+                                        💰 <field name="amount_total" widget="monetary"/>
+                                    </span>
+                                </div>
+                                <div class="mt-1">
+                                    <span class="badge bg-success fs-6">
+                                        ✅ Net: <field name="net_to_pay" widget="monetary"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
@@ -33,123 +76,165 @@
         <field name="arch" type="xml">
             <form string="Facture Client">
                 <header>
-                    <button name="action_confirm" string="Confirmer" type="object" 
-                            class="oe_highlight" states="draft"/>
-                    <button name="action_set_paid" string="Marquer Payée" type="object" 
-                            class="oe_highlight" states="confirmed"/>
-                    <button name="action_print_invoice" string="Imprimer" type="object" 
-                            states="confirmed,paid"/>
-                    <button name="action_cancel" string="Annuler" type="object" states="draft,confirmed"/>
-                    <button name="action_draft" string="Remettre en brouillon" type="object" states="cancel"/>
-                    <field name="state" widget="statusbar" 
-                           statusbar_visible="draft,confirmed,paid"/>
+                    <button name="action_confirm" string="✅ Confirmer" type="object" 
+                            class="btn-success" states="draft"/>
+                    <button name="action_pay_cash" string="💵 Payer Caisse" type="object" 
+                            class="btn-warning" states="confirmed"/>
+                    <button name="action_set_paid" string="✔️ Marquer Payée" type="object" 
+                            class="btn-info" states="confirmed"/>
+                    <button name="action_print_invoice" string="🖨️ Imprimer" type="object" 
+                            class="btn-secondary" states="confirmed,paid"/>
+                    <button name="action_cancel" string="❌ Annuler" type="object" states="draft,confirmed"/>
+                    <button name="action_draft" string="🔄 Brouillon" type="object" states="cancel"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,paid"/>
                 </header>
                 <sheet>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="fiscal_stamp" invisible="1"/>
+                    <field name="company_client_id" invisible="1"/>
+                    <field name="company_vat" invisible="1"/>
+                    
+                    <!-- Boutons statistiques -->
                     <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_pay_cash" 
+                                icon="fa-money" states="confirmed">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">💵 Payer</span>
+                                <span class="o_stat_text">Caisse</span>
+                            </div>
+                        </button>
                         <button class="oe_stat_button" type="object" name="action_print_invoice" 
                                 icon="fa-print" states="confirmed,paid">
                             <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_text">Imprimer</span>
+                                <span class="o_stat_text">🖨️ Imprimer</span>
                             </div>
                         </button>
                     </div>
                     
-                    <div class="oe_title">
+                    <!-- En-tête -->
+                    <div class="oe_title mb-2">
                         <h1>
-                            <field name="name" readonly="1"/>
+                            <field name="name" readonly="1" class="text-primary"/>
                         </h1>
                     </div>
                     
-                    <group>
-                        <group>
-                            <field name="date_invoice"/>
-                            <field name="travel_company_id" options="{'no_create': True}" required="1"/>
-                            <field name="member_ids" widget="many2many_tags" 
-                                   domain="[('company_id', '=', travel_company_id)]"
-                                   options="{'no_create': True}"
-                                   attrs="{'required': [('travel_company_id', '!=', False)]}"/>
-                            <field name="company_client_id" options="{'no_create': True, 'no_open': True}" 
-                                   attrs="{'invisible': [('member_ids', '!=', [])]}"/>
-                            <field name="company_vat" attrs="{'invisible': [('member_ids', '!=', [])]}"/>
-                        </group>
-                        <group>
+                    <!-- Section Informations & Membres -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="📋 Informations">
+                                <field name="date_invoice" string="📅 Date"/>
+                                <field name="travel_company_id" string="🏢 Société" 
+                                       options="{'no_create': True}" required="1"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="👥 Membres">
+                                <field name="member_ids" widget="many2many_tags" nolabel="1"
+                                       domain="[('company_id', '=', travel_company_id)]"
+                                       options="{'no_create': True}"
+                                       attrs="{'required': [('travel_company_id', '!=', False)]}"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="📝 LIGNES DE FACTURATION" class="mt-4"/>
+                    
+                    <!-- Lignes de facturation -->
+                    <field name="invoice_line_ids" mode="tree,kanban">
+                        <tree string="Lignes" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="passenger_id" string="👤 Passager" options="{'no_create': True}" 
+                                   domain="[('company_id', '=', parent.travel_company_id)]"/>
+                            <field name="destination_id" string="✈️ Voyage" options="{'no_create': True}"/>
+                            <field name="reference" string="📋 Réf"/>
+                            <field name="description" string="📝 Description"/>
+                            <field name="reservation_id" string="Réservation" optional="hide"/>
+                            <field name="price_ttc" string="💰 Prix TTC" widget="monetary" sum="Total"/>
+                            <field name="credit_info" string="💳 Crédit" optional="show"
+                                   readonly="1" decoration-bf="credit_info"
+                                   style="color: #28a745; font-weight: bold;"/>
+                            <field name="tax_rate" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
-                            <field name="fiscal_stamp" widget="monetary"/>
-                        </group>
+                        </tree>
+                    </field>
+                    
+                    <separator string="💰 CALCUL DES MONTANTS" class="mt-4"/>
+                    
+                    <!-- Section calcul -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="🏷️ Remise">
+                                <field name="discount_type" string="Type"/>
+                                <field name="discount_rate" string="Taux (%)"
+                                       attrs="{'invisible': [('discount_type', '!=', 'percent')]}"/>
+                                <field name="discount_fixed" string="Montant Fixe" widget="monetary"
+                                       attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="📊 Totaux">
+                                <field name="amount_untaxed" string="Total H.T" widget="monetary" readonly="1"/>
+                                <field name="discount_amount" string="🏷️ Remise" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
+                                <field name="amount_after_discount" string="H.T après remise" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
+                                <field name="amount_tax" string="T.V.A 7%" widget="monetary" readonly="1"/>
+                                <div class="alert alert-primary text-center py-2 mt-2">
+                                    <span class="text-muted">Total TTC</span>
+                                    <h3 class="mb-0 text-primary fw-bold">
+                                        <field name="amount_total" widget="monetary" nolabel="1"/>
+                                    </h3>
+                                </div>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <separator string="📉 RETENUES À LA SOURCE" class="mt-4"/>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <group string="Retenue 1% sur TTC">
+                                <field name="apply_withholding_tax" string="Appliquer"/>
+                                <field name="withholding_tax_amount" string="Montant" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('apply_withholding_tax', '=', False)]}"/>
+                            </group>
+                        </div>
+                        <div class="col-lg-6">
+                            <group string="Retenue 25% sur TVA">
+                                <field name="apply_vat_withholding" string="Appliquer"/>
+                                <field name="vat_withholding_amount" string="Montant" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('apply_vat_withholding', '=', False)]}"/>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <!-- Net à payer -->
+                    <div class="row" attrs="{'invisible': [('total_withholding', '=', 0)]}">
+                        <div class="col-12">
+                            <group>
+                                <field name="total_withholding" string="📉 Total Retenues" widget="monetary" readonly="1"/>
+                            </group>
+                            <div class="alert alert-success text-center py-3">
+                                <span class="text-muted">Net à Payer</span>
+                                <h2 class="mb-0 text-success fw-bold">
+                                    <field name="net_to_pay" widget="monetary" nolabel="1"/>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <group>
+                        <field name="amount_in_words_fr" string="💬 Montant en lettres" readonly="1"/>
                     </group>
                     
-                    <notebook>
-                        <page string="Lignes de Facturation" name="invoice_lines">
-
-                            <field name="invoice_line_ids" mode="tree,kanban">
-                                <tree string="Lignes" editable="bottom">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="passenger_id" options="{'no_create': True}" 
-                                           domain="[('company_id', '=', parent.travel_company_id)]"/>
-                                    <field name="destination_id" string="Voyage" options="{'no_create': True}"/>
-                                    <field name="reference"/>
-                                    <field name="description"/>
-                                    <field name="reservation_id" optional="hide"/>
-                                    <field name="price_ttc" widget="monetary"/>
-                                    <field name="tax_rate"/>
-                                    <field name="price_subtotal" widget="monetary" sum="Total HT"/>
-                                    <field name="price_tax" widget="monetary" sum="Total TVA"/>
-                                    <field name="currency_id" invisible="1"/>
-                                </tree>
-                            </field>
-                            
-                            <group class="oe_subtotal_footer oe_right" colspan="2">
-                                <field name="amount_untaxed" widget="monetary"/>
-                                <field name="amount_tax" widget="monetary"/>
-                                <field name="fiscal_stamp" widget="monetary"/>
-                                <div class="oe_subtotal_footer_separator oe_inline">
-                                    <label for="amount_total" string="Montant Final"/>
-                                    <field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" 
-                                           widget="monetary"/>
-                                </div>
-                            </group>
-                        </page>
-                        
-                        <page string="Retenues" name="withholdings">
-                            <group>
-                                <group string="Retenue 1% sur TTC">
-                                    <field name="apply_withholding_tax"/>
-                                    <field name="withholding_tax_amount" widget="monetary" 
-                                           attrs="{'invisible': [('apply_withholding_tax', '=', False)]}"/>
-                                </group>
-                                <group string="Retenue 25% sur TVA">
-                                    <field name="apply_vat_withholding"/>
-                                    <field name="vat_withholding_amount" widget="monetary" 
-                                           attrs="{'invisible': [('apply_vat_withholding', '=', False)]}"/>
-                                </group>
-                            </group>
-                            
-                            <group class="oe_subtotal_footer oe_right" colspan="2">
-                                <field name="total_withholding" widget="monetary" 
-                                       attrs="{'invisible': [('total_withholding', '=', 0)]}"/>
-                                <div class="oe_subtotal_footer_separator oe_inline" 
-                                     attrs="{'invisible': [('total_withholding', '=', 0)]}">
-                                    <label for="net_to_pay" string="Net à Payer" 
-                                           style="font-weight: bold; font-size: 1.2em;"/>
-                                    <field name="net_to_pay" nolabel="1" 
-                                           class="oe_subtotal_footer_separator" 
-                                           widget="monetary" 
-                                           style="font-weight: bold; font-size: 1.2em;"/>
-                                </div>
-                            </group>
-                            
-                            <group>
-                                <field name="amount_in_words_fr" readonly="1"/>
-                            </group>
-                        </page>
-                        
-                        <page string="Notes" name="notes">
-                            <field name="note" placeholder="Notes internes..."/>
-                        </page>
-                    </notebook>
+                    <separator string="📝 NOTES" class="mt-4"/>
+                    
+                    <group>
+                        <field name="note" placeholder="Notes internes..." nolabel="1"/>
+                    </group>
                 </sheet>
                 <div class="oe_chatter">
-                    <field name="message_follower_ids" groups="base.group_user"/>
+                    <field name="message_follower_ids"/>
                     <field name="activity_ids"/>
                     <field name="message_ids"/>
                 </div>
@@ -166,18 +251,19 @@
                 <field name="name" string="Numéro"/>
                 <field name="travel_company_id" string="Société"/>
                 <field name="member_ids" string="Membres"/>
-                <field name="company_client_id" string="Client Partenaire"/>
-                <field name="date_invoice"/>
-                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Payées" name="paid" domain="[('state', '=', 'paid')]"/>
-                <filter string="Annulées" name="cancel" domain="[('state', '=', 'cancel')]"/>
+                <field name="date_invoice" string="Date"/>
                 <separator/>
-                <filter string="Avec Retenues" name="with_withholdings" 
+                <filter string="📝 Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="✅ Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="💵 Payées" name="paid" domain="[('state', '=', 'paid')]"/>
+                <filter string="❌ Annulées" name="cancel" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter string="📉 Avec Retenues" name="with_withholdings" 
                         domain="['|', ('apply_withholding_tax', '=', True), ('apply_vat_withholding', '=', True)]"/>
+                <separator/>
                 <group expand="0" string="Grouper Par">
-                    <filter string="Client" name="group_client" context="{'group_by': 'company_client_id'}"/>
-                    <filter string="Date" name="group_date" context="{'group_by': 'date_invoice'}"/>
+                    <filter string="Société" name="group_company" context="{'group_by': 'travel_company_id'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'date_invoice:month'}"/>
                     <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
                 </group>
             </search>
@@ -188,7 +274,7 @@
     <record id="action_travel_invoice_client" model="ir.actions.act_window">
         <field name="name">Factures Clients</field>
         <field name="res_model">travel.invoice.client</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,form</field>
         <field name="context">{'search_default_confirmed': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -199,5 +285,4 @@
             </p>
         </field>
     </record>
-
 </odoo>

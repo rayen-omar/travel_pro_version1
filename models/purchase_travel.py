@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
-# import base64  # Nécessaire pour l'extraction PDF future
+"""
+Modèle de facturation fournisseur pour TravelPro.
+
+Gère les factures fournisseurs de l'agence de voyage avec calcul
+automatique de la TVA, retenues à la source et montants servis.
+"""
+import logging
+
+from num2words import num2words
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class TravelPurchase(models.Model):
@@ -107,13 +117,18 @@ class TravelPurchase(models.Model):
     
     @api.depends('amount_total', 'currency_id')
     def _compute_amount_in_words(self):
-        from num2words import num2words
-        
+        """Convertir le montant total en lettres (Français)."""
         for record in self:
             if record.amount_total:
-                # Conversion explicite en français
-                text = num2words(record.amount_total, lang='fr')
-                record.amount_in_words = f"{text} Dinars".capitalize()
+                try:
+                    text = num2words(record.amount_total, lang='fr')
+                    record.amount_in_words = f"{text} Dinars".capitalize()
+                except Exception as e:
+                    _logger.error(
+                        "Erreur conversion montant en lettres pour achat %s: %s",
+                        record.name, str(e)
+                    )
+                    record.amount_in_words = f"{record.amount_total:.3f} Dinars"
             else:
                 record.amount_in_words = ''
     
