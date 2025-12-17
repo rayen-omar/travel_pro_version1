@@ -256,3 +256,6 @@ class TestTravelInvoiceClient(TransactionCase):
         self.assertTrue(invoice.amount_in_words_fr)
         self.assertIn('Dinars', invoice.amount_in_words_fr)
 
+
+
+

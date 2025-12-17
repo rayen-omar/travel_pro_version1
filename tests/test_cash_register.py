@@ -287,3 +287,6 @@ class TestCashRegisterOperation(TransactionCase):
         operation.action_cancel()
         self.assertEqual(operation.state, 'cancelled')
 
+
+
+

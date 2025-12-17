@@ -193,3 +193,6 @@ class TestTravelMember(TransactionCase):
         member.invalidate_recordset(['reservation_count'])
         self.assertEqual(member.reservation_count, 1)
 
+
+
+

@@ -57,6 +57,9 @@ class TravelReservation(models.Model):
     status = fields.Selection([
         ('draft', 'Brouillon'), ('confirmed', 'Confirmé'), ('done', 'Terminé'), ('cancel', 'Annulé')
     ], default='draft', tracking=True)
+    
+    # Date de création de la réservation
+    create_date = fields.Datetime('Date de Création', readonly=True, index=True)
 
     use_credit = fields.Boolean('Utiliser crédit')
     credit_used = fields.Float('Crédit utilisé (TND)', digits=(16, 2), compute='_compute_credit_used', store=True)
@@ -423,10 +426,79 @@ class TravelReservation(models.Model):
         self.status = 'cancel'
 
     def action_confirm(self):
-        self.write({'status': 'confirmed'})
+        """Confirmer la réservation et déduire le crédit si utilisé."""
+        for rec in self:
+            # Vérifier si le crédit a déjà été débité pour cette réservation
+            existing_credit = self.env['travel.credit.history'].search([
+                ('reservation_id', '=', rec.id),
+                ('type', '=', 'usage')
+            ], limit=1)
+            
+            # Si le crédit est utilisé et n'a pas encore été débité
+            if rec.use_credit and rec.credit_used > 0 and not existing_credit:
+                # Vérifier que le client a suffisamment de crédit
+                if rec.member_id.credit_balance < rec.credit_used:
+                    raise UserError(
+                        f"Le client {rec.member_id.name} n'a pas suffisamment de crédit.\n"
+                        f"Crédit disponible: {rec.member_id.credit_balance:.2f} TND\n"
+                        f"Crédit requis: {rec.credit_used:.2f} TND"
+                    )
+                
+                # Créer l'enregistrement d'utilisation du crédit (montant négatif pour déduire)
+                credit_history = self.env['travel.credit.history'].create({
+                    'member_id': rec.member_id.id,
+                    'amount': -rec.credit_used,  # Montant négatif pour déduire
+                    'type': 'usage',
+                    'reservation_id': rec.id,
+                    'note': f'Utilisation crédit pour réservation {rec.name}',
+                })
+                
+                # Forcer le flush pour s'assurer que l'historique est sauvegardé
+                credit_history.flush_recordset()
+                rec.member_id.flush_recordset(['credit_history_ids'])
+                
+                # Invalider et forcer le recalcul du solde crédit
+                rec.member_id.invalidate_recordset(['credit_balance', 'credit_history_ids'])
+                
+                # Recharger le membre pour forcer le recalcul du champ stocké
+                rec.member_id._compute_credit_balance()
+                rec.member_id.flush_recordset(['credit_balance'])
+            
+            rec.write({'status': 'confirmed'})
 
     def action_done(self):
         self.write({'status': 'done'})
 
     def action_cancel(self):
-        self.write({'status': 'cancel'})
+        """Annuler la réservation et rembourser le crédit utilisé si la réservation était confirmée."""
+        for rec in self:
+            # Si la réservation était confirmée et avait utilisé du crédit, le rembourser
+            if rec.status == 'confirmed' and rec.use_credit and rec.credit_used > 0:
+                # Vérifier s'il y a un historique d'utilisation de crédit pour cette réservation
+                credit_usage = self.env['travel.credit.history'].search([
+                    ('reservation_id', '=', rec.id),
+                    ('type', '=', 'usage')
+                ], limit=1)
+                
+                # Si le crédit a été débité, le rembourser
+                if credit_usage:
+                    credit_refund = self.env['travel.credit.history'].create({
+                        'member_id': rec.member_id.id,
+                        'amount': rec.credit_used,  # Montant positif pour rembourser
+                        'type': 'refund',
+                        'reservation_id': rec.id,
+                        'note': f'Remboursement crédit pour annulation réservation {rec.name}',
+                    })
+                    
+                    # Forcer le flush pour s'assurer que l'historique est sauvegardé
+                    credit_refund.flush_recordset()
+                    rec.member_id.flush_recordset(['credit_history_ids'])
+                    
+                    # Invalider et forcer le recalcul du solde crédit
+                    rec.member_id.invalidate_recordset(['credit_balance', 'credit_history_ids'])
+                    
+                    # Recharger le membre pour forcer le recalcul du champ stocké
+                    rec.member_id._compute_credit_balance()
+                    rec.member_id.flush_recordset(['credit_balance'])
+            
+            rec.write({'status': 'cancel'})

@@ -147,3 +147,6 @@ class TestTravelCompany(TransactionCase):
         self.assertEqual(member2.company_id.id, company.id)
         self.assertEqual(company.member_count, 2)
 
+
+
+

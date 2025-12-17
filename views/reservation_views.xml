@@ -26,6 +26,7 @@
                   decoration-muted="status == 'cancel'"
                   decoration-warning="remaining_to_pay > 0 and status == 'confirmed'">
                 <field name="name" string="📋 Réf"/>
+                <field name="create_date" string="📅 Date Création" widget="datetime" optional="show"/>
                 <field name="member_id" string="👤 Client"/>
                 <field name="destination_id" string="✈️ Voyage"/>
                 <field name="trip_type" string="Type" widget="badge" optional="hide"/>
@@ -33,6 +34,7 @@
                 <field name="check_out" string="🛫 Départ"/>
                 <field name="nights" string="🌙 Nuits"/>
                 <field name="participants" string="👥 Pax" optional="show"/>
+                <field name="purchase_amount" string="💰 Achat" widget="monetary" sum="Total"/>
                 <field name="total_price" string="💵 Total" widget="monetary" sum="Total" decoration-bf="True"/>
                 <field name="credit_used" string="💳 Crédit" widget="monetary" optional="show"/>
                 <field name="remaining_to_pay" string="🔴 Reste" widget="monetary" 

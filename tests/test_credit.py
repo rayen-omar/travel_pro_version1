@@ -164,3 +164,6 @@ class TestCreditSystem(TransactionCase):
         # Note: Ce test dépend de la configuration ondelete='cascade'
         # Si le membre est supprimé, l'historique devrait l'être aussi
 
+
+
+

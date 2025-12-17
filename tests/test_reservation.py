@@ -236,3 +236,6 @@ class TestTravelReservation(TransactionCase):
         
         self.assertEqual(supplier.supplier_rank, 1)
 
+
+
+
