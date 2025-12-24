@@ -28,12 +28,11 @@
                 <field name="name" string="📋 Réf"/>
                 <field name="create_date" string="📅 Date Création" widget="datetime" optional="show"/>
                 <field name="member_id" string="👤 Client"/>
+                <field name="company_id" string="🏢 Société"/>
                 <field name="destination_id" string="✈️ Voyage"/>
                 <field name="trip_type" string="Type" widget="badge" optional="hide"/>
                 <field name="check_in" string="🛬 Arrivée"/>
                 <field name="check_out" string="🛫 Départ"/>
-                <field name="nights" string="🌙 Nuits"/>
-                <field name="participants" string="👥 Pax" optional="show"/>
                 <field name="purchase_amount" string="💰 Achat" widget="monetary" sum="Total"/>
                 <field name="total_price" string="💵 Total" widget="monetary" sum="Total" decoration-bf="True"/>
                 <field name="credit_used" string="💳 Crédit" widget="monetary" optional="show"/>
@@ -276,6 +275,7 @@
             <search string="Rechercher Réservations">
                 <field name="name" string="Référence"/>
                 <field name="member_id" string="Client"/>
+                <field name="company_id" string="Société"/>
                 <field name="destination_id" string="Voyage"/>
                 <field name="supplier_id" string="Fournisseur"/>
                 <separator/>
@@ -290,6 +290,7 @@
                 <group expand="0" string="Grouper Par">
                     <filter string="État" name="group_status" context="{'group_by': 'status'}"/>
                     <filter string="Client" name="group_member" context="{'group_by': 'member_id'}"/>
+                    <filter string="Société" name="group_company" context="{'group_by': 'company_id'}"/>
                     <filter string="Voyage" name="group_dest" context="{'group_by': 'destination_id'}"/>
                     <filter string="Fournisseur" name="group_supplier" context="{'group_by': 'supplier_id'}"/>
                     <filter string="Mois Arrivée" name="group_checkin" context="{'group_by': 'check_in:month'}"/>

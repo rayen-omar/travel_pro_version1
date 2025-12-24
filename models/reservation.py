@@ -9,6 +9,7 @@ class TravelReservation(models.Model):
 
     name = fields.Char('Référence', default='Nouveau', readonly=True)
     member_id = fields.Many2one('travel.member', string='Client', required=True)
+    company_id = fields.Many2one('travel.company', string='Société', related='member_id.company_id', store=True, readonly=True)
     destination_id = fields.Many2one('travel.destination', string='Destination', required=True)
     
     # Type de voyage

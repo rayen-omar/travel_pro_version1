@@ -86,9 +86,9 @@
                                       decoration-muted="status == 'cancel'">
                                     <field name="name" string="📋 Réf"/>
                                     <field name="member_id" string="👤 Client"/>
+                                    <field name="company_id" string="🏢 Société"/>
                                     <field name="check_in" string="🛬 Arrivée"/>
                                     <field name="check_out" string="🛫 Départ"/>
-                                    <field name="participants" string="👥 Pax"/>
                                     <field name="total_price" string="💵 Total" widget="monetary"/>
                                     <field name="status" string="État" widget="badge"/>
                                 </tree>
