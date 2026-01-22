@@ -59,12 +59,6 @@
                             </group>
                         </div>
                     </div>
-                    
-                    <separator string="Notes" class="mt-4"/>
-                    
-                    <group>
-                        <field name="note" placeholder="Notes et détails sur ce service..." nolabel="1"/>
-                    </group>
                 </sheet>
             </form>
         </field>

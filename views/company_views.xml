@@ -49,9 +49,13 @@
                     
                     <separator string="Adresse" class="mt-4"/>
                     
-                    <group>
-                        <field name="address" placeholder="Adresse complète de la société..." nolabel="1"/>
-                    </group>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <group string="Adresse">
+                                <field name="address" placeholder="Adresse complète de la société..."/>
+                            </group>
+                        </div>
+                    </div>
                     
                     <separator string="Membres de la Société" class="mt-4"/>
                     

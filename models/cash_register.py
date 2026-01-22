@@ -133,6 +133,7 @@ class CashRegister(models.Model):
         Ouvrir la caisse.
         - Pour une sous-caisse: vérifie que la caisse principale est ouverte
         - Pour la caisse principale: ouvre automatiquement toutes les sous-caisses
+        - Le solde d'ouverture est le solde de fermeture de la dernière session
         """
         self.ensure_one()
         if self.state == 'opened':
@@ -145,24 +146,39 @@ class CashRegister(models.Model):
                     "La caisse principale doit être ouverte avant d'ouvrir cette sous-caisse."
                 )
 
+        # Calculer le solde d'ouverture : utiliser le solde de fermeture de la dernière session
+        # Si la caisse a déjà été fermée, utiliser le closing_balance comme opening_balance
+        if self.closing_balance is not None and self.closing_date:
+            opening_balance = self.closing_balance
+        else:
+            # Si aucune fermeture précédente, utiliser 0.0
+            opening_balance = 0.0
+
         # Si c'est la caisse principale, ouvrir toutes les sous-caisses
         if self.is_main:
             sub_cashes = self.search([
                 ('main_cash_id', '=', self.id),
                 ('state', '=', 'closed')
             ])
-            sub_cashes.write({
-                'state': 'opened',
-                'opening_date': fields.Datetime.now(),
-                'opening_user_id': self.env.user.id,
-                'opening_balance': 0.0,
-            })
+            # Pour chaque sous-caisse, calculer son solde d'ouverture
+            for sub_cash in sub_cashes:
+                if sub_cash.closing_balance is not None and sub_cash.closing_date:
+                    sub_opening_balance = sub_cash.closing_balance
+                else:
+                    sub_opening_balance = 0.0
+                
+                sub_cash.write({
+                    'state': 'opened',
+                    'opening_date': fields.Datetime.now(),
+                    'opening_user_id': self.env.user.id,
+                    'opening_balance': sub_opening_balance,
+                })
 
         self.write({
             'state': 'opened',
             'opening_date': fields.Datetime.now(),
             'opening_user_id': self.env.user.id,
-            'opening_balance': max(self.balance, 0.0),
+            'opening_balance': opening_balance,
         })
 
         return {

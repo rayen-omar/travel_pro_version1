@@ -81,7 +81,7 @@
                     <!-- Section 3: Facturation -->
                     <div class="row">
                         <div class="col-lg-4">
-                            <group string="📊 MONTANTS">
+                            <group string="Montants">
                                 <field name="supplier_service_id" invisible="1"/>
                                 <field name="supplier_reservation_id" string="Réservation liée" 
                                        options="{'no_create': True}"/>
@@ -100,7 +100,7 @@
                             </group>
                         </div>
                         <div class="col-lg-4">
-                            <group string="📈 CALCULS">
+                            <group string="Calculs">
                                 <field name="supplier_amount_untaxed" string="Montant HT" readonly="1"
                                        widget="monetary"/>
                                 <field name="supplier_amount_tax" string="Montant TVA" readonly="1"
@@ -127,16 +127,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <separator string="Notes" class="mt-4"/>
-                    
-                    <!-- Section 4: Notes -->
-                    <group>
-                        <field name="supplier_description" string="Notes Facturation" 
-                               placeholder="Notes sur la facturation..." nolabel="1"/>
-                        <field name="comment" string="Notes Générales" 
-                               placeholder="Notes internes sur ce fournisseur..." nolabel="1"/>
-                    </group>
                 </sheet>
             </form>
         </field>
