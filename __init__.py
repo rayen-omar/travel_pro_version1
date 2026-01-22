@@ -2,6 +2,7 @@
 from odoo import SUPERUSER_ID, api
 
 from . import models
+from . import wizard
 
 
 def post_init_hook(cr, registry):

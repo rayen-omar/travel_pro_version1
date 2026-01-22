@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action pour ouvrir le wizard -->
+    <record id="action_invoice_reservations_wizard" model="ir.actions.act_window">
+        <field name="name">Facturer Plusieurs Réservations</field>
+        <field name="res_model">invoice.reservations.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_travel_reservation"/>
+        <field name="binding_view_types">list</field>
+    </record>
+    
+    <!-- Vue Formulaire Wizard -->
+    <record id="view_invoice_reservations_wizard_form" model="ir.ui.view">
+        <field name="name">invoice.reservations.wizard.form</field>
+        <field name="model">invoice.reservations.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Facturer Plusieurs Réservations">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>Facturation Groupée</span>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="travel_company_id" 
+                                   options="{'no_create': True}"
+                                   required="1"/>
+                            <field name="date_invoice" required="1"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Résumé:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Nombre de réservations: <field name="total_reservations" nolabel="1"/></li>
+                                    <li>Nombre de membres: <field name="members_count" nolabel="1"/></li>
+                                    <li>Montant total (TTC): <field name="total_amount" widget="monetary" nolabel="1"/></li>
+                                </ul>
+                            </div>
+                        </group>
+                    </group>
+                    
+                    <group string="Réservations à Facturer">
+                        <field name="reservation_ids" 
+                               nolabel="1"
+                               required="1"
+                               domain="[('status', 'in', ['confirmed', 'done']), ('total_price', '>', 0)]"
+                               context="{'default_travel_company_id': travel_company_id}">
+                            <tree string="Réservations" editable="bottom" decoration-success="status == 'done'" decoration-info="status == 'confirmed'">
+                                <field name="name" string="Référence"/>
+                                <field name="member_id" string="Client"/>
+                                <field name="destination_id" string="Voyage"/>
+                                <field name="check_in" string="Arrivée"/>
+                                <field name="check_out" string="Départ"/>
+                                <field name="total_price" string="Montant (TTC)" widget="monetary" sum="Total"/>
+                                <field name="status" string="État" widget="badge"/>
+                            </tree>
+                        </field>
+                    </group>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Note:</strong> Toutes les réservations sélectionnées doivent:
+                        <ul class="mb-0 mt-2">
+                            <li>Être confirmées ou terminées</li>
+                            <li>Avoir un prix supérieur à 0</li>
+                        </ul>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_create_invoice" string="Créer la Facture" type="object" class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

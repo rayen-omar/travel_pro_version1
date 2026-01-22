@@ -5,7 +5,6 @@ from odoo import api, fields, models
 class TravelWithholding(models.Model):
     _name = 'travel.withholding'
     _description = 'Retenue à la Source Fournisseur'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date_payment desc, id desc'
 
     name = fields.Char('Numéro', readonly=True, default='Nouveau', copy=False)

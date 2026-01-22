@@ -24,7 +24,6 @@ class TravelCompany(models.Model):
     """
     _name = 'travel.company'
     _description = 'Société Cliente'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====
@@ -54,7 +53,7 @@ class TravelCompany(models.Model):
         'Email',
         help="Adresse email de contact"
     )
-    address = fields.Text(
+    address = fields.Char(
         'Adresse',
         help="Adresse complète de la société"
     )

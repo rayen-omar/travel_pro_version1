@@ -16,7 +16,6 @@ from . import invoice
 from . import invoice_client
 from . import withholding
 from . import purchase_travel
-from . import purchase_report
 
 # Caisse et POS
 from . import pos

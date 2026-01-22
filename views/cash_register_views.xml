@@ -40,17 +40,17 @@
                   decoration-info="is_main == True" 
                   decoration-muted="state == 'closed'"
                   decoration-success="state == 'opened'">
-                <field name="name" string="🏦 Caisse"/>
-                <field name="code" string="🔖 Code"/>
+                <field name="name" string="Caisse"/>
+                <field name="code" string="Code"/>
                 <field name="is_main" invisible="1"/>
                 <field name="main_cash_id" string="Caisse Principale" optional="show"/>
-                <field name="sub_cash_count" string="📊 Sous-Caisses" attrs="{'invisible': [('is_main', '=', False)]}"/>
-                <field name="user_id" string="👤 Responsable"/>
+                <field name="sub_cash_count" string="Sous-Caisses" attrs="{'invisible': [('is_main', '=', False)]}"/>
+                <field name="user_id" string="Responsable"/>
                 <field name="state" string="État" widget="badge"/>
-                <field name="opening_balance" string="💵 Ouverture" widget="monetary"/>
-                <field name="total_receipts" string="📥 Recettes" sum="Total Recettes" widget="monetary" decoration-success="True"/>
-                <field name="total_expenses" string="📤 Dépenses" sum="Total Dépenses" widget="monetary" decoration-danger="True"/>
-                <field name="balance" string="💰 Solde" sum="Solde Total" widget="monetary" 
+                <field name="opening_balance" string="Ouverture" widget="monetary"/>
+                <field name="total_receipts" string="Recettes" sum="Total Recettes" widget="monetary" decoration-success="True"/>
+                <field name="total_expenses" string="Dépenses" sum="Total Dépenses" widget="monetary" decoration-danger="True"/>
+                <field name="balance" string="Solde" sum="Solde Total" widget="monetary" 
                        decoration-success="balance > 0" decoration-danger="balance &lt; 0" decoration-bf="True"/>
             </tree>
         </field>
@@ -74,8 +74,6 @@
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="oe_kanban_details p-3">
                                 <strong class="o_kanban_record_title fs-5 text-primary">
-                                    <t t-if="record.is_main.raw_value">🏦</t>
-                                    <t t-else="">💰</t>
                                     <field name="name"/>
                                 </strong>
                                 <div class="mt-2">
@@ -85,17 +83,17 @@
                                 </div>
                                 <div class="mt-2">
                                     <span class="badge bg-success">
-                                        📥 <field name="total_receipts" widget="monetary"/>
+                                        <field name="total_receipts" widget="monetary"/>
                                     </span>
                                 </div>
                                 <div class="mt-1">
                                     <span class="badge bg-danger">
-                                        📤 <field name="total_expenses" widget="monetary"/>
+                                        <field name="total_expenses" widget="monetary"/>
                                     </span>
                                 </div>
                                 <div class="mt-2">
                                     <span class="badge bg-primary fs-6">
-                                        💵 Solde: <field name="balance" widget="monetary"/>
+                                        Solde: <field name="balance" widget="monetary"/>
                                     </span>
                                 </div>
                             </div>
@@ -113,11 +111,11 @@
         <field name="arch" type="xml">
             <form string="Caisse">
                 <header>
-                    <button name="action_open_cash" string="🔓 Ouvrir la Caisse" type="object" 
+                    <button name="action_open_cash" string="Ouvrir la Caisse" type="object" 
                             class="btn-success" attrs="{'invisible': [('state', '=', 'opened')]}"/>
-                    <button name="action_close_cash" string="🔒 Fermer la Caisse" type="object" 
+                    <button name="action_close_cash" string="Fermer la Caisse" type="object" 
                             class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', False)]}"/>
-                    <button name="action_close_sub_cash" string="🔒 Fermer la Sous-Caisse" type="object" 
+                    <button name="action_close_sub_cash" string="Fermer la Sous-Caisse" type="object" 
                             class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', True)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="opened,closed"/>
                 </header>
@@ -149,25 +147,25 @@
                     <!-- Section Informations & Ouverture -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="📋 Informations">
-                                <field name="code" string="🔖 Code"/>
+                            <group string="Informations">
+                                <field name="code" string="Code"/>
                                 <field name="sequence_id" string="Séquence" options="{'no_create': True, 'no_create_edit': True}"/>
-                                <field name="is_main" string="🏦 Caisse Principale"/>
+                                <field name="is_main" string="Caisse Principale"/>
                                 <field name="main_cash_id" string="Caisse Parente" 
                                        attrs="{'required': [('is_main', '=', False)], 'invisible': [('is_main', '=', True)]}"
                                        options="{'no_create': True}"/>
-                                <field name="user_id" string="👤 Responsable"/>
+                                <field name="user_id" string="Responsable"/>
                                 <field name="company_id" groups="base.group_multi_company"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
-                            <group string="📅 Ouverture/Fermeture">
-                                <field name="opening_date" string="📅 Date Ouverture" readonly="1"/>
-                                <field name="opening_user_id" string="👤 Ouvert par" readonly="1"/>
-                                <field name="opening_balance" string="💵 Solde Ouverture" widget="monetary"/>
-                                <field name="closing_date" string="📅 Date Fermeture" readonly="1"/>
-                                <field name="closing_user_id" string="👤 Fermé par" readonly="1"/>
-                                <field name="closing_balance" string="💵 Solde Fermeture" widget="monetary" readonly="1"/>
+                            <group string="Ouverture/Fermeture">
+                                <field name="opening_date" string="Date Ouverture" readonly="1"/>
+                                <field name="opening_user_id" string="Ouvert par" readonly="1"/>
+                                <field name="opening_balance" string="Solde Ouverture" widget="monetary"/>
+                                <field name="closing_date" string="Date Fermeture" readonly="1"/>
+                                <field name="closing_user_id" string="Fermé par" readonly="1"/>
+                                <field name="closing_balance" string="Solde Fermeture" widget="monetary" readonly="1"/>
                             </group>
                         </div>
                     </div>
@@ -176,7 +174,7 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="alert alert-primary text-center py-3">
-                                <h4 class="mb-0">💰 Solde Actuel</h4>
+                                <h4 class="mb-0">Solde Actuel</h4>
                                 <h2 class="mb-0 text-primary fw-bold">
                                     <field name="balance" widget="monetary" nolabel="1"/>
                                 </h2>
@@ -184,24 +182,24 @@
                         </div>
                     </div>
                     
-                    <separator string="📊 SOUS-CAISSES" class="mt-4" attrs="{'invisible': [('is_main', '=', False)]}"/>
+                    <separator string="Sous-Caisses" class="mt-4" attrs="{'invisible': [('is_main', '=', False)]}"/>
                     
                     <!-- Sous-caisses -->
                     <field name="sub_cash_ids" nolabel="1" attrs="{'invisible': [('is_main', '=', False)]}">
                         <tree string="Sous-Caisses" create="1" delete="1" 
                               decoration-success="state == 'opened'" decoration-muted="state == 'closed'">
-                            <field name="name" string="🏦 Nom"/>
-                            <field name="code" string="🔖 Code"/>
-                            <field name="user_id" string="👤 Responsable"/>
+                            <field name="name" string="Nom"/>
+                            <field name="code" string="Code"/>
+                            <field name="user_id" string="Responsable"/>
                             <field name="state" string="État" widget="badge"/>
-                            <field name="opening_balance" string="💵 Ouverture" widget="monetary"/>
-                            <field name="total_receipts" string="📥 Recettes" sum="Total" widget="monetary"/>
-                            <field name="total_expenses" string="📤 Dépenses" sum="Total" widget="monetary"/>
-                            <field name="balance" string="💰 Solde" sum="Total" widget="monetary"/>
+                            <field name="opening_balance" string="Ouverture" widget="monetary"/>
+                            <field name="total_receipts" string="Recettes" sum="Total" widget="monetary"/>
+                            <field name="total_expenses" string="Dépenses" sum="Total" widget="monetary"/>
+                            <field name="balance" string="Solde" sum="Total" widget="monetary"/>
                         </tree>
                     </field>
                     
-                    <separator string="📋 OPÉRATIONS" class="mt-4"/>
+                    <separator string="Opérations" class="mt-4"/>
                     
                     <!-- Opérations -->
                     <field name="operation_ids" nolabel="1">
@@ -209,14 +207,14 @@
                               decoration-success="type == 'receipt' and state == 'confirmed'" 
                               decoration-danger="type == 'expense' and state == 'confirmed'"
                               decoration-muted="state == 'cancelled'">
-                            <field name="name" string="📋 Réf"/>
-                            <field name="date" string="📅 Date"/>
+                            <field name="name" string="Référence"/>
+                            <field name="date" string="Date"/>
                             <field name="type" string="Type" widget="badge"/>
-                            <field name="amount" string="💵 Montant" sum="Total" widget="monetary"/>
-                            <field name="payment_method" string="💳 Mode"/>
-                            <field name="invoice_number" string="📄 N° Facture" optional="show"/>
-                            <field name="quote_number" string="📋 N° Devis" optional="show"/>
-                            <field name="user_id" string="👤 Utilisateur"/>
+                            <field name="amount" string="Montant" sum="Total" widget="monetary"/>
+                            <field name="payment_method" string="Mode"/>
+                            <field name="invoice_number" string="N° Facture" optional="show"/>
+                            <field name="quote_number" string="N° Devis" optional="show"/>
+                            <field name="user_id" string="Utilisateur"/>
                             <field name="state" string="État" widget="badge"/>
                         </tree>
                     </field>
@@ -235,13 +233,13 @@
                 <field name="code"/>
                 <field name="user_id"/>
                 <separator/>
-                <filter string="🟢 Ouvertes" name="opened" domain="[('state', '=', 'opened')]"/>
-                <filter string="🔴 Fermées" name="closed" domain="[('state', '=', 'closed')]"/>
+                <filter string="Ouvertes" name="opened" domain="[('state', '=', 'opened')]"/>
+                <filter string="Fermées" name="closed" domain="[('state', '=', 'closed')]"/>
                 <separator/>
-                <filter string="🏦 Caisses Principales" name="main" domain="[('is_main', '=', True)]"/>
-                <filter string="📊 Sous-Caisses" name="sub" domain="[('is_main', '=', False)]"/>
+                <filter string="Caisses Principales" name="main" domain="[('is_main', '=', True)]"/>
+                <filter string="Sous-Caisses" name="sub" domain="[('is_main', '=', False)]"/>
                 <separator/>
-                <filter string="👤 Mes Caisses" name="my_cashes" domain="[('user_id', '=', uid)]"/>
+                <filter string="Mes Caisses" name="my_cashes" domain="[('user_id', '=', uid)]"/>
                 <separator/>
                 <group expand="0" string="Grouper Par">
                     <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
@@ -266,17 +264,17 @@
                   decoration-success="type == 'receipt' and state == 'confirmed'" 
                   decoration-danger="type == 'expense' and state == 'confirmed'" 
                   decoration-muted="state == 'cancelled'">
-                <field name="name" string="📋 Réf"/>
-                <field name="date" string="📅 Date"/>
-                <field name="cash_register_id" string="🏦 Caisse"/>
-                <field name="reservation_id" string="✈️ Réservation" optional="show"/>
+                <field name="name" string="Référence"/>
+                <field name="date" string="Date"/>
+                <field name="cash_register_id" string="Caisse"/>
+                <field name="reservation_id" string="Réservation" optional="show"/>
                 <field name="type" string="Type" widget="badge"/>
-                <field name="amount" string="💵 Montant" sum="Total" widget="monetary" decoration-bf="True"/>
-                <field name="payment_method" string="💳 Mode"/>
-                <field name="invoice_number" string="📄 N° Facture" optional="show"/>
+                <field name="amount" string="Montant" sum="Total" widget="monetary" decoration-bf="True"/>
+                <field name="payment_method" string="Mode"/>
+                <field name="invoice_number" string="N° Facture" optional="show"/>
                 <field name="invoice_id" string="Facture" optional="hide"/>
                 <field name="sale_order_id" string="Devis" optional="hide"/>
-                <field name="user_id" string="👤 Utilisateur"/>
+                <field name="user_id" string="Utilisateur"/>
                 <field name="state" string="État" widget="badge"/>
             </tree>
         </field>
@@ -298,16 +296,14 @@
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="oe_kanban_details p-3">
                                 <strong class="o_kanban_record_title text-primary">
-                                    <t t-if="record.type.raw_value == 'receipt'">📥</t>
-                                    <t t-else="">📤</t>
                                     <field name="name"/>
                                 </strong>
                                 <div class="text-muted mt-1">
-                                    📅 <field name="date"/>
+                                    <field name="date"/>
                                 </div>
                                 <div class="mt-3">
                                     <span t-attf-class="badge fs-6 #{record.type.raw_value == 'receipt' ? 'bg-success' : 'bg-danger'}">
-                                        💰 <field name="amount" widget="monetary"/>
+                                        <field name="amount" widget="monetary"/>
                                     </span>
                                 </div>
                                 <div class="mt-2">
@@ -330,12 +326,12 @@
                 <header>
                     <button name="action_confirm" string="✅ Confirmer" type="object" 
                             class="btn-success" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                    <button name="action_print_receipt" string="🖨️ Imprimer Reçu" type="object" 
+                    <button name="action_print_receipt" string="Imprimer Reçu" type="object" 
                             class="btn-secondary"
                             attrs="{'invisible': ['|', ('state', '!=', 'confirmed'), ('type', '!=', 'receipt')]}"/>
-                    <button name="action_cancel" string="❌ Annuler" type="object" 
+                    <button name="action_cancel" string="Annuler" type="object" 
                             attrs="{'invisible': [('state', '=', 'cancelled')]}"/>
-                    <button name="action_draft" string="🔄 Brouillon" type="object" 
+                    <button name="action_draft" string="Brouillon" type="object" 
                             attrs="{'invisible': [('state', '!=', 'cancelled')]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
@@ -346,7 +342,7 @@
                                 icon="fa-plane" attrs="{'invisible': [('reservation_id', '=', False)]}"
                                 context="{'default_reservation_id': reservation_id}">
                             <div class="o_stat_info">
-                                <span class="o_stat_text">✈️ Réservation</span>
+                                <span class="o_stat_text">Réservation</span>
                             </div>
                         </button>
                     </div>
@@ -361,19 +357,19 @@
                     <!-- Section Informations & Paiement -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="📋 Informations">
-                                <field name="cash_register_id" string="🏦 Caisse" options="{'no_create': True}"/>
-                                <field name="date" string="📅 Date"/>
-                                <field name="user_id" string="👤 Utilisateur"/>
+                            <group string="Informations">
+                                <field name="cash_register_id" string="Caisse" options="{'no_create': True}"/>
+                                <field name="date" string="Date"/>
+                                <field name="user_id" string="Utilisateur"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
-                            <group string="💵 Détails Paiement">
+                            <group string="Détails Paiement">
                                 <field name="type" string="Type" widget="radio" options="{'horizontal': true}"/>
-                                <field name="payment_method" string="💳 Mode de Paiement"/>
+                                <field name="payment_method" string="Mode de Paiement"/>
                             </group>
                             <div class="alert alert-primary text-center py-3">
-                                <h4 class="mb-0">💵 Montant</h4>
+                                <h4 class="mb-0">Montant</h4>
                                 <h2 class="mb-0 text-primary fw-bold">
                                     <field name="amount" widget="monetary" nolabel="1"
                                            attrs="{'readonly': [('state', '!=', 'draft')]}"/>
@@ -382,26 +378,26 @@
                         </div>
                     </div>
                     
-                    <separator string="🔗 RÉFÉRENCES LIÉES" class="mt-4"/>
+                    <separator string="Références Liées" class="mt-4"/>
                     
                     <div class="row">
                         <div class="col-lg-6">
                             <group>
-                                <field name="reservation_id" string="✈️ Réservation"
+                                <field name="reservation_id" string="Réservation"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"
                                        options="{'no_create': True}"/>
-                                <field name="invoice_number" string="📄 N° Facture" 
+                                <field name="invoice_number" string="N° Facture" 
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="quote_number" string="📋 N° Devis" 
+                                <field name="quote_number" string="N° Devis" 
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
                             <group>
-                                <field name="sale_order_id" string="🛒 Commande"
+                                <field name="sale_order_id" string="Commande"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"
                                        options="{'no_create': True}"/>
-                                <field name="invoice_id" string="📄 Facture Odoo"
+                                <field name="invoice_id" string="Facture Odoo"
                                        domain="[('move_type', 'in', ['out_invoice', 'out_refund'])]"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"
                                        options="{'no_create': True}"/>
@@ -409,7 +405,7 @@
                         </div>
                     </div>
                     
-                    <separator string="📝 NOTE" class="mt-4"/>
+                    <separator string="Note" class="mt-4"/>
                     
                     <group>
                         <field name="note" placeholder="Références ou notes sur cette opération..." 
@@ -432,15 +428,15 @@
                 <field name="quote_number"/>
                 <field name="reservation_id"/>
                 <separator/>
-                <filter string="📥 Recettes" name="receipts" domain="[('type', '=', 'receipt')]"/>
-                <filter string="📤 Dépenses" name="expenses" domain="[('type', '=', 'expense')]"/>
+                <filter string="Recettes" name="receipts" domain="[('type', '=', 'receipt')]"/>
+                <filter string="Dépenses" name="expenses" domain="[('type', '=', 'expense')]"/>
                 <separator/>
-                <filter string="✅ Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="📝 Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="❌ Annulées" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Brouillons" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Annulées" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
                 <separator/>
-                <filter string="📅 Aujourd'hui" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
-                <filter string="📅 Ce mois" name="this_month" domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter string="Aujourd'hui" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Ce mois" name="this_month" domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
                 <separator/>
                 <group expand="0" string="Grouper Par">
                     <filter string="Type" name="group_type" context="{'group_by': 'type'}"/>

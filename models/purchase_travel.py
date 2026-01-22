@@ -18,7 +18,6 @@ _logger = logging.getLogger(__name__)
 class TravelPurchase(models.Model):
     _name = 'travel.purchase'
     _description = 'Facture Fournisseur Travel'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date_creation desc, id desc'
 
     name = fields.Char('Numéro Facture', readonly=True, default='Nouveau', copy=False)
@@ -82,7 +81,7 @@ class TravelPurchase(models.Model):
     
     # Informations société vendeur (STE WE CAN TRAVEL) - valeurs fixes
     company_name_seller = fields.Char('Nom Société Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
-    company_address_seller = fields.Text('Adresse Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
+    company_address_seller = fields.Char('Adresse Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
     company_phone_seller = fields.Char('Téléphone Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
     company_mobile_seller = fields.Char('Mobile Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
     company_email_seller = fields.Char('Email Vendeur', compute='_compute_company_info_seller', store=False, readonly=True)
@@ -107,11 +106,11 @@ class TravelPurchase(models.Model):
         """Retourner les informations fixes de Agence WE CAN TRAVEL"""
         for record in self:
             record.company_name_seller = 'Agence WE CAN TRAVEL'
-            record.company_address_seller = 'rue bachir aljaziri manzel gabes\ngabes'
+            record.company_address_seller = 'rue bachir aljaziri manzel gabes, gabes'
             record.company_phone_seller = '+216256100035'
             record.company_mobile_seller = '+21623713387'
             record.company_email_seller = 'sales@we-cantravel.com'
-            record.company_vat_seller = '1670453m'
+            record.company_vat_seller = '1670453M'
             record.company_bank_name = 'Banque Attijari Bank'
             record.company_bank_iban = 'TN59 04 108 0650090101536 27'
     

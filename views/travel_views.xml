@@ -6,11 +6,11 @@
         <field name="model">travel.destination</field>
         <field name="arch" type="xml">
             <tree string="Voyages" decoration-info="reservation_count > 0">
-                <field name="name" string="✈️ Voyage"/>
-                <field name="price" string="💵 Prix/Personne" widget="monetary" decoration-bf="True"/>
-                <field name="start_date" string="🛫 Début"/>
-                <field name="end_date" string="🛬 Fin"/>
-                <field name="reservation_count" string="📋 Réservations" decoration-bf="reservation_count > 0"/>
+                <field name="name" string="Voyage"/>
+                <field name="price" string="Prix/Personne" widget="monetary" decoration-bf="True"/>
+                <field name="start_date" string="Début"/>
+                <field name="end_date" string="Fin"/>
+                <field name="reservation_count" string="Réservations" decoration-bf="reservation_count > 0"/>
             </tree>
         </field>
     </record>
@@ -29,78 +29,42 @@
                         </h1>
                     </div>
                     
-                    <!-- Section Description & Période -->
+                    <!-- Section Période & Tarif -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="📋 Informations">
-                                <field name="description" string="📝 Description" placeholder="Description du voyage..."/>
+                            <group string="Période">
+                                <field name="start_date" string="Date Début"/>
+                                <field name="end_date" string="Date Fin"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
-                            <group string="📅 Période">
-                                <field name="start_date" string="🛫 Date Début"/>
-                                <field name="end_date" string="🛬 Date Fin"/>
+                            <group string="Tarif">
+                                <field name="price" string="Prix par Personne" widget="monetary"/>
                             </group>
                         </div>
                     </div>
                     
-                    <!-- Section Tarif & Services -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="💰 TARIF">
-                                <div class="alert alert-primary text-center py-3" role="alert">
-                                    <h4 class="mb-0">Prix par Personne</h4>
-                                    <h2 class="mb-0 text-primary fw-bold">
-                                        <field name="price" widget="monetary" nolabel="1"/>
-                                    </h2>
-                                </div>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="🛎️ Services Inclus">
-                                <field name="service_ids" widget="many2many_tags" nolabel="1" 
-                                       options="{'color_field': 'color'}"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="✈️ RÉSERVATIONS" class="mt-4"/>
+                    <separator string="Réservations" class="mt-4"/>
                     
                     <!-- Section Réservations -->
                     <div class="row mb-3">
                         <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-info fs-6 me-2">
-                                        <field name="reservation_count"/> Réservations
-                                    </span>
-                                </div>
-                                <div>
-                                    <button name="action_create_reservation" type="object" 
-                                            string="➕ Nouvelle Réservation" class="btn btn-primary btn-sm"/>
-                                </div>
-                            </div>
                             <field name="reservation_ids" nolabel="1">
                                 <tree decoration-success="status == 'confirmed'" 
                                       decoration-info="status == 'done'" 
                                       decoration-muted="status == 'cancel'">
-                                    <field name="name" string="📋 Réf"/>
-                                    <field name="member_id" string="👤 Client"/>
-                                    <field name="company_id" string="🏢 Société"/>
-                                    <field name="check_in" string="🛬 Arrivée"/>
-                                    <field name="check_out" string="🛫 Départ"/>
-                                    <field name="total_price" string="💵 Total" widget="monetary"/>
+                                    <field name="name" string="Référence"/>
+                                    <field name="member_id" string="Client"/>
+                                    <field name="company_id" string="Société"/>
+                                    <field name="check_in" string="Arrivée"/>
+                                    <field name="check_out" string="Départ"/>
+                                    <field name="total_price" string="Total" widget="monetary"/>
                                     <field name="status" string="État" widget="badge"/>
                                 </tree>
                             </field>
                         </div>
                     </div>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
@@ -121,19 +85,19 @@
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="oe_kanban_details p-3">
                                 <strong class="o_kanban_record_title fs-5 text-primary">
-                                    ✈️ <field name="name"/>
+                                    <field name="name"/>
                                 </strong>
                                 <div class="mt-2">
                                     <span class="badge bg-primary fs-6">
-                                        💰 <field name="price" widget="monetary"/>
+                                        <field name="price" widget="monetary"/>
                                     </span>
                                 </div>
                                 <div class="mt-2 text-muted" t-if="record.start_date.value">
-                                    📅 <field name="start_date"/> → <field name="end_date"/>
+                                    <field name="start_date"/> → <field name="end_date"/>
                                 </div>
                                 <div class="mt-2">
                                     <span class="badge bg-info">
-                                        📋 <field name="reservation_count"/> Réservations
+                                        <field name="reservation_count"/> Réservations
                                     </span>
                                 </div>
                             </div>
@@ -152,11 +116,11 @@
             <search string="Rechercher Voyages">
                 <field name="name" string="Nom"/>
                 <separator/>
-                <filter string="🟢 En cours" name="current" 
+                <filter string="En cours" name="current" 
                         domain="[('start_date', '&lt;=', context_today().strftime('%Y-%m-%d')), ('end_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
-                <filter string="🔵 À venir" name="upcoming" 
+                <filter string="À venir" name="upcoming" 
                         domain="[('start_date', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
-                <filter string="⚪ Passés" name="past" 
+                <filter string="Passés" name="past" 
                         domain="[('end_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <separator/>
                 <filter string="Avec Réservations" name="with_reservations" domain="[('reservation_ids', '!=', False)]"/>

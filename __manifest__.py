@@ -66,6 +66,7 @@
         'views/invoice_client_views.xml',
         'views/report_invoice_client.xml',
         'views/invoice_views.xml',
+        'views/invoice_reservations_wizard_views.xml',
         'views/purchase_views.xml',
         'views/purchase_travel_views.xml',
         'views/report_purchase_travel.xml',
@@ -76,7 +77,6 @@
         # POS
         'views/pos_views.xml',
         # Rapports
-        'views/purchase_report_views.xml',
         'views/report_reservation_quote.xml',
         # Menu (doit être chargé en dernier)
         'views/menu.xml',

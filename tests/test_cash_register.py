@@ -291,3 +291,10 @@ class TestCashRegisterOperation(TransactionCase):
 
 
 
+
+
+
+
+
+
+

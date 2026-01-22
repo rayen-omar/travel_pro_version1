@@ -6,14 +6,14 @@
         <field name="model">travel.member</field>
         <field name="arch" type="xml">
             <tree string="Membres" decoration-success="credit_balance > 0">
-                <field name="name" string="👤 Nom"/>
-                <field name="company_id" string="🏢 Société"/>
-                <field name="matricule" string="🔖 Matricule"/>
-                <field name="email" string="✉️ Email"/>
-                <field name="phone" string="📞 Téléphone"/>
-                <field name="credit_balance" string="💰 Crédit" widget="monetary" 
+                <field name="name" string="Nom"/>
+                <field name="company_id" string="Société"/>
+                <field name="matricule" string="Matricule"/>
+                <field name="email" string="Email"/>
+                <field name="phone" string="Téléphone"/>
+                <field name="credit_balance" string="Crédit" widget="monetary" 
                        decoration-success="credit_balance > 0" decoration-bf="credit_balance > 0"/>
-                <field name="reservation_count" string="✈️ Réservations" optional="show"/>
+                <field name="reservation_count" string="Réservations" optional="show"/>
             </tree>
         </field>
     </record>
@@ -40,52 +40,39 @@
                     <!-- Section Contact & Crédit -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="📋 Informations">
-                                <field name="matricule" string="🔖 Matricule"/>
-                                <field name="email" string="✉️ Email" widget="email" placeholder="email@exemple.com"/>
-                                <field name="phone" string="📞 Téléphone" widget="phone" placeholder="+216 XX XXX XXX"/>
+                            <group string="Informations">
+                                <field name="matricule" string="Matricule"/>
+                                <field name="email" string="Email" widget="email" placeholder="email@exemple.com"/>
+                                <field name="phone" string="Téléphone" widget="phone" placeholder="+216 XX XXX XXX"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
-                            <group string="💰 CRÉDIT">
+                            <group string="Crédit">
                                 <div class="alert alert-success text-center py-3" role="alert">
                                     <h4 class="mb-0">Solde Crédit</h4>
                                     <h2 class="mb-0 text-success fw-bold">
                                         <field name="credit_balance" widget="monetary" nolabel="1"/>
                                     </h2>
                                 </div>
-                                <button name="action_recharge_credit" type="object" 
-                                        string="💳 Recharger Crédit" class="btn btn-success w-100"/>
                             </group>
                         </div>
                     </div>
                     
-                    <separator string="✈️ RÉSERVATIONS" class="mt-4"/>
+                    <separator string="Réservations" class="mt-4"/>
                     
                     <!-- Section Réservations -->
                     <div class="row mb-3">
                         <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-info fs-6 me-2">
-                                        <field name="reservation_count"/> Réservations
-                                    </span>
-                                </div>
-                                <div>
-                                    <button name="action_create_reservation" type="object" 
-                                            string="➕ Nouvelle Réservation" class="btn btn-primary btn-sm"/>
-                                </div>
-                            </div>
                             <field name="reservation_ids" nolabel="1">
                                 <tree decoration-success="status == 'confirmed'" 
                                       decoration-info="status == 'done'" 
                                       decoration-muted="status == 'cancel'">
-                                    <field name="name" string="📋 Réf"/>
-                                    <field name="destination_id" string="✈️ Voyage"/>
-                                    <field name="check_in" string="🛬 Arrivée"/>
-                                    <field name="check_out" string="🛫 Départ"/>
-                                    <field name="total_price" string="💵 Total" widget="monetary"/>
-                                    <field name="remaining_to_pay" string="🔴 Reste" widget="monetary" 
+                                    <field name="name" string="Référence"/>
+                                    <field name="destination_id" string="Voyage"/>
+                                    <field name="check_in" string="Arrivée"/>
+                                    <field name="check_out" string="Départ"/>
+                                    <field name="total_price" string="Total" widget="monetary"/>
+                                    <field name="remaining_to_pay" string="Reste" widget="monetary" 
                                            decoration-danger="remaining_to_pay > 0"/>
                                     <field name="status" string="État" widget="badge"/>
                                 </tree>
@@ -93,26 +80,21 @@
                         </div>
                     </div>
                     
-                    <separator string="📊 HISTORIQUE CRÉDIT" class="mt-4"/>
+                    <separator string="Historique Crédit" class="mt-4"/>
                     
                     <!-- Section Historique Crédit -->
                     <field name="credit_history_ids" nolabel="1">
                         <tree decoration-success="type == 'recharge'" 
                               decoration-danger="type == 'usage'"
                               decoration-warning="type == 'refund'">
-                            <field name="date" string="📅 Date"/>
+                            <field name="date" string="Date"/>
                             <field name="type" string="Type" widget="badge"/>
-                            <field name="amount" string="💵 Montant" sum="Total" widget="monetary"/>
-                            <field name="reservation_id" string="✈️ Réservation" optional="show"/>
-                            <field name="note" string="📝 Note"/>
+                            <field name="amount" string="Montant" sum="Total" widget="monetary"/>
+                            <field name="reservation_id" string="Réservation" optional="show"/>
+                            <field name="note" string="Note"/>
                         </tree>
                     </field>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
@@ -134,20 +116,20 @@
                         <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
                             <div class="oe_kanban_details p-3">
                                 <strong class="o_kanban_record_title fs-5 text-primary">
-                                    👤 <field name="name"/>
+                                    <field name="name"/>
                                 </strong>
                                 <div class="text-muted mt-1" t-if="record.company_id.value">
-                                    🏢 <field name="company_id"/>
+                                    <field name="company_id"/>
                                 </div>
                                 <div class="mt-1" t-if="record.matricule.value">
-                                    🔖 <field name="matricule"/>
+                                    <field name="matricule"/>
                                 </div>
                                 <div t-if="record.phone.value">
-                                    📞 <field name="phone"/>
+                                    <field name="phone"/>
                                 </div>
                                 <div class="mt-3">
                                     <span class="badge bg-success fs-6">
-                                        💰 <field name="credit_balance" widget="monetary"/>
+                                        <field name="credit_balance" widget="monetary"/>
                                     </span>
                                 </div>
                             </div>

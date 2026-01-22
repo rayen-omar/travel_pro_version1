@@ -50,12 +50,8 @@
     <menuitem id="menu_reservation" name="Réservations" parent="menu_travel_group" action="action_reservation" sequence="20"/>
     
     <!-- Menu Facturation -->
-    <menuitem id="menu_invoicing" name="Facturation" parent="menu_travel_pro" sequence="60"/>
-    <menuitem id="menu_invoice_client" name="Factures Clients" parent="menu_invoicing" 
-              action="action_travel_invoice_client" sequence="10"/>
-    <!-- Factures Fournisseurs supprimé - intégré dans le formulaire Fournisseur -->
-    <menuitem id="menu_purchase_report" name="Rapport des Achats" parent="menu_invoicing" 
-              action="action_travel_purchase_report_wizard" sequence="30"/>
+    <menuitem id="menu_invoicing" name="Facturation" parent="menu_travel_pro" 
+              action="action_travel_invoice_client" sequence="60"/>
     
     <!-- Menu Caisse -->
     <menuitem id="menu_cash_group" name="Caisse" parent="menu_travel_pro" sequence="70"/>

@@ -10,6 +10,6 @@ access_travel_invoice_client,access_travel_invoice_client,model_travel_invoice_c
 access_travel_invoice_client_line,access_travel_invoice_client_line,model_travel_invoice_client_line,base.group_user,1,1,1,1
 access_travel_withholding,access_travel_withholding,model_travel_withholding,base.group_user,1,1,1,1
 access_travel_purchase_travel,access_travel_purchase,model_travel_purchase,base.group_user,1,1,1,1
-access_travel_purchase_report,access_travel_purchase_report,model_travel_purchase_report,base.group_user,1,1,1,1
 access_cash_register,cash.register.access,model_cash_register,base.group_user,1,1,1,1
 access_cash_register_operation,cash.register.operation.access,model_cash_register_operation,base.group_user,1,1,1,1
+access_invoice_reservations_wizard,invoice.reservations.wizard.access,model_invoice_reservations_wizard,base.group_user,1,1,1,1

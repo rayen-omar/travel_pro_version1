@@ -5,7 +5,6 @@ from odoo.exceptions import UserError
 class TravelReservation(models.Model):
     _name = 'travel.reservation'
     _description = 'Réservation Voyage'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char('Référence', default='Nouveau', readonly=True)
     member_id = fields.Many2one('travel.member', string='Client', required=True)
@@ -66,23 +65,6 @@ class TravelReservation(models.Model):
     credit_used = fields.Float('Crédit utilisé (TND)', digits=(16, 2), compute='_compute_credit_used', store=True)
     remaining_to_pay = fields.Float('Reste à payer (TND)', digits=(16, 2), compute='_compute_remaining', store=True)
     
-    # Champs calculés pour workflow (sans store pour éviter les problèmes de migration)
-    has_sale_order = fields.Boolean(string='A un Devis', compute='_compute_workflow_status', store=False)
-    has_invoice = fields.Boolean(string='A une Facture', compute='_compute_workflow_status', store=False)
-    has_payment = fields.Boolean(string='A un Paiement', compute='_compute_workflow_status', store=False)
-    workflow_progress = fields.Selection([
-        ('0', '0% - Brouillon'),
-        ('25', '25% - Devis créé'),
-        ('50', '50% - Facturé'),
-        ('75', '75% - Partiellement payé'),
-        ('100', '100% - Payé'),
-    ], string='Progression', compute='_compute_workflow_status', store=False)
-    workflow_progress_percent = fields.Integer(
-        string='Progression (%)',
-        compute='_compute_workflow_status',
-        store=False,
-        help='Pourcentage de progression du workflow (0-100) pour le widget progressbar'
-    )
 
     @api.depends('check_in', 'check_out')
     def _compute_nights(self):
@@ -147,49 +129,6 @@ class TravelReservation(models.Model):
         for rec in self:
             rec.pos_order_count = len(rec.pos_order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced']))
 
-    @api.depends('sale_order_id', 'invoice_ids', 'cash_operation_ids', 'pos_order_ids', 'remaining_to_pay', 'status')
-    def _compute_workflow_status(self):
-        """Calculer l'état du workflow et la progression."""
-        for rec in self:
-            # Utiliser sudo() pour éviter les problèmes de cache
-            rec.has_sale_order = bool(rec.sale_order_id)
-            rec.has_invoice = bool(rec.invoice_ids)
-            
-            # Calculer les paiements (caisse + POS)
-            total_paid = 0.0
-            if rec.cash_operation_ids:
-                receipts = rec.cash_operation_ids.filtered(
-                    lambda o: o.type == 'receipt' and o.state == 'confirmed'
-                )
-                total_paid += sum(receipts.mapped('amount'))
-            
-            if rec.pos_order_ids:
-                paid_orders = rec.pos_order_ids.filtered(
-                    lambda o: o.state in ['paid', 'done', 'invoiced']
-                )
-                total_paid += sum(paid_orders.mapped('amount_total'))
-            
-            rec.has_payment = total_paid > 0
-            
-            # Calculer la progression
-            if rec.status == 'cancel':
-                rec.workflow_progress = '0'
-                rec.workflow_progress_percent = 0
-            elif not rec.has_sale_order:
-                rec.workflow_progress = '0'
-                rec.workflow_progress_percent = 0
-            elif not rec.has_invoice:
-                rec.workflow_progress = '25'
-                rec.workflow_progress_percent = 25
-            elif not rec.has_payment:
-                rec.workflow_progress = '50'
-                rec.workflow_progress_percent = 50
-            elif rec.remaining_to_pay and rec.remaining_to_pay > 0.01:
-                rec.workflow_progress = '75'
-                rec.workflow_progress_percent = 75
-            else:
-                rec.workflow_progress = '100'
-                rec.workflow_progress_percent = 100
 
     def action_create_sale_order(self):
         """Créer un devis n'est plus nécessaire - vous pouvez facturer directement."""

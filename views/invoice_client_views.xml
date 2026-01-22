@@ -10,16 +10,16 @@
                   decoration-success="state=='paid'" 
                   decoration-muted="state=='cancel'"
                   decoration-warning="state=='confirmed'">
-                <field name="name" string="📄 N° Facture"/>
-                <field name="date_invoice" string="📅 Date"/>
-                <field name="travel_company_id" string="🏢 Société"/>
-                <field name="member_ids" string="👥 Membres" widget="many2many_tags" optional="hide"/>
+                <field name="name" string="N° Facture"/>
+                <field name="date_invoice" string="Date"/>
+                <field name="travel_company_id" string="Société"/>
+                <field name="member_ids" string="Membres" widget="many2many_tags" optional="hide"/>
                 <field name="amount_untaxed" string="H.T" sum="Total HT" widget="monetary"/>
-                <field name="discount_amount" string="🏷️ Remise" sum="Remise" optional="show" widget="monetary"/>
+                <field name="discount_amount" string="Remise" sum="Remise" optional="show" widget="monetary"/>
                 <field name="amount_tax" string="TVA" sum="Total TVA" widget="monetary"/>
-                <field name="amount_total" string="💵 TTC" sum="Total TTC" widget="monetary" decoration-bf="True"/>
-                <field name="total_withholding" string="📉 Retenues" sum="Total Retenues" widget="monetary" optional="show"/>
-                <field name="net_to_pay" string="✅ Net à Payer" sum="Net à Payer" widget="monetary" 
+                <field name="amount_total" string="TTC" sum="Total TTC" widget="monetary" decoration-bf="True"/>
+                <field name="total_withholding" string="Retenues" sum="Total Retenues" widget="monetary" optional="show"/>
+                <field name="net_to_pay" string="Net à Payer" sum="Net à Payer" widget="monetary" 
                        decoration-bf="True" decoration-success="True"/>
                 <field name="state" string="État" widget="badge"/>
             </tree>
@@ -76,16 +76,16 @@
         <field name="arch" type="xml">
             <form string="Facture Client">
                 <header>
-                    <button name="action_confirm" string="✅ Confirmer" type="object" 
+                    <button name="action_confirm" string="Confirmer" type="object" 
                             class="btn-success" states="draft"/>
-                    <button name="action_pay_cash" string="💵 Payer Caisse" type="object" 
+                    <button name="action_pay_cash" string="Payer Caisse" type="object" 
                             class="btn-warning" states="confirmed"/>
-                    <button name="action_set_paid" string="✔️ Marquer Payée" type="object" 
+                    <button name="action_set_paid" string="Marquer Payée" type="object" 
                             class="btn-info" states="confirmed"/>
-                    <button name="action_print_invoice" string="🖨️ Imprimer" type="object" 
+                    <button name="action_print_invoice" string="Imprimer" type="object" 
                             class="btn-secondary" states="confirmed,paid"/>
-                    <button name="action_cancel" string="❌ Annuler" type="object" states="draft,confirmed"/>
-                    <button name="action_draft" string="🔄 Brouillon" type="object" states="cancel"/>
+                    <button name="action_cancel" string="Annuler" type="object" states="draft,confirmed"/>
+                    <button name="action_draft" string="Brouillon" type="object" states="cancel"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,paid"/>
                 </header>
                 <sheet>
@@ -99,14 +99,14 @@
                         <button class="oe_stat_button" type="object" name="action_pay_cash" 
                                 icon="fa-money" states="confirmed">
                             <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_text">💵 Payer</span>
+                                <span class="o_stat_text">Payer</span>
                                 <span class="o_stat_text">Caisse</span>
                             </div>
                         </button>
                         <button class="oe_stat_button" type="object" name="action_print_invoice" 
                                 icon="fa-print" states="confirmed,paid">
                             <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_text">🖨️ Imprimer</span>
+                                <span class="o_stat_text">Imprimer</span>
                             </div>
                         </button>
                     </div>
@@ -121,14 +121,14 @@
                     <!-- Section Informations & Membres -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="📋 Informations">
-                                <field name="date_invoice" string="📅 Date"/>
-                                <field name="travel_company_id" string="🏢 Société" 
+                            <group string="Informations">
+                                <field name="date_invoice" string="Date"/>
+                                <field name="travel_company_id" string="Société" 
                                        options="{'no_create': True}" required="1"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
-                            <group string="👥 Membres">
+                            <group string="Membres">
                                 <field name="member_ids" widget="many2many_tags" nolabel="1"
                                        domain="[('company_id', '=', travel_company_id)]"
                                        options="{'no_create': True}"
@@ -137,20 +137,20 @@
                         </div>
                     </div>
                     
-                    <separator string="📝 LIGNES DE FACTURATION" class="mt-4"/>
+                    <separator string="Lignes de Facturation" class="mt-4"/>
                     
                     <!-- Lignes de facturation -->
                     <field name="invoice_line_ids" mode="tree,kanban">
                         <tree string="Lignes" editable="bottom">
                             <field name="sequence" widget="handle"/>
-                            <field name="passenger_id" string="👤 Passager" options="{'no_create': True}" 
+                            <field name="passenger_id" string="Passager" options="{'no_create': True}" 
                                    domain="[('company_id', '=', parent.travel_company_id)]"/>
-                            <field name="destination_id" string="✈️ Voyage" options="{'no_create': True}"/>
-                            <field name="reference" string="📋 Réf"/>
-                            <field name="description" string="📝 Description"/>
+                            <field name="destination_id" string="Voyage" options="{'no_create': True}"/>
+                            <field name="reference" string="Référence"/>
+                            <field name="description" string="Description"/>
                             <field name="reservation_id" string="Réservation" optional="hide"/>
-                            <field name="price_ttc" string="💰 Prix TTC" widget="monetary" sum="Total"/>
-                            <field name="credit_info" string="💳 Crédit" optional="show"
+                            <field name="price_ttc" string="Prix TTC" widget="monetary" sum="Total"/>
+                            <field name="credit_info" string="Crédit" optional="show"
                                    readonly="1" decoration-bf="credit_info"
                                    style="color: #28a745; font-weight: bold;"/>
                             <field name="tax_rate" invisible="1"/>
@@ -158,12 +158,12 @@
                         </tree>
                     </field>
                     
-                    <separator string="💰 CALCUL DES MONTANTS" class="mt-4"/>
+                    <separator string="Calcul des Montants" class="mt-4"/>
                     
                     <!-- Section calcul -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <group string="🏷️ Remise">
+                            <group string="Remise">
                                 <field name="discount_type" string="Type"/>
                                 <field name="discount_rate" string="Taux (%)"
                                        attrs="{'invisible': [('discount_type', '!=', 'percent')]}"/>
@@ -174,7 +174,7 @@
                         <div class="col-lg-6">
                             <group string="📊 Totaux">
                                 <field name="amount_untaxed" string="Total H.T" widget="monetary" readonly="1"/>
-                                <field name="discount_amount" string="🏷️ Remise" widget="monetary" readonly="1"
+                                <field name="discount_amount" string="Remise" widget="monetary" readonly="1"
                                        attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
                                 <field name="amount_after_discount" string="H.T après remise" widget="monetary" readonly="1"
                                        attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
@@ -227,17 +227,12 @@
                         <field name="amount_in_words_fr" string="💬 Montant en lettres" readonly="1"/>
                     </group>
                     
-                    <separator string="📝 NOTES" class="mt-4"/>
+                    <separator string="Notes" class="mt-4"/>
                     
                     <group>
                         <field name="note" placeholder="Notes internes..." nolabel="1"/>
                     </group>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
@@ -253,8 +248,8 @@
                 <field name="member_ids" string="Membres"/>
                 <field name="date_invoice" string="Date"/>
                 <separator/>
-                <filter string="📝 Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="✅ Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmées" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
                 <filter string="💵 Payées" name="paid" domain="[('state', '=', 'paid')]"/>
                 <filter string="❌ Annulées" name="cancel" domain="[('state', '=', 'cancel')]"/>
                 <separator/>

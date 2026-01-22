@@ -26,7 +26,6 @@ class TravelMember(models.Model):
     """
     _name = 'travel.member'
     _description = 'Membre / Client'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====

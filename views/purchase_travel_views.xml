@@ -53,26 +53,27 @@
                         </h1>
                     </div>
                     
-                    <group>
-                        <group>
+                    <!-- Section Fournisseur -->
+                    <group string="FOURNISSEUR">
+                        <group string="INFORMATIONS FOURNISSEUR">
+                            <field name="supplier_id" string="Fournisseur" options="{'no_create': True}" required="1"/>
+                            <field name="purchase_type" string="Type"/>
                             <field name="date_creation" string="Date Facture"/>
-                            <field name="purchase_type"/>
-                            <field name="supplier_id" options="{'no_create': True}"/>
-                            <field name="service_ids" widget="many2many_tags" 
+                            <field name="service_ids" widget="many2many_tags" string="Services"
                                    domain="[('supplier_id', '=', supplier_id)]"
                                    options="{'no_create': True}"
                                    attrs="{'required': [('supplier_id', '!=', False)]}"/>
-                            <field name="reservation_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="reservation_id" string="Réservation" options="{'no_create': True, 'no_open': True}"/>
                         </group>
-                        <group>
+                        <group string="CONTACT FOURNISSEUR">
                             <field name="currency_id" invisible="1"/>
-                            <field name="date_payment"/>
+                            <field name="date_payment" string="Date Paiement"/>
                         </group>
                     </group>
                     
                     <notebook>
-                        <page string="MONTANTS" name="amounts">
-                            <group>
+                        <page string="DÉTAILS DE L'ACHAT" name="amounts">
+                            <group string="Lignes d'achat">
                                 <group string="Calcul de Base">
                                     <label for="amount_ttc" string="Montant TTC Saisi"/>
                                     <div class="o_row">
@@ -86,20 +87,20 @@
                                     <field name="amount_untaxed" widget="monetary" readonly="1"/>
                                     <field name="fiscal_stamp" widget="monetary" string="Timbre Fiscal (D.T)"/>
                                     <label for="amount_total" string="Total Facture" 
-                                           style="font-weight: bold; font-size: 14px; color: #1f77b4;"/>
+                                           style="font-weight: bold; font-size: 14px; color: rgb(113, 99, 158);"/>
                                     <div>
                                         <field name="amount_total" widget="monetary" readonly="1" nolabel="1"
-                                               style="font-weight: bold; font-size: 16px; color: #1f77b4;"/>
+                                               style="font-weight: bold; font-size: 16px; color: rgb(113, 99, 158);"/>
                                     </div>
                                 </group>
                                 <group string="Retenue à la Source">
                                     <label for="withholding_rate" string="Taux Retenue (%)"/>
                                     <field name="withholding_rate" nolabel="1"/>
                                     <label for="amount_withholding" string="Montant Retenue" 
-                                           style="color: #ff6600;"/>
+                                           style="color: rgb(113, 99, 158);"/>
                                     <div>
                                         <field name="amount_withholding" widget="monetary" readonly="1" nolabel="1"
-                                               style="font-weight: bold; color: #ff6600;"/>
+                                               style="font-weight: bold; color: rgb(113, 99, 158);"/>
                                     </div>
                                     <label for="amount_served" string="Montant Servi" 
                                            style="font-weight: bold; font-size: 14px; color: #28a745;"/>
@@ -122,11 +123,6 @@
                         </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" groups="base.group_user"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
