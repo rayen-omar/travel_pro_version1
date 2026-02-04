@@ -17,6 +17,21 @@ class Service(models.Model):
     supplier_id = fields.Many2one('res.partner', string='Fournisseur')
     destination_id = fields.Many2one('travel.destination', string='Voyage')
     note = fields.Text(string='Note')
+    
+    # Champs synchronisés depuis les lignes de facturation
+    price_ttc = fields.Float(string='Prix TTC (TND)', digits=(16, 2),
+                            help="Prix TTC du service (rempli depuis la ligne de facturation)")
+    tax_rate = fields.Selection([
+        ('7', '7%'),
+        ('19', '19%'),
+        ('custom', 'Autre (personnalisé)')
+    ], string='TVA', default='7',
+       help="Taux de TVA (rempli depuis la ligne de facturation)")
+    tax_rate_custom = fields.Float(string='Taux Personnalisé (%)', digits=(16, 2),
+                                  help="Taux de TVA personnalisé si 'Autre' est sélectionné")
+    invoice_line_id = fields.Many2one('travel.invoice.client.line', string='Ligne de Facturation',
+                                      readonly=True, ondelete='set null',
+                                      help="Ligne de facturation source de ce service")
 
     @api.onchange('supplier_id')
     def _onchange_supplier_id(self):

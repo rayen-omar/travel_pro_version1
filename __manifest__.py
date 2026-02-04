@@ -46,7 +46,8 @@
         'mail',
     ],
     'data': [
-        # Sécurité
+        # Sécurité - IMPORTANT: security.xml AVANT ir.model.access.csv
+        'security/security.xml',
         'security/ir.model.access.csv',
         # Données
         'data/currency_data.xml',

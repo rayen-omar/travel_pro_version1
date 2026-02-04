@@ -14,7 +14,10 @@
                 <field name="supplier_id" string="Fournisseur"/>
                 <field name="destination_id" string="Destination" optional="show"/>
                 <field name="room_price" string="Prix/Nuit" widget="monetary" optional="show"/>
-                <field name="price" string="Prix Total" widget="monetary" sum="Total" decoration-bf="True"/>
+                <field name="price" string="Prix Total" widget="monetary" optional="show"/>
+                <field name="price_ttc" string="Prix TTC" widget="monetary" optional="show"/>
+                <field name="tax_rate" string="TVA" optional="show"/>
+                <field name="invoice_line_id" string="Ligne Facture" optional="hide"/>
             </tree>
         </field>
     </record>
@@ -56,6 +59,37 @@
                                         <field name="price" widget="monetary" nolabel="1"/> DT
                                     </h2>
                                 </div>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Informations depuis Ligne de Facturation -->
+                    <div class="row" t-if="invoice_line_id">
+                        <div class="col-lg-12">
+                            <group string="Informations depuis Ligne de Facturation">
+                                <div class="alert alert-info">
+                                    <strong>Ce service a été créé depuis une ligne de facturation</strong>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <field name="price_ttc" string="Prix TTC" widget="monetary" readonly="1"/>
+                                        <field name="tax_rate" string="TVA" readonly="1"/>
+                                        <field name="tax_rate_custom" string="Taux Personnalisé (%)" 
+                                               attrs="{'invisible': [('tax_rate', '!=', 'custom')]}" readonly="1"/>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <field name="invoice_line_id" string="Ligne de Facturation" readonly="1"/>
+                                    </div>
+                                </div>
+                            </group>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Notes -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <group string="Notes">
+                                <field name="note" string="Note" placeholder="Notes additionnelles..."/>
                             </group>
                         </div>
                     </div>

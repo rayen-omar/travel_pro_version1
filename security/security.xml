@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================ -->
+    <!--              GROUPES DE SÉCURITÉ             -->
+    <!-- ============================================ -->
+    
+    <!-- Catégorie TravelPro -->
+    <record id="module_category_travel" model="ir.module.category">
+        <field name="name">TravelPro</field>
+        <field name="description">Gestion d'agence de voyage</field>
+        <field name="sequence">10</field>
+    </record>
+    
+    <!-- 
+        GROUPE 1: Agent de Voyage
+        - Accès NORMAL à toutes les parties (sociétés, membres, réservations, factures, etc.)
+        - CAISSE: Voit uniquement SA propre caisse
+        - CAISSE: Peut créer des opérations uniquement dans SA caisse
+    -->
+    <record id="group_travel_agent" model="res.groups">
+        <field name="name">Agent de Voyage</field>
+        <field name="category_id" ref="module_category_travel"/>
+        <field name="comment">Accès normal + Caisse: voit uniquement sa caisse et crée des opérations dans sa caisse</field>
+    </record>
+    
+    <!-- 
+        GROUPE 2: Responsable Agence (Manager)
+        - Accès COMPLET à tout le module TravelPro
+        - Hérite des droits de l'Agent de Voyage
+        - CAISSE: Voit TOUTES les caisses
+        - CAISSE: Peut gérer toutes les opérations
+    -->
+    <record id="group_travel_manager" model="res.groups">
+        <field name="name">Responsable Agence</field>
+        <field name="category_id" ref="module_category_travel"/>
+        <field name="implied_ids" eval="[(4, ref('group_travel_agent'))]"/>
+        <field name="comment">Accès complet à tout le module TravelPro + toutes les caisses</field>
+    </record>
+
+    <!-- ============================================ -->
+    <!--         RECORD RULES - CAISSES               -->
+    <!-- ============================================ -->
+    
+    <!-- 
+        RÈGLE AGENT: Voit UNIQUEMENT sa propre caisse
+        Condition : user_id = utilisateur connecté
+        L'agent ne peut voir que la caisse où il est assigné comme responsable
+    -->
+    <record id="rule_cash_register_agent_own" model="ir.rule">
+        <field name="name">Caisse: Agent voit uniquement sa caisse</field>
+        <field name="model_id" ref="model_cash_register"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_travel_agent'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    
+    <!-- RÈGLE MANAGER: Voit TOUTES les caisses -->
+    <record id="rule_cash_register_manager_all" model="ir.rule">
+        <field name="name">Caisse: Manager voit toutes les caisses</field>
+        <field name="model_id" ref="model_cash_register"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_travel_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ============================================ -->
+    <!--      RECORD RULES - OPÉRATIONS CAISSE        -->
+    <!-- ============================================ -->
+    
+    <!-- 
+        RÈGLE AGENT: Voit et crée UNIQUEMENT les opérations de SA caisse
+        Condition : la caisse de l'opération appartient à l'utilisateur
+    -->
+    <record id="rule_cash_operation_agent_own" model="ir.rule">
+        <field name="name">Opération: Agent voit/crée uniquement dans sa caisse</field>
+        <field name="model_id" ref="model_cash_register_operation"/>
+        <field name="domain_force">[('cash_register_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_travel_agent'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    
+    <!-- RÈGLE MANAGER: Voit TOUTES les opérations -->
+    <record id="rule_cash_operation_manager_all" model="ir.rule">
+        <field name="name">Opération: Manager voit toutes les opérations</field>
+        <field name="model_id" ref="model_cash_register_operation"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_travel_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</odoo>

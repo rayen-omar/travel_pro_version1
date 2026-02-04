@@ -6,6 +6,7 @@ Gère les factures clients de l'agence de voyage avec calcul
 automatique de la TVA, remises, retenues et montants en lettres.
 """
 import logging
+import re
 
 from num2words import num2words
 
@@ -91,6 +92,14 @@ class TravelInvoiceClient(models.Model):
                                              help="Total HT après application de la remise")
     
     amount_tax = fields.Monetary('Total TVA', compute='_compute_amounts', store=True, currency_field='currency_id')
+    
+    # TVA par taux (pour affichage détaillé)
+    tax_7_amount = fields.Monetary('TVA 7%', compute='_compute_amounts', store=True, currency_field='currency_id')
+    tax_19_amount = fields.Monetary('TVA 19%', compute='_compute_amounts', store=True, currency_field='currency_id')
+    tax_custom_amount = fields.Monetary('TVA Autre', compute='_compute_amounts', store=True, currency_field='currency_id')
+    tax_details = fields.Text('Détails TVA', compute='_compute_amounts', store=False,
+                             help="Détail des montants TVA par taux")
+    
     fiscal_stamp = fields.Monetary('Timbre Fiscal', default=1.0, currency_field='currency_id')
     amount_total = fields.Monetary('Total TTC', compute='_compute_amounts', store=True, currency_field='currency_id')
     
@@ -109,6 +118,13 @@ class TravelInvoiceClient(models.Model):
                                   default=lambda self: self.env.ref('base.TND', raise_if_not_found=False) or self.env.company.currency_id, 
                                   required=True)
     
+    # Type de template
+    invoice_template_type = fields.Selection([
+        ('detailed', 'Détaillé (par membre)'),
+        ('general', 'Général (par voyage)')
+    ], string='Type de Template', default='detailed', required=True,
+       help="Détaillé: Affiche chaque membre dans une ligne séparée\nGénéral: Regroupe par voyage avec nombre de membres")
+    
     # État
     state = fields.Selection([
         ('draft', 'Brouillon'),
@@ -121,20 +137,30 @@ class TravelInvoiceClient(models.Model):
     note = fields.Text('Notes')
     amount_in_words_fr = fields.Char('Montant en lettres FR', compute='_compute_amount_in_words_fr', store=False)
 
+    def _format_amount_in_words(self, amount):
+        """Formater le montant en lettres français avec corrections."""
+        try:
+            amount_int = int(round(amount))
+            text = num2words(amount_int, lang='fr')
+            # Corrections spécifiques pour les erreurs courantes
+            # Remplacer "Mlle" (abréviation erronée) par "mille"
+            text = re.sub(r'\bMlle\b', 'mille', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bMLLE\b', 'mille', text)
+            # Capitaliser la première lettre
+            if text:
+                text = text[0].upper() + text[1:] if len(text) > 1 else text.upper()
+            return text
+        except Exception as e:
+            _logger.error("Erreur conversion montant %s en lettres: %s", amount, str(e))
+            return f"{amount:.0f}"
+    
     @api.depends('amount_total', 'currency_id')
     def _compute_amount_in_words_fr(self):
         """Convertir le montant total en lettres (Français)."""
         for record in self:
             if record.amount_total:
-                try:
-                    text = num2words(record.amount_total, lang='fr')
-                    record.amount_in_words_fr = f"{text} Dinars".capitalize()
-                except Exception as e:
-                    _logger.error(
-                        "Erreur conversion montant en lettres pour facture %s: %s",
-                        record.name, str(e)
-                    )
-                    record.amount_in_words_fr = f"{record.amount_total:.3f} Dinars"
+                text = self._format_amount_in_words(record.amount_total)
+                record.amount_in_words_fr = f"{text} Dinars"
             else:
                 record.amount_in_words_fr = ''
     
@@ -165,22 +191,39 @@ class TravelInvoiceClient(models.Model):
     
 
     
-    @api.depends('invoice_line_ids.price_ttc', 'invoice_line_ids.tax_rate', 'fiscal_stamp',
+    @api.depends('invoice_line_ids.price_ttc', 'invoice_line_ids.tax_rate', 'invoice_line_ids.tax_rate_custom',
+                 'invoice_line_ids.price_tax', 'invoice_line_ids.price_subtotal', 'fiscal_stamp',
                  'discount_type', 'discount_rate', 'discount_fixed')
     def _compute_amounts(self):
         for invoice in self:
-            # Calculer le Total HT depuis les prix TTC des lignes
-            # Formule : HT = TTC / (1 + taux_tva)
-            amount_untaxed = 0.0
-            tax_rate_for_invoice = 0.07  # Par défaut 7%
+            # Calculer le Total HT depuis les lignes (déjà calculé dans price_subtotal)
+            amount_untaxed = sum(invoice.invoice_line_ids.mapped('price_subtotal'))
+            
+            # Calculer la TVA par taux depuis les lignes (déjà calculé dans price_tax)
+            # Grouper les TVA par taux
+            tax_by_rate = {}
+            tax_details_list = []
             
             for line in invoice.invoice_line_ids:
-                if line.price_ttc:
-                    tax_percent = float(line.tax_rate or '7') / 100.0
-                    # HT = TTC / (1 + TVA)
-                    line_ht = (line.quantity * line.price_ttc) / (1 + tax_percent)
-                    amount_untaxed += line_ht
-                    tax_rate_for_invoice = tax_percent  # Prendre le dernier taux
+                if line.price_tax > 0:
+                    # Obtenir le taux et son libellé
+                    if line.tax_rate == '7':
+                        rate_key = '7%'
+                        rate_label = 'TVA 7%'
+                    elif line.tax_rate == '19':
+                        rate_key = '19%'
+                        rate_label = 'TVA 19%'
+                    else:  # custom
+                        rate_key = f"{line.tax_rate_custom}%"
+                        rate_label = f"TVA {line.tax_rate_custom}%"
+                    
+                    # Ajouter au total par taux
+                    if rate_key not in tax_by_rate:
+                        tax_by_rate[rate_key] = {
+                            'label': rate_label,
+                            'amount': 0.0
+                        }
+                    tax_by_rate[rate_key]['amount'] += line.price_tax
             
             # Calcul de la remise selon le type (sur le Total HT)
             discount_amount = 0.0
@@ -194,15 +237,46 @@ class TravelInvoiceClient(models.Model):
             # Total HT après remise (MT HT)
             amount_after_discount = amount_untaxed - discount_amount
             
-            # IMPORTANT : La TVA est calculée APRÈS la remise sur le MT HT
-            amount_tax = amount_after_discount * tax_rate_for_invoice
+            # Calculer le ratio de remise pour appliquer proportionnellement à la TVA
+            if amount_untaxed > 0:
+                discount_ratio = amount_after_discount / amount_untaxed
+            else:
+                discount_ratio = 1.0
+            
+            # Appliquer la remise proportionnellement à chaque taux de TVA
+            total_tax_after_discount = 0.0
+            tax_7_amount = 0.0
+            tax_19_amount = 0.0
+            tax_custom_amount = 0.0
+            
+            for rate_key, tax_info in tax_by_rate.items():
+                tax_amount_before_discount = tax_info['amount']
+                tax_amount_after_discount = tax_amount_before_discount * discount_ratio
+                total_tax_after_discount += tax_amount_after_discount
+                
+                # Stocker par type pour affichage
+                if rate_key == '7%':
+                    tax_7_amount = tax_amount_after_discount
+                elif rate_key == '19%':
+                    tax_19_amount = tax_amount_after_discount
+                else:
+                    tax_custom_amount += tax_amount_after_discount
+                
+                # Ajouter au détail
+                tax_details_list.append(
+                    f"{tax_info['label']}: {tax_amount_after_discount:.3f} DT"
+                )
             
             invoice.amount_untaxed = amount_untaxed
             invoice.discount_amount = discount_amount
             invoice.amount_after_discount = amount_after_discount
-            invoice.amount_tax = amount_tax
-            # Montant total = MT HT + TVA (calculée après remise) + Timbre Fiscal
-            invoice.amount_total = amount_after_discount + amount_tax + invoice.fiscal_stamp
+            invoice.amount_tax = total_tax_after_discount
+            invoice.tax_7_amount = tax_7_amount
+            invoice.tax_19_amount = tax_19_amount
+            invoice.tax_custom_amount = tax_custom_amount
+            invoice.tax_details = "\n".join(tax_details_list) if tax_details_list else ""
+            # Montant total = MT HT + TVA (après remise) + Timbre Fiscal
+            invoice.amount_total = amount_after_discount + total_tax_after_discount + invoice.fiscal_stamp
     
     @api.depends('amount_total', 'amount_tax', 'fiscal_stamp', 'apply_withholding_tax', 'apply_vat_withholding')
     def _compute_withholding(self):
@@ -278,9 +352,56 @@ class TravelInvoiceClient(models.Model):
         self.state = 'draft'
     
     def action_print_invoice(self):
-        """Imprimer la facture"""
+        """Imprimer la facture selon le type de template choisi"""
         self.ensure_one()
-        return self.env.ref('travel_pro_version1.action_report_travel_invoice_client').report_action(self)
+        if self.invoice_template_type == 'general':
+            return self.env.ref('travel_pro_version1.action_report_travel_invoice_client_general').report_action(self)
+        else:
+            return self.env.ref('travel_pro_version1.action_report_travel_invoice_client').report_action(self)
+    
+    def _get_grouped_lines_by_destination(self):
+        """Grouper les lignes par destination/voyage pour le template général"""
+        self.ensure_one()
+        grouped = {}
+        for line in self.invoice_line_ids:
+            destination = line.destination_id.name if line.destination_id else 'Sans destination'
+            if destination not in grouped:
+                grouped[destination] = {
+                    'destination': destination,
+                    'members': [],
+                    'total_price': 0.0,
+                    'member_count': 0,
+                    'references': [],
+                    'descriptions': [],
+                    'description_summary': ''
+                }
+            # Ajouter le membre (éviter les doublons)
+            member_name = line.passenger_id.name if line.passenger_id else ''
+            if member_name and member_name not in grouped[destination]['members']:
+                grouped[destination]['members'].append(member_name)
+                grouped[destination]['member_count'] += 1
+            # Ajouter la référence
+            if line.reference:
+                grouped[destination]['references'].append(line.reference)
+            # Ajouter la description
+            if line.description:
+                grouped[destination]['descriptions'].append(line.description)
+            # Ajouter le prix
+            grouped[destination]['total_price'] += line.price_ttc * line.quantity
+        
+        # Formater les descriptions pour chaque groupe
+        for dest_key, group_data in grouped.items():
+            descriptions = group_data['descriptions']
+            if descriptions:
+                # Prendre les 2 premières descriptions
+                if len(descriptions) <= 2:
+                    group_data['description_summary'] = ' | '.join(descriptions)
+                else:
+                    group_data['description_summary'] = ' | '.join(descriptions[:2]) + f" ... et {len(descriptions) - 2} autre(s)"
+            else:
+                group_data['description_summary'] = 'Sans description'
+        
+        return list(grouped.values())
     
     def action_pay_cash(self):
         """Ouvrir un formulaire pour enregistrer le paiement en caisse"""
@@ -425,6 +546,8 @@ class TravelInvoiceClientLine(models.Model):
     # Détails du voyage
     description = fields.Text('Description', required=True)
     reservation_id = fields.Many2one('travel.reservation', string='Réservation liée')
+    service_id = fields.Many2one('travel.service', string='Service lié',
+                                 help="Service associé à cette ligne de facturation")
     credit_info = fields.Text('Info Crédit', compute='_compute_credit_info', store=False,
                               help="Information sur l'utilisation du crédit depuis la réservation")
     
@@ -439,8 +562,12 @@ class TravelInvoiceClientLine(models.Model):
     # TVA
     tax_rate = fields.Selection([
         ('7', '7%'),
-        ('19', '19%')
+        ('19', '19%'),
+        ('custom', 'Autre (personnalisé)')
     ], string='TVA', default='7', required=True)
+    tax_rate_custom = fields.Float('Taux TVA Personnalisé (%)', 
+                                   help="Saisissez le taux de TVA en pourcentage (ex: 13 pour 13%)",
+                                   digits=(16, 2))
     
     # Totaux
     price_subtotal = fields.Monetary('Total HT', compute='_compute_price', store=True, currency_field='currency_id')
@@ -462,7 +589,25 @@ class TravelInvoiceClientLine(models.Model):
             else:
                 line.credit_info = False
     
-    @api.depends('quantity', 'price_ttc', 'tax_rate')
+    @api.constrains('tax_rate', 'tax_rate_custom')
+    def _check_tax_rate_custom(self):
+        """Vérifier que le taux personnalisé est rempli si 'custom' est sélectionné"""
+        for line in self:
+            if line.tax_rate == 'custom' and (not line.tax_rate_custom or line.tax_rate_custom <= 0):
+                raise ValidationError(
+                    "Veuillez saisir un taux TVA personnalisé valide (supérieur à 0) "
+                    "lorsque vous sélectionnez 'Autre (personnalisé)'."
+                )
+    
+    def _get_tax_rate_value(self):
+        """Obtenir la valeur numérique du taux TVA"""
+        self.ensure_one()
+        if self.tax_rate == 'custom':
+            return self.tax_rate_custom or 0.0
+        else:
+            return float(self.tax_rate or '7')
+    
+    @api.depends('quantity', 'price_ttc', 'tax_rate', 'tax_rate_custom')
     def _compute_price_ht(self):
         """Calculer le prix HT à partir du prix TTC
         Formule correcte selon utilisateur:
@@ -471,13 +616,13 @@ class TravelInvoiceClientLine(models.Model):
         """
         for line in self:
             if line.price_ttc:
-                tax_percent = float(line.tax_rate or '0') / 100.0
+                tax_percent = line._get_tax_rate_value() / 100.0
                 # HT = TTC / (1 + TVA)
                 line.price_unit = line.price_ttc / (1 + tax_percent)
             else:
                 line.price_unit = 0.0
     
-    @api.depends('quantity', 'price_unit', 'price_ttc', 'tax_rate')
+    @api.depends('quantity', 'price_unit', 'price_ttc', 'tax_rate', 'tax_rate_custom')
     def _compute_price(self):
         """Calculer les montants de la ligne
         Formule: 
@@ -488,7 +633,7 @@ class TravelInvoiceClientLine(models.Model):
         for line in self:
             if line.price_ttc:
                 # Calculer depuis le TTC
-                tax_percent = float(line.tax_rate or '0') / 100.0
+                tax_percent = line._get_tax_rate_value() / 100.0
                 total_ttc = line.quantity * line.price_ttc
                 
                 # HT = TTC / (1 + TVA)
@@ -564,4 +709,71 @@ class TravelInvoiceClientLine(models.Model):
             if self.reservation_id.check_in and self.reservation_id.check_out:
                 description += f" ({self.reservation_id.check_in} au {self.reservation_id.check_out})"
             self.description = description
+    
+    @api.onchange('service_id')
+    def _onchange_service_id(self):
+        """Remplir automatiquement les champs de la ligne depuis le service sélectionné"""
+        if self.service_id:
+            if self.service_id.destination_id:
+                self.destination_id = self.service_id.destination_id.id
+            if self.service_id.price_ttc:
+                self.price_ttc = self.service_id.price_ttc
+            elif self.service_id.price:
+                self.price_ttc = self.service_id.price
+            if self.service_id.tax_rate:
+                self.tax_rate = self.service_id.tax_rate
+            if self.service_id.tax_rate == 'custom' and self.service_id.tax_rate_custom:
+                self.tax_rate_custom = self.service_id.tax_rate_custom
+            if self.service_id.name:
+                self.description = f"Service: {self.service_id.name}"
+    
+    def action_create_service(self):
+        """Créer un service depuis cette ligne de facturation et ajouter une nouvelle ligne de facturation"""
+        self.ensure_one()
+        
+        if not self.description:
+            raise UserError("Veuillez remplir la description avant de créer le service.")
+        
+        # Créer le service avec les données de la ligne
+        service_vals = {
+            'name': self.description[:100] if len(self.description) > 100 else self.description,
+            'type': 'autre',  # Type par défaut
+            'price': self.price_ttc or 0.0,
+            'destination_id': self.destination_id.id if self.destination_id else False,
+            'price_ttc': self.price_ttc or 0.0,
+            'tax_rate': self.tax_rate or '7',
+            'tax_rate_custom': self.tax_rate_custom if self.tax_rate == 'custom' else 0.0,
+            'invoice_line_id': self.id,
+        }
+        
+        service = self.env['travel.service'].create(service_vals)
+        
+        # Créer une nouvelle ligne de facturation indépendante qui référence ce service
+        new_line_vals = {
+            'invoice_id': self.invoice_id.id,
+            'passenger_id': self.passenger_id.id if self.passenger_id else False,
+            'destination_id': self.destination_id.id if self.destination_id else False,
+            'reference': self.reference or '',
+            'description': f"Service: {service.name}",
+            'price_ttc': service.price_ttc or service.price or 0.0,
+            'tax_rate': service.tax_rate or '7',
+            'tax_rate_custom': service.tax_rate_custom if service.tax_rate == 'custom' else 0.0,
+            'service_id': service.id,
+            'quantity': 1.0,
+        }
+        
+        new_line = self.env['travel.invoice.client.line'].create(new_line_vals)
+        
+        # Afficher un message de confirmation
+        message = f'Le service "{service.name}" a été créé et une nouvelle ligne de facturation a été ajoutée.'
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Service créé',
+                'message': message,
+                'type': 'success',
+                'sticky': False,
+            }
+        }
     

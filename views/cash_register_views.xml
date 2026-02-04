@@ -47,10 +47,12 @@
                 <field name="sub_cash_count" string="Sous-Caisses" attrs="{'invisible': [('is_main', '=', False)]}"/>
                 <field name="user_id" string="Responsable"/>
                 <field name="state" string="État" widget="badge"/>
-                <field name="opening_balance" string="Ouverture" widget="monetary"/>
+                <field name="opening_date" string="Date Ouverture" optional="show"/>
+                <field name="closing_date" string="Date Fermeture" optional="show"/>
+                <field name="opening_balance" string="Solde Ouverture" widget="monetary"/>
                 <field name="total_receipts" string="Recettes" sum="Total Recettes" widget="monetary" decoration-success="True"/>
                 <field name="total_expenses" string="Dépenses" sum="Total Dépenses" widget="monetary" decoration-danger="True"/>
-                <field name="balance" string="Solde" sum="Solde Total" widget="monetary" 
+                <field name="balance" string="Solde Actuel" sum="Solde Total" widget="monetary" 
                        decoration-success="balance > 0" decoration-danger="balance &lt; 0" decoration-bf="True"/>
             </tree>
         </field>
@@ -210,7 +212,9 @@
                             <field name="name" string="Référence"/>
                             <field name="date" string="Date"/>
                             <field name="type" string="Type" widget="badge"/>
-                            <field name="amount" string="Montant" sum="Total" widget="monetary"/>
+                            <field name="amount" string="Montant" widget="monetary"/>
+                            <field name="signed_amount" string="Solde" sum="Solde Net" widget="monetary" 
+                                   decoration-success="signed_amount > 0" decoration-danger="signed_amount &lt; 0"/>
                             <field name="payment_method" string="Mode"/>
                             <field name="invoice_number" string="N° Facture" optional="show"/>
                             <field name="quote_number" string="N° Devis" optional="show"/>
@@ -269,7 +273,9 @@
                 <field name="cash_register_id" string="Caisse"/>
                 <field name="reservation_id" string="Réservation" optional="show"/>
                 <field name="type" string="Type" widget="badge"/>
-                <field name="amount" string="Montant" sum="Total" widget="monetary" decoration-bf="True"/>
+                <field name="amount" string="Montant" widget="monetary" decoration-bf="True"/>
+                <field name="signed_amount" string="Solde" sum="Solde Net" widget="monetary"
+                       decoration-success="signed_amount > 0" decoration-danger="signed_amount &lt; 0"/>
                 <field name="payment_method" string="Mode"/>
                 <field name="invoice_number" string="N° Facture" optional="show"/>
                 <field name="invoice_id" string="Facture" optional="hide"/>
@@ -360,7 +366,6 @@
                             <group string="Informations">
                                 <field name="cash_register_id" string="Caisse" options="{'no_create': True}"/>
                                 <field name="date" string="Date"/>
-                                <field name="user_id" string="Utilisateur"/>
                             </group>
                         </div>
                         <div class="col-lg-6">

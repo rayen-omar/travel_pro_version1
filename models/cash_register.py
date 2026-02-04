@@ -60,12 +60,22 @@ class CashRegister(models.Model):
             else:
                 cash.sub_cash_count = 0
 
-    @api.depends('operation_ids.amount', 'operation_ids.type')
+    @api.depends('operation_ids.amount', 'operation_ids.type', 'operation_ids.state', 'opening_date')
     def _compute_totals(self):
-        """Calculer les totaux des recettes et dépenses."""
+        """Calculer les totaux des recettes et dépenses de la session actuelle uniquement."""
         for cash in self:
-            receipts = cash.operation_ids.filtered(lambda o: o.type == 'receipt')
-            expenses = cash.operation_ids.filtered(lambda o: o.type == 'expense')
+            # Filtrer les opérations de la session actuelle (après la date d'ouverture)
+            # et uniquement les opérations confirmées
+            if cash.opening_date:
+                current_operations = cash.operation_ids.filtered(
+                    lambda o: o.state == 'confirmed' and o.date >= cash.opening_date
+                )
+            else:
+                # Si pas de date d'ouverture, prendre toutes les opérations confirmées
+                current_operations = cash.operation_ids.filtered(lambda o: o.state == 'confirmed')
+            
+            receipts = current_operations.filtered(lambda o: o.type == 'receipt')
+            expenses = current_operations.filtered(lambda o: o.type == 'expense')
             cash.total_receipts = sum(receipts.mapped('amount'))
             cash.total_expenses = sum(expenses.mapped('amount'))
 
@@ -131,9 +141,8 @@ class CashRegister(models.Model):
     def action_open_cash(self):
         """
         Ouvrir la caisse.
-        - Pour une sous-caisse: vérifie que la caisse principale est ouverte
-        - Pour la caisse principale: ouvre automatiquement toutes les sous-caisses
-        - Le solde d'ouverture est le solde de fermeture de la dernière session
+        - Caisse principale: s'ouvre avec le solde de fermeture (somme de toutes les caisses)
+        - Sous-caisses: s'ouvrent toujours avec solde = 0
         """
         self.ensure_one()
         if self.state == 'opened':
@@ -146,32 +155,30 @@ class CashRegister(models.Model):
                     "La caisse principale doit être ouverte avant d'ouvrir cette sous-caisse."
                 )
 
-        # Calculer le solde d'ouverture : utiliser le solde de fermeture de la dernière session
-        # Si la caisse a déjà été fermée, utiliser le closing_balance comme opening_balance
-        if self.closing_balance is not None and self.closing_date:
-            opening_balance = self.closing_balance
+        # Calculer le solde d'ouverture
+        if self.is_main:
+            # Caisse principale: utiliser le solde de fermeture (qui contient le total de toutes les caisses)
+            if self.closing_balance is not None and self.closing_date:
+                opening_balance = self.closing_balance
+            else:
+                opening_balance = 0.0
         else:
-            # Si aucune fermeture précédente, utiliser 0.0
+            # Sous-caisse: toujours ouvrir avec 0
             opening_balance = 0.0
 
-        # Si c'est la caisse principale, ouvrir toutes les sous-caisses
+        # Si c'est la caisse principale, ouvrir toutes les sous-caisses avec solde = 0
         if self.is_main:
             sub_cashes = self.search([
                 ('main_cash_id', '=', self.id),
-                ('state', '=', 'closed')
+                ('state', '=', 'closed'),
+                ('active', '=', True)
             ])
-            # Pour chaque sous-caisse, calculer son solde d'ouverture
             for sub_cash in sub_cashes:
-                if sub_cash.closing_balance is not None and sub_cash.closing_date:
-                    sub_opening_balance = sub_cash.closing_balance
-                else:
-                    sub_opening_balance = 0.0
-                
                 sub_cash.write({
                     'state': 'opened',
                     'opening_date': fields.Datetime.now(),
                     'opening_user_id': self.env.user.id,
-                    'opening_balance': sub_opening_balance,
+                    'opening_balance': 0.0,  # Sous-caisses toujours à 0
                 })
 
         self.write({
@@ -186,7 +193,7 @@ class CashRegister(models.Model):
             'tag': 'display_notification',
             'params': {
                 'title': 'Caisse Ouverte',
-                'message': f'La caisse {self.name} a été ouverte avec succès.',
+                'message': f'La caisse {self.name} a été ouverte avec un solde de {opening_balance:.2f}.',
                 'type': 'success',
                 'sticky': False,
             }
@@ -195,7 +202,9 @@ class CashRegister(models.Model):
     def action_close_cash(self):
         """
         Fermer la caisse principale.
-        Nécessite que toutes les sous-caisses soient fermées.
+        - Calcule le solde total (caisse principale + toutes les sous-caisses)
+        - Remet les sous-caisses à 0
+        - Le solde total devient le solde d'ouverture de la caisse principale le lendemain
         """
         self.ensure_one()
         if self.state == 'closed':
@@ -204,30 +213,46 @@ class CashRegister(models.Model):
         if not self.is_main:
             raise UserError("Seule la caisse principale peut être fermée manuellement.")
 
-        # Vérifier que toutes les sous-caisses sont fermées
+        # Récupérer toutes les sous-caisses (ouvertes ou fermées)
         sub_cashes = self.search([
             ('main_cash_id', '=', self.id),
-            ('state', '=', 'opened')
+            ('active', '=', True)
         ])
-        if sub_cashes:
+        
+        # Vérifier que toutes les sous-caisses sont fermées
+        opened_sub_cashes = sub_cashes.filtered(lambda c: c.state == 'opened')
+        if opened_sub_cashes:
             raise UserError(
                 "Toutes les sous-caisses doivent être fermées avant de fermer la caisse principale."
             )
 
-        closing_balance = self.balance
+        # Calculer le solde total = solde caisse principale + solde de toutes les sous-caisses
+        total_balance = self.balance
+        for sub_cash in sub_cashes:
+            total_balance += sub_cash.closing_balance or 0.0
+        
+        # Fermer la caisse principale avec le solde total
         self.write({
             'state': 'closed',
             'closing_date': fields.Datetime.now(),
             'closing_user_id': self.env.user.id,
-            'closing_balance': closing_balance,
+            'closing_balance': total_balance,  # Solde total de toutes les caisses
         })
+        
+        # Remettre les sous-caisses à 0 pour la prochaine session
+        for sub_cash in sub_cashes:
+            sub_cash.write({
+                'closing_balance': 0.0,  # Solde de fermeture = 0
+                'opening_balance': 0.0,  # Solde d'ouverture = 0 pour la prochaine fois
+            })
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': 'Caisse Fermée',
-                'message': f'La caisse {self.name} a été fermée avec succès. Solde: {closing_balance:.2f}',
+                'message': f'La caisse {self.name} a été fermée avec succès.\n'
+                           f'Solde Total (toutes caisses): {total_balance:.2f}',
                 'type': 'success',
                 'sticky': False,
             }

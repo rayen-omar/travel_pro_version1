@@ -125,6 +125,8 @@
                                 <field name="date_invoice" string="Date"/>
                                 <field name="travel_company_id" string="Société" 
                                        options="{'no_create': True}" required="1"/>
+                                <field name="invoice_template_type" string="Type de Template"
+                                       widget="radio" options="{'horizontal': true}"/>
                             </group>
                         </div>
                         <div class="col-lg-6">
@@ -143,17 +145,25 @@
                     <field name="invoice_line_ids" mode="tree,kanban">
                         <tree string="Lignes" editable="bottom">
                             <field name="sequence" widget="handle"/>
+                            <button name="action_create_service" string="Créer Service" type="object" 
+                                    icon="fa-plus-circle" title="Créer un service depuis cette ligne"
+                                    attrs="{'invisible': [('description', '=', False)]}"/>
                             <field name="passenger_id" string="Passager" options="{'no_create': True}" 
                                    domain="[('company_id', '=', parent.travel_company_id)]"/>
                             <field name="destination_id" string="Voyage" options="{'no_create': True}"/>
                             <field name="reference" string="Référence"/>
                             <field name="description" string="Description"/>
                             <field name="reservation_id" string="Réservation" optional="hide"/>
+                            <field name="service_id" string="Service" optional="show" 
+                                   options="{'no_create': True}"/>
                             <field name="price_ttc" string="Prix TTC" widget="monetary" sum="Total"/>
+                            <field name="tax_rate" string="TVA"/>
+                            <field name="tax_rate_custom" string="Taux Personnalisé (%)" 
+                                   attrs="{'invisible': [('tax_rate', '!=', 'custom')], 'required': [('tax_rate', '=', 'custom')]}"/>
+                            <field name="price_tax" string="Montant TVA" widget="monetary" sum="Total TVA" readonly="1"/>
                             <field name="credit_info" string="Crédit" optional="show"
                                    readonly="1" decoration-bf="credit_info"
                                    style="color: #28a745; font-weight: bold;"/>
-                            <field name="tax_rate" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                         </tree>
                     </field>
@@ -178,7 +188,14 @@
                                        attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
                                 <field name="amount_after_discount" string="H.T après remise" widget="monetary" readonly="1"
                                        attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
-                                <field name="amount_tax" string="T.V.A 7%" widget="monetary" readonly="1"/>
+                                <separator string="TVA par Taux" attrs="{'invisible': [('amount_tax', '=', 0)]}"/>
+                                <field name="tax_7_amount" string="TVA 7%" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('tax_7_amount', '=', 0)]}"/>
+                                <field name="tax_19_amount" string="TVA 19%" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('tax_19_amount', '=', 0)]}"/>
+                                <field name="tax_custom_amount" string="TVA Autre" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('tax_custom_amount', '=', 0)]}"/>
+                                <field name="amount_tax" string="Total TVA" widget="monetary" readonly="1" decoration-bf="True"/>
                                 <div class="alert alert-primary text-center py-2 mt-2">
                                     <span class="text-muted">Total TTC</span>
                                     <h3 class="mb-0 text-primary fw-bold">

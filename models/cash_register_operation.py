@@ -20,6 +20,8 @@ class CashRegisterOperation(models.Model):
     ], string='Type', required=True, tracking=True)
     
     amount = fields.Float(string='Montant', required=True, tracking=True)
+    signed_amount = fields.Float(string='Montant Signé', compute='_compute_signed_amount', store=True,
+                                  help="Montant positif pour recettes, négatif pour dépenses")
     payment_method = fields.Selection([
         ('cash', 'Espèces'),
         ('check', 'Chèque'),
@@ -72,6 +74,15 @@ class CashRegisterOperation(models.Model):
                 )
         return super().create(vals)
     
+    @api.depends('amount', 'type')
+    def _compute_signed_amount(self):
+        """Calculer le montant signé: positif pour recettes, négatif pour dépenses."""
+        for operation in self:
+            if operation.type == 'expense':
+                operation.signed_amount = -operation.amount
+            else:
+                operation.signed_amount = operation.amount
+
     @api.constrains('amount')
     def _check_amount(self):
         """Vérifier que le montant est strictement positif."""
