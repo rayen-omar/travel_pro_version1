@@ -104,7 +104,7 @@
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <thead>
                                 <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 15%;">Membre</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 15%;">Membre/Service</th>
                                     <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 15%;">Voyage</th>
                                     <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Référence</th>
                                     <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 28%;">Description</th>
@@ -117,7 +117,13 @@
                                 <t t-foreach="o.invoice_line_ids" t-as="line">
                                     <tr style="border-bottom: 1px solid #e0e0e0;">
                                         <td style="padding: 6px 4px; font-size: 11px;">
+                                            <t t-if="line.passenger_id">
                                             <span t-field="line.passenger_id.name"/>
+                                            </t>
+                                            <t t-if="line.service_id">
+                                                <span style="color: #2196F3; font-weight: 500;">Service: </span>
+                                                <span t-field="line.service_id.name"/>
+                                            </t>
                                         </td>
                                         <td style="padding: 6px 4px; font-size: 11px;">
                                             <span t-field="line.destination_id.name"/>
@@ -404,26 +410,50 @@
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <thead>
                                 <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 30%;">Voyage</th>
-                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 15%;">Nombre Membres</th>
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 40%;">Description</th>
-                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 15%;">Prix TTC</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 25%;">Voyage</th>
+                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Nombre</th>
+                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 28%;">Description</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Prix TTC</th>
+                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 8%;">TVA</th>
+                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 8%;">Montant TVA</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="o._get_grouped_lines_by_destination()" t-as="group">
                                     <tr style="border-bottom: 1px solid #e0e0e0;">
                                         <td style="padding: 6px 4px; font-size: 11px; font-weight: 500;">
-                                            <span t-esc="group.get('destination', 'Sans destination')"/>
+                                            <t t-if="group.get('type') == 'service'">
+                                                <span style="color: #2196F3; font-weight: 600;">Service: </span>
+                                                <span t-esc="group.get('service_name', 'Service')"/>
+                                            </t>
+                                            <t t-if="group.get('type') == 'member'">
+                                                <span t-esc="group.get('destination', 'Sans destination')"/>
+                                            </t>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
-                                            <span t-esc="group.get('member_count', 0)"/>
+                                            <t t-if="group.get('type') == 'member'">
+                                                <span t-esc="group.get('member_count', 0)"/> Membres
+                                            </t>
+                                            <t t-if="group.get('type') == 'service'">
+                                                <span>-</span>
+                                            </t>
                                         </td>
                                         <td style="padding: 6px 4px; font-size: 11px;">
-                                            <div t-esc="group.get('description_summary', '')"/>
+                                            <t t-if="group.get('type') == 'member'">
+                                                <div t-esc="group.get('description_summary', '')"/>
+                                            </t>
+                                            <t t-if="group.get('type') == 'service'">
+                                                <div t-esc="group.get('description_summary', '')"/>
+                                            </t>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: right; font-size: 11px; font-weight: 500;">
                                             <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-esc="group.get('total_price', 0.0)"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
+                                            <span t-esc="group.get('tax_rate_display', '')"/>
+                                        </td>
+                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
+                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-esc="group.get('total_tax', 0.0)"/>
                                         </td>
                                     </tr>
                                 </t>

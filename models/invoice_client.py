@@ -360,48 +360,106 @@ class TravelInvoiceClient(models.Model):
             return self.env.ref('travel_pro_version1.action_report_travel_invoice_client').report_action(self)
     
     def _get_grouped_lines_by_destination(self):
-        """Grouper les lignes par destination/voyage pour le template général"""
+        """Grouper les lignes par destination/voyage pour le template général
+        Les services sont dans des lignes indépendantes séparées des membres"""
         self.ensure_one()
-        grouped = {}
+        grouped_members = {}  # Groupes pour les lignes avec membres
+        grouped_services = {}  # Groupes pour les lignes avec services
+        
         for line in self.invoice_line_ids:
             destination = line.destination_id.name if line.destination_id else 'Sans destination'
-            if destination not in grouped:
-                grouped[destination] = {
+            
+            if line.passenger_id:
+                # Ligne avec membre
+                key = f"member_{destination}"
+                if key not in grouped_members:
+                    grouped_members[key] = {
+                        'destination': destination,
+                        'type': 'member',
+                        'members': [],
+                        'total_price': 0.0,
+                        'total_tax': 0.0,
+                        'tax_rates': set(),  # Pour détecter les taux multiples
+                        'tax_rate_display': '',
+                        'member_count': 0,
+                        'references': [],
+                        'descriptions': [],
+                        'description_summary': ''
+                    }
+                # Ajouter le membre (éviter les doublons)
+                member_name = line.passenger_id.name
+                if member_name and member_name not in grouped_members[key]['members']:
+                    grouped_members[key]['members'].append(member_name)
+                    grouped_members[key]['member_count'] += 1
+                # Ajouter la référence
+                if line.reference:
+                    grouped_members[key]['references'].append(line.reference)
+                # Ajouter la description
+                if line.description:
+                    grouped_members[key]['descriptions'].append(line.description)
+                # Ajouter le prix
+                grouped_members[key]['total_price'] += line.price_ttc * line.quantity
+                # Ajouter le montant TVA
+                grouped_members[key]['total_tax'] += line.price_tax or 0.0
+                # Collecter les taux TVA
+                if line.tax_rate == '7':
+                    grouped_members[key]['tax_rates'].add('7%')
+                elif line.tax_rate == '19':
+                    grouped_members[key]['tax_rates'].add('19%')
+                elif line.tax_rate == 'custom' and line.tax_rate_custom:
+                    grouped_members[key]['tax_rates'].add(f"{line.tax_rate_custom}%")
+                
+            elif line.service_id:
+                # Ligne avec service - chaque service dans sa propre ligne
+                service_name = line.service_id.name or 'Service'
+                key = f"service_{destination}_{service_name}"
+                # Déterminer le taux TVA
+                tax_rate_display = ''
+                if line.tax_rate == '7':
+                    tax_rate_display = '7%'
+                elif line.tax_rate == '19':
+                    tax_rate_display = '19%'
+                elif line.tax_rate == 'custom' and line.tax_rate_custom:
+                    tax_rate_display = f"{line.tax_rate_custom}%"
+                
+                grouped_services[key] = {
                     'destination': destination,
-                    'members': [],
-                    'total_price': 0.0,
-                    'member_count': 0,
-                    'references': [],
-                    'descriptions': [],
-                    'description_summary': ''
+                    'type': 'service',
+                    'service_name': service_name,
+                    'total_price': line.price_ttc * line.quantity,
+                    'total_tax': line.price_tax or 0.0,
+                    'tax_rate_display': tax_rate_display,
+                    'description_summary': line.description or service_name
                 }
-            # Ajouter le membre (éviter les doublons)
-            member_name = line.passenger_id.name if line.passenger_id else ''
-            if member_name and member_name not in grouped[destination]['members']:
-                grouped[destination]['members'].append(member_name)
-                grouped[destination]['member_count'] += 1
-            # Ajouter la référence
-            if line.reference:
-                grouped[destination]['references'].append(line.reference)
-            # Ajouter la description
-            if line.description:
-                grouped[destination]['descriptions'].append(line.description)
-            # Ajouter le prix
-            grouped[destination]['total_price'] += line.price_ttc * line.quantity
         
-        # Formater les descriptions pour chaque groupe
-        for dest_key, group_data in grouped.items():
+        # Formater les descriptions et taux TVA pour les groupes membres
+        result = []
+        for group_data in grouped_members.values():
             descriptions = group_data['descriptions']
             if descriptions:
-                # Prendre les 2 premières descriptions
                 if len(descriptions) <= 2:
                     group_data['description_summary'] = ' | '.join(descriptions)
                 else:
                     group_data['description_summary'] = ' | '.join(descriptions[:2]) + f" ... et {len(descriptions) - 2} autre(s)"
             else:
                 group_data['description_summary'] = 'Sans description'
+            
+            # Formater le taux TVA
+            tax_rates = group_data.get('tax_rates', set())
+            if len(tax_rates) == 0:
+                group_data['tax_rate_display'] = ''
+            elif len(tax_rates) == 1:
+                group_data['tax_rate_display'] = list(tax_rates)[0]
+            else:
+                # Plusieurs taux différents
+                group_data['tax_rate_display'] = 'Mixte'
+            
+            result.append(group_data)
         
-        return list(grouped.values())
+        # Ajouter les services comme lignes indépendantes
+        result.extend(grouped_services.values())
+        
+        return result
     
     def action_pay_cash(self):
         """Ouvrir un formulaire pour enregistrer le paiement en caisse"""
@@ -534,20 +592,20 @@ class TravelInvoiceClientLine(models.Model):
     sequence = fields.Integer('Séquence', default=10)
     invoice_id = fields.Many2one('travel.invoice.client', string='Facture', required=True, ondelete='cascade')
     
-    # Référence passager/client
-    passenger_id = fields.Many2one('travel.member', string='Membre', 
-                                   required=True)
+    # Référence passager/client (optionnel - ligne peut être pour un membre OU un service)
+    passenger_id = fields.Many2one('travel.member', string='Membre',
+                                   help="Membre associé à cette ligne (optionnel si un service est sélectionné)")
     reference = fields.Char('Référence', help='Ex: P-00001')
     
     # Voyage/Destination
     destination_id = fields.Many2one('travel.destination', string='Voyage', 
-                                     help="Nom du voyage - rempli automatiquement depuis les réservations du membre")
+                                     help="Nom du voyage - rempli automatiquement depuis les réservations du membre ou le service")
     
     # Détails du voyage
     description = fields.Text('Description', required=True)
     reservation_id = fields.Many2one('travel.reservation', string='Réservation liée')
-    service_id = fields.Many2one('travel.service', string='Service lié',
-                                 help="Service associé à cette ligne de facturation")
+    service_id = fields.Many2one('travel.service', string='Service',
+                                 help="Service associé à cette ligne (peut être créé directement depuis ici)")
     credit_info = fields.Text('Info Crédit', compute='_compute_credit_info', store=False,
                               help="Information sur l'utilisation du crédit depuis la réservation")
     
@@ -588,6 +646,15 @@ class TravelInvoiceClientLine(models.Model):
                 line.credit_info = info
             else:
                 line.credit_info = False
+    
+    @api.constrains('passenger_id', 'service_id')
+    def _check_passenger_or_service(self):
+        """Vérifier qu'une ligne a soit un membre, soit un service"""
+        for line in self:
+            if not line.passenger_id and not line.service_id:
+                raise ValidationError(
+                    "Une ligne de facturation doit avoir soit un membre, soit un service."
+                )
     
     @api.constrains('tax_rate', 'tax_rate_custom')
     def _check_tax_rate_custom(self):
@@ -655,6 +722,10 @@ class TravelInvoiceClientLine(models.Model):
     def _onchange_passenger_id(self):
         """Remplir automatiquement le voyage et le prix depuis les réservations du membre"""
         if self.passenger_id:
+            # Effacer le service si un membre est sélectionné (lignes indépendantes)
+            if self.service_id:
+                self.service_id = False
+            
             self.reference = f"P-{str(self.passenger_id.id).zfill(5)}"
             
             # Récupérer les réservations confirmées du membre avec un prix
@@ -714,66 +785,28 @@ class TravelInvoiceClientLine(models.Model):
     def _onchange_service_id(self):
         """Remplir automatiquement les champs de la ligne depuis le service sélectionné"""
         if self.service_id:
+            # Effacer le membre si un service est sélectionné (lignes indépendantes)
+            if self.passenger_id:
+                self.passenger_id = False
+                self.reservation_id = False
+            
+            # Remplir la destination si disponible
             if self.service_id.destination_id:
                 self.destination_id = self.service_id.destination_id.id
+            
+            # Remplir le prix TTC
             if self.service_id.price_ttc:
                 self.price_ttc = self.service_id.price_ttc
             elif self.service_id.price:
                 self.price_ttc = self.service_id.price
+            
+            # Remplir la TVA
             if self.service_id.tax_rate:
                 self.tax_rate = self.service_id.tax_rate
-            if self.service_id.tax_rate == 'custom' and self.service_id.tax_rate_custom:
-                self.tax_rate_custom = self.service_id.tax_rate_custom
+                if self.service_id.tax_rate == 'custom' and self.service_id.tax_rate_custom:
+                    self.tax_rate_custom = self.service_id.tax_rate_custom
+            
+            # Remplir la description avec le nom du service
             if self.service_id.name:
-                self.description = f"Service: {self.service_id.name}"
-    
-    def action_create_service(self):
-        """Créer un service depuis cette ligne de facturation et ajouter une nouvelle ligne de facturation"""
-        self.ensure_one()
-        
-        if not self.description:
-            raise UserError("Veuillez remplir la description avant de créer le service.")
-        
-        # Créer le service avec les données de la ligne
-        service_vals = {
-            'name': self.description[:100] if len(self.description) > 100 else self.description,
-            'type': 'autre',  # Type par défaut
-            'price': self.price_ttc or 0.0,
-            'destination_id': self.destination_id.id if self.destination_id else False,
-            'price_ttc': self.price_ttc or 0.0,
-            'tax_rate': self.tax_rate or '7',
-            'tax_rate_custom': self.tax_rate_custom if self.tax_rate == 'custom' else 0.0,
-            'invoice_line_id': self.id,
-        }
-        
-        service = self.env['travel.service'].create(service_vals)
-        
-        # Créer une nouvelle ligne de facturation indépendante qui référence ce service
-        new_line_vals = {
-            'invoice_id': self.invoice_id.id,
-            'passenger_id': self.passenger_id.id if self.passenger_id else False,
-            'destination_id': self.destination_id.id if self.destination_id else False,
-            'reference': self.reference or '',
-            'description': f"Service: {service.name}",
-            'price_ttc': service.price_ttc or service.price or 0.0,
-            'tax_rate': service.tax_rate or '7',
-            'tax_rate_custom': service.tax_rate_custom if service.tax_rate == 'custom' else 0.0,
-            'service_id': service.id,
-            'quantity': 1.0,
-        }
-        
-        new_line = self.env['travel.invoice.client.line'].create(new_line_vals)
-        
-        # Afficher un message de confirmation
-        message = f'Le service "{service.name}" a été créé et une nouvelle ligne de facturation a été ajoutée.'
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Service créé',
-                'message': message,
-                'type': 'success',
-                'sticky': False,
-            }
-        }
+                self.description = self.service_id.name
     

@@ -268,9 +268,3 @@ class SequenceGeneratorMixin(models.AbstractModel):
 
 
 
-
-
-
-
-
-

@@ -18,12 +18,6 @@
         <field name="view_mode">tree,form</field>
     </record>
     
-    <record id="action_service" model="ir.actions.act_window">
-        <field name="name">Services</field>
-        <field name="res_model">travel.service</field>
-        <field name="view_mode">tree,form</field>
-    </record>
-    
     <record id="action_reservation" model="ir.actions.act_window">
         <field name="name">Réservations</field>
         <field name="res_model">travel.reservation</field>

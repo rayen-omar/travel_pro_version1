@@ -7,7 +7,6 @@ incluant leurs informations personnelles, leur solde crédit
 et leurs réservations.
 """
 import logging
-import re
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -26,6 +25,7 @@ class TravelMember(models.Model):
     """
     _name = 'travel.member'
     _description = 'Membre / Client'
+    _inherit = ['email.validation.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====
@@ -98,21 +98,7 @@ class TravelMember(models.Model):
     )
 
     # ===== VALIDATIONS =====
-    # Pattern RFC 5322 simplifié pour validation email
-    EMAIL_PATTERN = re.compile(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    )
-
-    @api.constrains('email')
-    def _check_email_format(self):
-        """Valider le format de l'email s'il est fourni."""
-        for record in self:
-            if record.email:
-                if not self.EMAIL_PATTERN.match(record.email):
-                    raise ValidationError(
-                        f"Format d'email invalide: {record.email}\n"
-                        "Le format attendu est: exemple@domaine.com"
-                    )
+    # La validation email est héritée de email.validation.mixin
 
     @api.constrains('phone')
     def _check_phone_format(self):

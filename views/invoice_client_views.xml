@@ -145,17 +145,22 @@
                     <field name="invoice_line_ids" mode="tree,kanban">
                         <tree string="Lignes" editable="bottom">
                             <field name="sequence" widget="handle"/>
-                            <button name="action_create_service" string="Créer Service" type="object" 
-                                    icon="fa-plus-circle" title="Créer un service depuis cette ligne"
-                                    attrs="{'invisible': [('description', '=', False)]}"/>
-                            <field name="passenger_id" string="Passager" options="{'no_create': True}" 
-                                   domain="[('company_id', '=', parent.travel_company_id)]"/>
-                            <field name="destination_id" string="Voyage" options="{'no_create': True}"/>
+                            <field name="passenger_id" string="Membre" 
+                                   options="{'create': True, 'create_edit': True}"
+                                   domain="[('company_id', '=', parent.travel_company_id)]"
+                                   attrs="{'required': [('service_id', '=', False)]}"
+                                   context="{'default_company_id': parent.travel_company_id}"/>
+                            <field name="destination_id" string="Voyage" 
+                                   options="{'create': True, 'create_edit': True}"/>
                             <field name="reference" string="Référence"/>
                             <field name="description" string="Description"/>
-                            <field name="reservation_id" string="Réservation" optional="hide"/>
-                            <field name="service_id" string="Service" optional="show" 
-                                   options="{'no_create': True}"/>
+                            <field name="reservation_id" string="Réservation" optional="hide"
+                                   options="{'create': True, 'create_edit': True}"
+                                   context="{'default_member_id': passenger_id, 'default_destination_id': destination_id}"/>
+                            <field name="service_id" string="Service" 
+                                   options="{'create': True, 'create_edit': True}"
+                                   attrs="{'required': [('passenger_id', '=', False)]}"
+                                   context="{'default_name': description, 'default_price': price_ttc, 'default_price_ttc': price_ttc, 'default_destination_id': destination_id, 'default_tax_rate': tax_rate, 'default_tax_rate_custom': tax_rate_custom}"/>
                             <field name="price_ttc" string="Prix TTC" widget="monetary" sum="Total"/>
                             <field name="tax_rate" string="TVA"/>
                             <field name="tax_rate_custom" string="Taux Personnalisé (%)" 

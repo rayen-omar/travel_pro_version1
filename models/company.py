@@ -24,6 +24,7 @@ class TravelCompany(models.Model):
     """
     _name = 'travel.company'
     _description = 'Société Cliente'
+    _inherit = ['email.validation.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====
@@ -79,20 +80,7 @@ class TravelCompany(models.Model):
     )
 
     # ===== VALIDATIONS =====
-    EMAIL_PATTERN = re.compile(
-        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    )
-
-    @api.constrains('email')
-    def _check_email_format(self):
-        """Valider le format de l'email s'il est fourni."""
-        for record in self:
-            if record.email:
-                if not self.EMAIL_PATTERN.match(record.email):
-                    raise ValidationError(
-                        f"Format d'email invalide: {record.email}\n"
-                        "Le format attendu est: contact@societe.com"
-                    )
+    # La validation email est héritée de email.validation.mixin
 
     @api.constrains('vat')
     def _check_vat_format(self):
