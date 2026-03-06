@@ -7,7 +7,7 @@ class ResPartner(models.Model):
 
     # Services liés à ce fournisseur (créés avec ce fournisseur)
     travel_service_ids = fields.One2many('travel.service', 'supplier_id', string='Services Créés')
-    travel_service_count = fields.Integer('Nombre de Services', compute='_compute_travel_service_count')
+    travel_service_count = fields.Integer('Nombre de Services', compute='_compute_travel_service_count', store=True)
     
     # Services sélectionnés pour facturation (Many2many - on peut sélectionner des services existants)
     supplier_invoice_service_ids = fields.Many2many(

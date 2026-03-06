@@ -37,6 +37,7 @@
     <menuitem id="menu_supplier_group" name="Fournisseurs" parent="menu_travel_pro" sequence="25"/>
     <menuitem id="menu_supplier" name="Fournisseurs" parent="menu_supplier_group" action="action_supplier" sequence="10"/>
     <menuitem id="menu_service" name="Services" parent="menu_supplier_group" action="action_service" sequence="20"/>
+    <menuitem id="menu_hotel" name="Hôtels" parent="menu_supplier_group" action="action_hotel" sequence="25"/>
     
     <!-- Menu Voyages (parent sans action) -->
     <menuitem id="menu_travel_group" name="Voyages" parent="menu_travel_pro" sequence="30"/>

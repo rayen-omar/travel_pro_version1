@@ -264,6 +264,8 @@ class TravelReservation(models.Model):
             'reference': f"R-{str(self.id).zfill(5)}",
             'description': f"Réservation {self.name or 'N/A'} - {self.destination_id.name if self.destination_id else ''}",
             'destination_id': self.destination_id.id if self.destination_id else False,
+            'hotel_id': self.hotel_service_id.id if self.hotel_service_id else False,
+            'member_count': self.participants or 1,
             'reservation_id': self.id,
             'quantity': 1.0,
             'price_ttc': self.total_price,  # Le prix de la réservation est TTC

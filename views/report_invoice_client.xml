@@ -80,20 +80,29 @@
                                 <span t-field="o.travel_company_id.name"/>
                             </div>
                             <div style="color: #666; font-size: 11px; line-height: 1.4;">
-                                <div t-if="o.company_address" t-esc="o.company_address"/>
-                                <div t-if="o.company_vat_number" style="margin-top: 4px; font-weight: 600; color: #333;">
-                                    <strong>Matricule Fiscal:</strong> <span t-field="o.company_vat_number"/>
+                                <div t-if="o.travel_company_id.address" t-esc="o.travel_company_id.address"/>
+                                <div t-if="o.travel_company_id.vat" style="margin-top: 4px; font-weight: 600; color: #333;">
+                                    <strong>Matricule Fiscal:</strong> <span t-field="o.travel_company_id.vat"/>
                                 </div>
-                                <div t-if="o.company_phone">
-                                    <strong>Tél:</strong> <span t-field="o.company_phone"/>
+                                <div t-if="o.travel_company_id.phone">
+                                    <strong>Tél:</strong> <span t-field="o.travel_company_id.phone"/>
                                 </div>
-                                <div t-if="o.company_mobile">
-                                    <strong>Mobile:</strong> <span t-field="o.company_mobile"/>
+                                <div t-if="o.travel_company_id.mobile">
+                                    <strong>Mobile:</strong> <span t-field="o.travel_company_id.mobile"/>
                                 </div>
-                                <div t-if="o.company_email">
-                                    <strong>Email:</strong> <span t-field="o.company_email"/>
+                                <div t-if="o.travel_company_id.email">
+                                    <strong>Email:</strong> <span t-field="o.travel_company_id.email"/>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2" t-if="o.member_count_global and o.member_count_global &gt; 0">
+                    <div class="col-12">
+                        <div style="font-size: 11px; color: #333;">
+                            <strong>Nombre de Membres:</strong>
+                            <span t-field="o.member_count_global"/>
                         </div>
                     </div>
                 </div>
@@ -135,11 +144,13 @@
                                             <span t-field="line.description"/>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
-                                            <span t-field="line.price_ttc" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            <span t-field="line.price_total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
                                             <t t-if="line.tax_rate == '7'">7%</t>
+                                            <t t-if="line.tax_rate == '13'">13%</t>
                                             <t t-if="line.tax_rate == '19'">19%</t>
+                                            <t t-if="line.tax_rate == '0'">0%</t>
                                             <t t-if="line.tax_rate == 'custom'">
                                                 <span t-esc="line.tax_rate_custom"/>%
                                             </t>
@@ -191,6 +202,14 @@
                                     <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">T.V.A 7%</td>
                                     <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 500; padding-left: 15px;">
                                         <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.tax_7_amount"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="o.tax_13_amount > 0">
+                                <tr>
+                                    <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">T.V.A 13%</td>
+                                    <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 500; padding-left: 15px;">
+                                        <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.tax_13_amount"/>
                                     </td>
                                 </tr>
                             </t>
@@ -386,74 +405,88 @@
                                 <span t-field="o.travel_company_id.name"/>
                             </div>
                             <div style="color: #666; font-size: 11px; line-height: 1.4;">
-                                <div t-if="o.company_address" t-esc="o.company_address"/>
-                                <div t-if="o.company_vat_number" style="margin-top: 4px; font-weight: 600; color: #333;">
-                                    <strong>Matricule Fiscal:</strong> <span t-field="o.company_vat_number"/>
+                                <div t-if="o.travel_company_id.address" t-esc="o.travel_company_id.address"/>
+                                <div t-if="o.travel_company_id.vat" style="margin-top: 4px; font-weight: 600; color: #333;">
+                                    <strong>Matricule Fiscal:</strong> <span t-field="o.travel_company_id.vat"/>
                                 </div>
-                                <div t-if="o.company_phone">
-                                    <strong>Tél:</strong> <span t-field="o.company_phone"/>
+                                <div t-if="o.travel_company_id.phone">
+                                    <strong>Tél:</strong> <span t-field="o.travel_company_id.phone"/>
                                 </div>
-                                <div t-if="o.company_mobile">
-                                    <strong>Mobile:</strong> <span t-field="o.company_mobile"/>
+                                <div t-if="o.travel_company_id.mobile">
+                                    <strong>Mobile:</strong> <span t-field="o.travel_company_id.mobile"/>
                                 </div>
-                                <div t-if="o.company_email">
-                                    <strong>Email:</strong> <span t-field="o.company_email"/>
+                                <div t-if="o.travel_company_id.email">
+                                    <strong>Email:</strong> <span t-field="o.travel_company_id.email"/>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Tableau des lignes de facturation (regroupé par voyage) -->
+                <!-- Tableau des lignes de facturation -->
                 <div class="row mb-2">
                     <div class="col-12">
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <thead>
-                                <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 25%;">Voyage</th>
-                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Nombre</th>
-                                    <th style="padding: 6px 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 28%;">Description</th>
-                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 12%;">Prix TTC</th>
-                                    <th style="padding: 6px 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 8%;">TVA</th>
-                                    <th style="padding: 6px 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 8%;">Montant TVA</th>
+                                <tr style="background-color: #f5f5f5; border: 1px solid #000;">
+                                    <th style="padding: 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 10%; border: 1px solid #000;">Nombre</th>
+                                    <th style="padding: 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 17%; border: 1px solid #000;">Hôtel</th>
+                                    <th style="padding: 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 17%; border: 1px solid #000;">Service</th>
+                                    <th style="padding: 4px; text-align: left; font-weight: 600; font-size: 11px; color: #333; width: 22%; border: 1px solid #000;">Description</th>
+                                    <th style="padding: 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 12%; border: 1px solid #000;">Prix TTC</th>
+                                    <th style="padding: 4px; text-align: center; font-weight: 600; font-size: 11px; color: #333; width: 10%; border: 1px solid #000;">TVA</th>
+                                    <th style="padding: 4px; text-align: right; font-weight: 600; font-size: 11px; color: #333; width: 12%; border: 1px solid #000;">Montant TVA</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-foreach="o._get_grouped_lines_by_destination()" t-as="group">
-                                    <tr style="border-bottom: 1px solid #e0e0e0;">
-                                        <td style="padding: 6px 4px; font-size: 11px; font-weight: 500;">
-                                            <t t-if="group.get('type') == 'service'">
-                                                <span style="color: #2196F3; font-weight: 600;">Service: </span>
-                                                <span t-esc="group.get('service_name', 'Service')"/>
-                                            </t>
-                                            <t t-if="group.get('type') == 'member'">
-                                                <span t-esc="group.get('destination', 'Sans destination')"/>
-                                            </t>
+                                <t t-foreach="o.invoice_line_ids" t-as="line">
+                                    <tr>
+                                        <td style="padding: 4px; text-align: center; font-size: 11px; border: 1px solid #000;">
+                                            <span t-field="line.member_count"/>
                                         </td>
-                                        <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
-                                            <t t-if="group.get('type') == 'member'">
-                                                <span t-esc="group.get('member_count', 0)"/> Membres
+                                        <td style="padding: 4px; font-size: 11px; font-weight: 500; border: 1px solid #000;">
+                                            <t t-if="line.hotel_id">
+                                                <span t-field="line.hotel_id.name"/>
                                             </t>
-                                            <t t-if="group.get('type') == 'service'">
+                                            <t t-elif="line.reservation_id and line.reservation_id.hotel_service_id">
+                                                <span t-field="line.reservation_id.hotel_service_id.name"/>
+                                            </t>
+                                            <t t-elif="line.service_id and line.service_id.type == 'hebergement'">
+                                                <span t-field="line.service_id.name"/>
+                                            </t>
+                                            <t t-else="">
                                                 <span>-</span>
                                             </t>
                                         </td>
-                                        <td style="padding: 6px 4px; font-size: 11px;">
-                                            <t t-if="group.get('type') == 'member'">
-                                                <div t-esc="group.get('description_summary', '')"/>
+                                        <td style="padding: 4px; font-size: 11px; font-weight: 500; border: 1px solid #000;">
+                                            <t t-if="line.service_id and line.service_id.type != 'hebergement'">
+                                                <span t-field="line.service_id.name"/>
                                             </t>
-                                            <t t-if="group.get('type') == 'service'">
-                                                <div t-esc="group.get('description_summary', '')"/>
+                                            <t t-elif="line.service_id and line.service_id.type == 'hebergement'">
+                                                <span>-</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span>-</span>
                                             </t>
                                         </td>
-                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px; font-weight: 500;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-esc="group.get('total_price', 0.0)"/>
+                                        <td style="padding: 4px; font-size: 11px; border: 1px solid #000;">
+                                            <div t-if="line.description" t-esc="line.description"/>
+                                            <div t-if="line.reservation_id and not line.description" t-esc="line.reservation_id.name"/>
                                         </td>
-                                        <td style="padding: 6px 4px; text-align: center; font-size: 11px;">
-                                            <span t-esc="group.get('tax_rate_display', '')"/>
+                                        <td style="padding: 4px; text-align: right; font-size: 11px; font-weight: 500; border: 1px solid #000;">
+                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="line.price_total"/>
                                         </td>
-                                        <td style="padding: 6px 4px; text-align: right; font-size: 11px;">
-                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-esc="group.get('total_tax', 0.0)"/>
+                                        <td style="padding: 4px; text-align: center; font-size: 11px; border: 1px solid #000;">
+                                            <t t-if="line.tax_rate == '7'">7%</t>
+                                            <t t-if="line.tax_rate == '13'">13%</t>
+                                            <t t-if="line.tax_rate == '19'">19%</t>
+                                            <t t-if="line.tax_rate == '0'">0%</t>
+                                            <t t-if="line.tax_rate == 'custom'">
+                                                <span t-esc="line.tax_rate_custom"/>%
+                                            </t>
+                                        </td>
+                                        <td style="padding: 4px; text-align: right; font-size: 11px; border: 1px solid #000;">
+                                            <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="line.price_tax"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -498,6 +531,14 @@
                                     <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">T.V.A 7%</td>
                                     <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 500; padding-left: 15px;">
                                         <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.tax_7_amount"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <t t-if="o.tax_13_amount > 0">
+                                <tr>
+                                    <td style="padding: 4px 0; text-align: right; font-size: 11px; color: #666;">T.V.A 13%</td>
+                                    <td style="padding: 4px 0; text-align: right; font-size: 11px; font-weight: 500; padding-left: 15px;">
+                                        <span t-options='{"widget": "monetary", "display_currency": o.currency_id}' t-field="o.tax_13_amount"/>
                                     </td>
                                 </tr>
                             </t>

@@ -10,10 +10,13 @@ class Service(models.Model):
         ('hebergement','Hébergement'),
         ('transport','Transport'),
         ('activite','Activité'),
+        ('billet', 'Billet'),
         ('autre','Autre')
     ], string='Type', default='autre')
     price = fields.Float(string='Prix (TND)', digits=(16, 2))
     room_price = fields.Float(string='Prix par nuit (TND, si hébergement)', digits=(16, 2))
+    ticket_price = fields.Float(string='Prix Billet (TND)', digits=(16, 2), help="Utilisé pour les billets")
+    commission = fields.Float(string='Commission HT (TND)', digits=(16, 2), help="Utilisé pour les billets")
     supplier_id = fields.Many2one('res.partner', string='Fournisseur')
     destination_id = fields.Many2one('travel.destination', string='Voyage')
     note = fields.Text(string='Note')
@@ -22,7 +25,9 @@ class Service(models.Model):
     price_ttc = fields.Float(string='Prix TTC (TND)', digits=(16, 2),
                             help="Prix TTC du service (rempli depuis la ligne de facturation)")
     tax_rate = fields.Selection([
+        ('0', 'Sans TVA'),
         ('7', '7%'),
+        ('13', '13%'),
         ('19', '19%'),
         ('custom', 'Autre (personnalisé)')
     ], string='TVA', default='7',
@@ -32,6 +37,26 @@ class Service(models.Model):
     invoice_line_id = fields.Many2one('travel.invoice.client.line', string='Ligne de Facturation',
                                       readonly=True, ondelete='set null',
                                       help="Ligne de facturation source de ce service")
+
+    @api.onchange('type', 'ticket_price', 'commission', 'tax_rate', 'tax_rate_custom')
+    def _onchange_billet_price(self):
+        """Calculer automatiquement le prix et le prix TTC si c'est un billet"""
+        for record in self:
+            if record.type == 'billet':
+                tax_rate_value = 0.0
+                if record.tax_rate == '7':
+                    tax_rate_value = 0.07
+                elif record.tax_rate == '13':
+                    tax_rate_value = 0.13
+                elif record.tax_rate == '19':
+                    tax_rate_value = 0.19
+                elif record.tax_rate == 'custom':
+                    tax_rate_value = (record.tax_rate_custom or 0.0) / 100.0
+                
+                tax_amount = record.commission * tax_rate_value
+                total = record.ticket_price + record.commission + tax_amount
+                record.price = total
+                record.price_ttc = total
 
     @api.onchange('supplier_id')
     def _onchange_supplier_id(self):

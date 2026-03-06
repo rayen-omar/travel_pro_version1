@@ -53,10 +53,19 @@
                             <group string="Tarification">
                                 <field name="room_price" string="Prix/Nuit" widget="monetary"
                                        attrs="{'invisible': [('type', '!=', 'hebergement')]}"/>
+                                
+                                <!-- Champs Billet -->
+                                <field name="ticket_price" string="Prix Billet" widget="monetary"
+                                       attrs="{'invisible': [('type', '!=', 'billet')]}"/>
+                                <field name="commission" string="Commission HT" widget="monetary"
+                                       attrs="{'invisible': [('type', '!=', 'billet')]}"/>
+                                <field name="tax_rate" string="TVA sur Commission" widget="radio" options="{'horizontal': true}"
+                                       attrs="{'invisible': [('type', '!=', 'billet')]}"/>
+                                       
                                 <div class="alert alert-primary text-center py-3">
                                     <h4 class="mb-0">Prix Total</h4>
                                     <h2 class="mb-0 text-primary fw-bold">
-                                        <field name="price" widget="monetary" nolabel="1"/> DT
+                                        <field name="price" widget="monetary" nolabel="1" attrs="{'readonly': [('type', '=', 'billet')]}"/> DT
                                     </h2>
                                 </div>
                             </group>
@@ -170,6 +179,46 @@
             </p>
             <p>
                 Gérez les services proposés par vos fournisseurs : hébergement, transport, activités, etc.
+            </p>
+        </field>
+    </record>
+
+    <!-- Vue Liste Hôtels -->
+    <record id="view_hotel_tree" model="ir.ui.view">
+        <field name="name">hotel.tree</field>
+        <field name="model">travel.service</field>
+        <field name="arch" type="xml">
+            <tree string="Hôtels">
+                <field name="name" string="Hôtel"/>
+                <field name="supplier_id" string="Fournisseur"/>
+                <field name="destination_id" string="Destination" optional="show"/>
+                <field name="room_price" string="Prix/Nuit" widget="monetary" optional="show"/>
+                <field name="price" string="Prix Total" widget="monetary" optional="show"/>
+                <field name="price_ttc" string="Prix TTC" widget="monetary" optional="show"/>
+                <field name="tax_rate" string="TVA" optional="show"/>
+                <field name="invoice_line_id" string="Ligne Facture" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Action Hôtels -->
+    <record id="action_hotel" model="ir.actions.act_window">
+        <field name="name">Hôtels</field>
+        <field name="res_model">travel.service</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[('type', '=', 'hebergement')]</field>
+        <field name="context">{'default_type': 'hebergement', 'search_default_hebergement': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_hotel_tree')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_service_kanban')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_service_form')})]"/>
+        <field name="search_view_id" ref="view_service_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouvel hôtel
+            </p>
+            <p>
+                Cette vue affiche tous les services d'hébergement, y compris ceux créés depuis la partie Services.
             </p>
         </field>
     </record>
