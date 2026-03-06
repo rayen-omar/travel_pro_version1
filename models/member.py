@@ -24,8 +24,8 @@ class TravelMember(models.Model):
     pour payer ses réservations.
     """
     _name = 'travel.member'
-    _description = 'Membre / Client'
-    _inherit = ['email.validation.mixin']
+    _description = 'Voyageur (Membre)'
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'email.validation.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====

@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 class TravelReservation(models.Model):
     _name = 'travel.reservation'
     _description = 'Réservation Voyage'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char('Référence', default='Nouveau', readonly=True)
     member_id = fields.Many2one('travel.member', string='Client', required=True)
@@ -106,10 +107,12 @@ class TravelReservation(models.Model):
             else:
                 rec.credit_used = 0
 
-    @api.depends('total_price', 'credit_used')
+    @api.depends('total_price', 'credit_used', 'cash_operation_ids.amount', 'cash_operation_ids.state', 'cash_operation_ids.type')
     def _compute_remaining(self):
         for rec in self:
-            rec.remaining_to_pay = rec.total_price - rec.credit_used
+            cash_paid = sum(op.amount for op in rec.cash_operation_ids if op.state == 'confirmed' and op.type == 'receipt')
+            cash_refund = sum(op.amount for op in rec.cash_operation_ids if op.state == 'confirmed' and op.type == 'expense')
+            rec.remaining_to_pay = rec.total_price - rec.credit_used - cash_paid + cash_refund
 
     @api.depends('invoice_ids')
     def _compute_invoice_count(self):

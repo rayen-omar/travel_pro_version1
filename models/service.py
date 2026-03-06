@@ -4,6 +4,7 @@ from odoo import api, fields, models
 class Service(models.Model):
     _name = 'travel.service'
     _description = 'Service pour voyage'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Nom du service', required=True)
     type = fields.Selection([

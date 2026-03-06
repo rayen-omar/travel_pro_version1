@@ -24,7 +24,7 @@ class TravelCompany(models.Model):
     """
     _name = 'travel.company'
     _description = 'Société Cliente'
-    _inherit = ['email.validation.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'email.validation.mixin']
     _order = 'name'
 
     # ===== CONTRAINTES SQL =====

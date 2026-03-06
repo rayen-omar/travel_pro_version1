@@ -7,6 +7,7 @@ class CashRegister(models.Model):
     """Modèle de gestion des caisses avec caisse principale et sous-caisses."""
     _name = 'cash.register'
     _description = 'Caisse'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
 
     name = fields.Char(string='Nom de la Caisse', required=True, tracking=True)

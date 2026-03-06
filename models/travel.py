@@ -4,6 +4,7 @@ from odoo import api, fields, models
 class TravelDestination(models.Model):
     _name = 'travel.destination'
     _description = 'Travel Destination'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char('Nom', required=True, tracking=True)
     description = fields.Text('Description')

@@ -4,6 +4,7 @@ from odoo import api, fields, models
 class TravelCreditHistory(models.Model):
     _name = 'travel.credit.history'
     _description = 'Historique Crédit Membre'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date desc'
 
     member_id = fields.Many2one('travel.member', 'Membre', required=True, ondelete='cascade')

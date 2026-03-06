@@ -19,6 +19,7 @@ _logger = logging.getLogger(__name__)
 class TravelInvoiceClient(models.Model):
     _name = 'travel.invoice.client'
     _description = 'Facture Client Travel'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'name'
 
     name = fields.Char('Numéro Facture', default='Nouveau', readonly=True, copy=False)

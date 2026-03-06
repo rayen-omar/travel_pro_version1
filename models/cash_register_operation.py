@@ -7,6 +7,7 @@ class CashRegisterOperation(models.Model):
     """Modèle pour les opérations de caisse (recettes et dépenses)."""
     _name = 'cash.register.operation'
     _description = 'Opération de Caisse'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date desc, id desc'
 
     name = fields.Char(string='Référence', required=True, readonly=True, default='Nouveau')

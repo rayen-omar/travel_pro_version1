@@ -18,6 +18,7 @@ _logger = logging.getLogger(__name__)
 class TravelPurchase(models.Model):
     _name = 'travel.purchase'
     _description = 'Facture Fournisseur Travel'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date_creation desc, id desc'
 
     name = fields.Char('Numéro Facture', readonly=True, default='Nouveau', copy=False)
