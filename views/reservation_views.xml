@@ -36,6 +36,7 @@
                 <field name="purchase_amount" string="Achat" widget="monetary" sum="Total"/>
                 <field name="total_price" string="Total" widget="monetary" sum="Total" decoration-bf="True"/>
                 <field name="credit_used" string="Crédit" widget="monetary" optional="show"/>
+                <field name="credit_refund_amount" string="Avoir" widget="monetary" optional="show"/>
                 <field name="remaining_to_pay" string="Reste" widget="monetary" 
                        decoration-danger="remaining_to_pay > 0"/>
                 <field name="status" string="État" widget="badge" optional="show"/>
@@ -108,6 +109,8 @@
                             class="btn-primary" attrs="{'invisible': [('status', '=', 'draft')]}"/>
                     <button name="action_open_pos" type="object" string="Payer Caisse" 
                             class="btn-warning" attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}"/>
+                    <button name="action_open_credit_refund" type="object" string="Avoir" 
+                            class="btn-secondary" attrs="{'invisible': [('status', '=', 'draft')]}"/>
                     <button name="action_cancel_and_credit" type="object" string="Annuler &amp; Créditer" 
                             class="btn-danger" attrs="{'invisible': [('status', '!=', 'confirmed')]}" 
                             confirm="Êtes-vous sûr de vouloir annuler cette réservation et créditer le client ?"/>
@@ -220,6 +223,9 @@
                                 <field name="credit_used" string="Crédit Utilisé" widget="monetary" readonly="1"
                                        attrs="{'invisible': [('use_credit', '=', False)]}"
                                        class="text-success fw-bold"/>
+                                <field name="credit_refund_amount" string="Avoir Crédit" widget="monetary" readonly="1"
+                                       attrs="{'invisible': [('credit_refund_amount', '=', 0)]}"
+                                       class="text-warning fw-bold"/>
                             </group>
                             <div class="alert alert-danger text-center py-3" 
                                  attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}">

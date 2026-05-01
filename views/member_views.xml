@@ -26,6 +26,28 @@
             <form string="Membre">
                 <sheet>
                     <field name="partner_id" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    
+                    <!-- Boutons intelligents -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_payments" icon="fa-money">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="total_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Payé</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_payments" icon="fa-exclamation-triangle" 
+                                attrs="{'invisible': [('total_remaining', '&lt;=', 0)]}">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-danger">
+                                    <field name="total_remaining" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">À Payer</span>
+                            </div>
+                        </button>
+                    </div>
                     
                     <!-- En-tête -->
                     <div class="oe_title mb-3">

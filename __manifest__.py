@@ -75,6 +75,7 @@
         # Caisse
         'views/cash_register_views.xml',
         'views/report_cash_receipt.xml',
+        'views/report_cash_bordereau.xml',
         # POS
         'views/pos_views.xml',
         # Rapports

@@ -26,8 +26,8 @@ class CashRegisterOperation(models.Model):
     payment_method = fields.Selection([
         ('cash', 'Espèces'),
         ('check', 'Chèque'),
-        ('mobile_wallet', 'Portefeuille Mobile'),
-        ('card', 'Carte Bancaire'),
+        ('convention', 'Par Convention'),
+        ('traite', 'Par traite'),
         ('transfer', 'Virement'),
     ], string='Mode de Paiement', required=True, tracking=True)
     

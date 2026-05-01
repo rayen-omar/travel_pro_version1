@@ -55,6 +55,10 @@ class TravelReservation(models.Model):
     pos_order_ids = fields.One2many('pos.order', 'reservation_id', string='Commandes POS')
     pos_order_count = fields.Integer(string='Commandes POS', compute='_compute_pos_order_count')
     
+    # Historique crédit lié à cette réservation (pour les avoirs/remboursements)
+    credit_history_ids = fields.One2many('travel.credit.history', 'reservation_id', string='Historique Crédit')
+    credit_refund_amount = fields.Float('Avoir Crédit (TND)', compute='_compute_credit_refund_amount', store=True)
+    
     status = fields.Selection([
         ('draft', 'Brouillon'), ('confirmed', 'Confirmé'), ('done', 'Terminé'), ('cancel', 'Annulé')
     ], default='draft', tracking=True)
@@ -111,8 +115,7 @@ class TravelReservation(models.Model):
     def _compute_remaining(self):
         for rec in self:
             cash_paid = sum(op.amount for op in rec.cash_operation_ids if op.state == 'confirmed' and op.type == 'receipt')
-            cash_refund = sum(op.amount for op in rec.cash_operation_ids if op.state == 'confirmed' and op.type == 'expense')
-            rec.remaining_to_pay = rec.total_price - rec.credit_used - cash_paid + cash_refund
+            rec.remaining_to_pay = rec.total_price - rec.credit_used - cash_paid
 
     @api.depends('invoice_ids')
     def _compute_invoice_count(self):
@@ -131,6 +134,31 @@ class TravelReservation(models.Model):
         """Calculer le nombre de commandes POS."""
         for rec in self:
             rec.pos_order_count = len(rec.pos_order_ids.filtered(lambda o: o.state in ['paid', 'done', 'invoiced']))
+
+    @api.depends('credit_history_ids.amount', 'credit_history_ids.type')
+    def _compute_credit_refund_amount(self):
+        """Calculer le montant total des avoirs (refunds) liés à cette réservation."""
+        for rec in self:
+            refunds = rec.credit_history_ids.filtered(lambda h: h.type == 'refund')
+            rec.credit_refund_amount = sum(refunds.mapped('amount'))
+
+    def action_open_credit_refund(self):
+        """Ouvrir le formulaire pour créer un avoir (remboursement vers crédit)"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Créer un Avoir (Crédit)',
+            'res_model': 'travel.credit.history',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_member_id': self.member_id.id,
+                'default_reservation_id': self.id,
+                'default_type': 'refund',
+                'default_amount': 0.0,
+                'default_note': f'Avoir pour réservation {self.name}',
+            },
+        }
 
 
     def action_create_sale_order(self):

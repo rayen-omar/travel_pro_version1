@@ -16,4 +16,30 @@
             </form>
         </field>
     </record>
+
+    <!-- Vue Formulaire Historique Crédit Simplifiée -->
+    <record id="view_travel_credit_history_form" model="ir.ui.view">
+        <field name="name">travel.credit.history.form</field>
+        <field name="model">travel.credit.history</field>
+        <field name="arch" type="xml">
+            <form string="Historique Crédit">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date"/>
+                            <field name="type"/>
+                        </group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="amount"/>
+                            <field name="reservation_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
 </odoo>

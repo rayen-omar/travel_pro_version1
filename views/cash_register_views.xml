@@ -116,9 +116,11 @@
                     <button name="action_open_cash" string="Ouvrir la Caisse" type="object" 
                             class="btn-success" attrs="{'invisible': [('state', '=', 'opened')]}"/>
                     <button name="action_close_cash" string="Fermer la Caisse" type="object" 
-                            class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', False)]}"/>
+                            class="btn-danger" attrs="{'invisible': ['|', ('state', '=', 'closed'), ('is_main', '=', False)]}"/>
                     <button name="action_close_sub_cash" string="Fermer la Sous-Caisse" type="object" 
-                            class="btn-danger" attrs="{'invisible': [('state', '=', 'closed'), ('is_main', '=', True)]}"/>
+                            class="btn-danger" attrs="{'invisible': ['|', ('state', '=', 'closed'), ('is_main', '=', True)]}"/>
+                    <button name="action_print_bordereau" string="Imprimer Bordereau" type="object" 
+                            class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'opened'), ('is_main', '=', False)]}"/>
                     <field name="state" widget="statusbar" statusbar_visible="opened,closed"/>
                 </header>
                 <sheet>

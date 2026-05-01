@@ -96,6 +96,17 @@ class TravelMember(models.Model):
         'member_id', 
         string='Historique Crédit'
     )
+    
+    currency_id = fields.Many2one(
+        'res.currency', 
+        string='Devise', 
+        default=lambda self: self.env.company.currency_id
+    )
+    
+    # Statistiques de paiement
+    total_paid = fields.Float('Total Payé (TND)', compute='_compute_payment_stats', digits=(16, 2))
+    total_remaining = fields.Float('Reste à Payer (TND)', compute='_compute_payment_stats', digits=(16, 2))
+    payment_count = fields.Integer('Nombre de Paiements', compute='_compute_payment_stats')
 
     # ===== VALIDATIONS =====
     # La validation email est héritée de email.validation.mixin
@@ -125,6 +136,25 @@ class TravelMember(models.Model):
         """Calculer le solde crédit depuis l'historique."""
         for rec in self:
             rec.credit_balance = sum(h.amount for h in rec.credit_history_ids)
+
+    @api.depends('reservation_ids.cash_operation_ids', 'reservation_ids.cash_operation_ids.state', 
+                 'reservation_ids.cash_operation_ids.amount', 'reservation_ids.cash_operation_ids.type',
+                 'reservation_ids.remaining_to_pay')
+    def _compute_payment_stats(self):
+        """Calculer les statistiques de paiement basées sur les réservations."""
+        for rec in self:
+            reservations = rec.reservation_ids
+            # Récupérer toutes les opérations confirmées liées aux réservations du membre
+            all_ops = reservations.mapped('cash_operation_ids').filtered(lambda o: o.state == 'confirmed')
+            receipts = all_ops.filtered(lambda o: o.type == 'receipt')
+            expenses = all_ops.filtered(lambda o: o.type == 'expense')
+            
+            # Total payé = Recettes - Dépenses (remboursements caisse)
+            rec.total_paid = sum(receipts.mapped('amount')) - sum(expenses.mapped('amount'))
+            # Reste à payer = somme des restes à payer de toutes les réservations
+            rec.total_remaining = sum(reservations.mapped('remaining_to_pay'))
+            # Nombre d'opérations de type recette
+            rec.payment_count = len(receipts)
 
     # ===== CRUD METHODS =====
     @api.model
@@ -247,6 +277,23 @@ class TravelMember(models.Model):
             'view_mode': 'tree,form',
             'domain': [('member_id', '=', self.id)],
             'context': {'default_member_id': self.id},
+        }
+
+    def action_view_payments(self):
+        """Voir l'historique des paiements de ce membre."""
+        self.ensure_one()
+        # Récupérer les IDs de toutes les opérations de caisse liées aux réservations
+        all_ops_ids = self.reservation_ids.mapped('cash_operation_ids').ids
+        return {
+            'name': f'Paiements de {self.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'cash.register.operation',
+            'view_mode': 'tree,form',
+            'domain': [('id', 'in', all_ops_ids)],
+            'context': {
+                'default_type': 'receipt',
+                'search_default_confirmed': 1,
+            },
         }
 
     # ===== SEARCH METHODS =====

@@ -259,6 +259,27 @@ class CashRegister(models.Model):
             }
         }
 
+    def action_print_bordereau(self):
+        """Imprimer le bordereau récapitulatif de la caisse principale et ses sous-caisses."""
+        self.ensure_one()
+        if not self.is_main:
+            raise UserError("Le bordereau ne peut être imprimé que depuis la caisse principale.")
+        
+        # Vérifier s'il y a des opérations à imprimer
+        start_date = self.opening_date or fields.Datetime.now().replace(hour=0, minute=0, second=0)
+        cashes = self | self.sub_cash_ids
+        ops = self.env['cash.register.operation'].search([
+            ('cash_register_id', 'in', cashes.ids),
+            ('date', '>=', start_date),
+            ('state', '=', 'confirmed'),
+            ('type', '=', 'receipt')
+        ])
+        
+        if not ops:
+            raise UserError("Aucune opération de recette confirmée pour cette session.")
+            
+        return self.env.ref('travel_pro_version1.action_report_cash_bordereau').report_action(self)
+
     def action_close_sub_cash(self):
         """Fermer une sous-caisse."""
         self.ensure_one()

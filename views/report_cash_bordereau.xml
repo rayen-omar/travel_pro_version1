@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_cash_bordereau_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div class="text-center mb-4">
+                    <h2 style="font-weight: bold; text-decoration: underline;">BORDEREAU DE CAISSE (JOURNALIER)</h2>
+                    <h4>Caisse Principale: <span t-field="o.name"/></h4>
+                    <p><strong>Date :</strong> <span t-esc="time.strftime('%d/%m/%Y')"/></p>
+                </div>
+
+                <t t-set="cashes" t-value="o | o.sub_cash_ids"/>
+                <t t-set="operations" t-value="o.env['cash.register.operation'].search([('cash_register_id', 'in', cashes.ids), ('date', '&gt;=', o.opening_date), ('state', '=', 'confirmed'), ('type', '=', 'receipt')], order='payment_method, date')"/>
+
+                <table class="table table-sm o_main_table mt-4">
+                    <thead>
+                        <tr class="bg-light">
+                            <th>Date</th>
+                            <th>Caisse</th>
+                            <th>Référence</th>
+                            <th>Client / Réservation</th>
+                            <th class="text-right">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-set="current_method" t-value="False"/>
+                        <t t-set="method_total" t-value="0"/>
+                        <t t-set="grand_total" t-value="0"/>
+
+                        <t t-foreach="operations" t-as="op">
+                            <!-- Group Header -->
+                            <t t-if="current_method != op.payment_method">
+                                <t t-if="current_method">
+                                    <tr class="table-info font-weight-bold">
+                                        <td colspan="4" class="text-right">Total Section:</td>
+                                        <td class="text-right"><span t-esc="'{:,.3f}'.format(method_total)"/> DT</td>
+                                    </tr>
+                                </t>
+                                <t t-set="current_method" t-value="op.payment_method"/>
+                                <t t-set="method_total" t-value="0"/>
+                                <tr class="bg-secondary text-white font-weight-bold">
+                                    <td colspan="5">MODE DE PAIEMENT : <span t-field="op.payment_method"/></td>
+                                </tr>
+                            </t>
+
+                            <!-- Line -->
+                            <tr>
+                                <td><span t-field="op.date" t-options='{"widget": "datetime"}'/></td>
+                                <td><span t-field="op.cash_register_id.name"/></td>
+                                <td><span t-field="op.name"/></td>
+                                <td>
+                                    <span t-field="op.reservation_id.member_id.name"/><br/>
+                                    <small class="text-muted"><span t-field="op.reservation_id.name"/></small>
+                                </td>
+                                <td class="text-right"><span t-esc="'{:,.3f}'.format(op.amount)"/> DT</td>
+                            </tr>
+                            <t t-set="method_total" t-value="method_total + op.amount"/>
+                            <t t-set="grand_total" t-value="grand_total + op.amount"/>
+                        </t>
+
+                        <!-- Last Method Total -->
+                        <tr class="table-info font-weight-bold">
+                            <td colspan="4" class="text-right">Total Section:</td>
+                            <td class="text-right"><span t-esc="'{:,.3f}'.format(method_total)"/> DT</td>
+                        </tr>
+
+                        <!-- Grand Total -->
+                        <tr class="table-dark font-weight-bold" style="font-size: 1.2em;">
+                            <td colspan="4" class="text-right text-uppercase">Total Général des Recettes:</td>
+                            <td class="text-right"><span t-esc="'{:,.3f}'.format(grand_total)"/> DT</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="row mt-5">
+                    <div class="col-6 text-center">
+                        <p><strong>Signature Caissier</strong></p>
+                        <br/><br/>
+                        _________________________
+                    </div>
+                    <div class="col-6 text-center">
+                        <p><strong>Cachet Agence</strong></p>
+                        <br/><br/>
+                        _________________________
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_cash_bordereau">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="travel_pro_version1.report_cash_bordereau_document"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_cash_bordereau" model="ir.actions.report">
+        <field name="name">Bordereau de Caisse</field>
+        <field name="model">cash.register</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">travel_pro_version1.report_cash_bordereau</field>
+        <field name="report_file">travel_pro_version1.report_cash_bordereau</field>
+        <field name="print_report_name">'Bordereau_%s_%s' % (object.name, time.strftime('%Y-%m-%d'))</field>
+        <field name="binding_model_id" ref="model_cash_register"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

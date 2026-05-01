@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_cash_receipt_document">
-        <t t-call="web.html_container">
-            <t t-foreach="docs" t-as="o">
+        <t t-foreach="docs" t-as="o">
                 <div class="article">
                     <style>
                         @media print {
@@ -117,28 +116,28 @@
                             </div>
                         </div>
 
-                        <!-- Info Paiement Crédit -->
-                        <div class="row mb-3" t-if="o.reservation_id and o.reservation_id.use_credit and o.reservation_id.credit_used > 0">
+                        <!-- Situation Financière de la Réservation -->
+                        <div class="row mb-3" t-if="o.reservation_id">
                             <div class="col-12">
-                                <div class="card" style="border: 1px solid #28a745;">
-                                    <div class="card-header" style="padding: 5px 10px; background-color: #d4edda; border-bottom: 1px solid #28a745; font-size: 18px;">
-                                        <strong style="color: #155724;">💳 Info Paiement Crédit</strong>
+                                <div class="card" style="border: 1px solid #17a2b8;">
+                                    <div class="card-header" style="padding: 5px 10px; background-color: #d1ecf1; border-bottom: 1px solid #17a2b8; font-size: 18px;">
+                                        <strong style="color: #0c5460;">💰 Situation Financière</strong>
                                     </div>
-                                    <div class="card-body" style="padding: 10px; background-color: #f1f8f4;">
+                                    <div class="card-body" style="padding: 10px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                            <span style="font-size: 16px;"><strong>Crédit Utilisé:</strong></span>
-                                            <span style="color: #28a745; font-weight: 600; font-size: 16px;">
-                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.credit_used)"/> DT
+                                            <span style="font-size: 16px;">Total Réservation:</span>
+                                            <span style="font-weight: 600; font-size: 16px;">
+                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.total_price)"/> DT
                                             </span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                            <span style="font-size: 16px;"><strong>✅ Montant Payé:</strong></span>
+                                            <span style="font-size: 16px;">Total déjà Payé:</span>
                                             <span style="color: #28a745; font-weight: 600; font-size: 16px;">
-                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.credit_used)"/> DT
+                                                <span t-esc="'{:,.3f}'.format(o.reservation_id.total_price - o.reservation_id.remaining_to_pay)"/> DT
                                             </span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between;">
-                                            <span style="font-size: 16px;"><strong>🔴 Reste à Payer:</strong></span>
+                                            <span style="font-size: 16px;">Reste à Payer:</span>
                                             <span style="color: #dc3545; font-weight: 600; font-size: 16px;">
                                                 <span t-esc="'{:,.3f}'.format(o.reservation_id.remaining_to_pay)"/> DT
                                             </span>
@@ -171,7 +170,6 @@
                     </div>
                 </div>
             </t>
-        </t>
     </template>
 
     <template id="report_cash_receipt">
