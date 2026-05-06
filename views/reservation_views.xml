@@ -131,116 +131,57 @@
                         </button>
                     </div>
                     
-                    <!-- En-tête avec référence -->
-                    <div class="oe_title mb-3">
+                    <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1" class="text-primary"/>
+                            <field name="name" readonly="1"/>
                         </h1>
                     </div>
                     
-                    <!-- Section 1: Client & Voyage -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Client">
-                                <field name="member_id" string="Client" options="{'no_create': True}" required="1"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Voyage">
-                                <field name="destination_id" string="Destination" options="{'no_create': True}" required="1"/>
-                                <field name="trip_type" string="Type"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="Période &amp; Participants" class="mt-4"/>
-                    
-                    <!-- Section 2: Période & Participants -->
-                    <div class="row">
-                        <div class="col-lg-6">
+                    <group>
+                        <group string="Client &amp; Voyage">
+                            <field name="member_id" options="{'no_create': True}"/>
+                            <field name="destination_id" options="{'no_create': True}"/>
+                            <field name="trip_type"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="check_in"/>
+                            <field name="check_out"/>
+                            <field name="nights"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Détails" name="details">
                             <group>
-                                <field name="check_in" string="Date Arrivée"/>
-                                <field name="check_out" string="Date Départ"/>
-                                <field name="nights" string="Nuitées" readonly="1"/>
+                                <group string="Participants">
+                                    <field name="adults"/>
+                                    <field name="children"/>
+                                    <field name="infants"/>
+                                    <field name="participants"/>
+                                </group>
+                                <group string="Hébergement">
+                                    <field name="hotel_service_id" options="{'no_create': True}"/>
+                                    <field name="supplier_id" options="{'no_create': True}"/>
+                                    <field name="room_type"/>
+                                </group>
                             </group>
-                        </div>
-                        <div class="col-lg-6">
+                        </page>
+                        <page string="Finances" name="finance">
                             <group>
-                                <field name="adults" string="Adultes"/>
-                                <field name="children" string="Enfants"/>
-                                <field name="infants" string="Bébés"/>
-                                <field name="participants" string="Total Pax" readonly="1"/>
+                                <group string="Prix">
+                                    <field name="price"/>
+                                    <field name="purchase_amount"/>
+                                    <field name="total_price" class="oe_subtotal_footer_separator"/>
+                                </group>
+                                <group string="Paiement">
+                                    <field name="use_credit"/>
+                                    <field name="credit_used" attrs="{'invisible': [('use_credit', '=', False)]}"/>
+                                    <field name="remaining_to_pay" class="oe_subtotal_footer_separator" 
+                                           decoration-danger="remaining_to_pay > 0"/>
+                                </group>
                             </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="Hébergement &amp; Fournisseur" class="mt-4"/>
-                    
-                    <!-- Section 3: Hébergement -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group>
-                                <field name="hotel_service_id" string="Service Hôtel" 
-                                       options="{'no_create': True}"
-                                       domain="[('type', '=', 'hebergement')]"/>
-                                <field name="supplier_id" string="Fournisseur" options="{'no_create': True}"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group>
-                                <field name="local_or_foreign" string="Local/Étranger"/>
-                                <field name="room_category" string="Catégorie"/>
-                                <field name="room_type" string="Type Chambre"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="Tarification" class="mt-4"/>
-                    
-                    <!-- Section 4: Tarification -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Prix">
-                                <field name="price" string="Prix Voyage (TTC)" widget="monetary"/>
-                                <div class="d-flex align-items-center">
-                                    <field name="purchase_amount" string="Prix Achat" widget="monetary" class="flex-grow-1"/>
-                                    <button name="action_compute_purchase_amount" string="Calculer" type="object" 
-                                            class="btn btn-sm btn-secondary ms-2"
-                                            attrs="{'invisible': [('supplier_id', '=', False)]}"
-                                            title="Calculer depuis Fournisseur"/>
-                                </div>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Montants">
-                                <div class="alert alert-primary text-center py-3 mb-2">
-                                    <span class="text-muted">Total TTC</span>
-                                    <h2 class="mb-0 text-primary fw-bold">
-                                        <field name="total_price" widget="monetary" nolabel="1"/>
-                                    </h2>
-                                </div>
-                                <field name="use_credit" string="Utiliser Crédit"/>
-                                <field name="credit_used" string="Crédit Utilisé" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('use_credit', '=', False)]}"
-                                       class="text-success fw-bold"/>
-                                <field name="credit_refund_amount" string="Avoir Crédit" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('credit_refund_amount', '=', 0)]}"
-                                       class="text-warning fw-bold"/>
-                            </group>
-                            <div class="alert alert-danger text-center py-3" 
-                                 attrs="{'invisible': [('remaining_to_pay', '&lt;=', 0)]}">
-                                <span class="text-muted">Reste à Payer</span>
-                                <h2 class="mb-0 text-danger fw-bold">
-                                    <field name="remaining_to_pay" widget="monetary" nolabel="1"/>
-                                </h2>
-                            </div>
-                            <div class="alert alert-success text-center py-2" 
-                                 attrs="{'invisible': [('remaining_to_pay', '>', 0)]}">
-                                <h4 class="mb-0 text-success">Entièrement Payé</h4>
-                            </div>
-                        </div>
-                    </div>
-                    
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>

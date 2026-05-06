@@ -103,11 +103,24 @@ class TravelReservation(models.Model):
             services_price = sum(s.price for s in rec.service_ids if s.price)
             rec.total_price = base_price + services_price
 
-    @api.depends('use_credit', 'member_id.credit_balance', 'total_price')
+    @api.depends('use_credit', 'member_id.credit_balance', 'total_price', 'credit_history_ids.amount')
     def _compute_credit_used(self):
         for rec in self:
-            if rec.use_credit and rec.member_id.credit_balance > 0:
-                rec.credit_used = min(rec.member_id.credit_balance, rec.total_price)
+            if rec.use_credit:
+                # Calculer combien de crédit a déjà été consommé par CETTE réservation
+                # (Les montants d'usage sont négatifs dans l'historique)
+                already_used = -sum(rec.credit_history_ids.filtered(lambda h: h.type == 'usage').mapped('amount'))
+                
+                # Le crédit disponible "réel" pour cette réservation est le solde actuel du membre 
+                # PLUS ce que cette réservation a déjà bloqué/consommé.
+                available_credit = rec.member_id.credit_balance + already_used
+                
+                if available_credit > 0:
+                    # On peut utiliser au maximum le disponible total ou le prix total
+                    rec.credit_used = min(available_credit, rec.total_price)
+                else:
+                    # Si aucun crédit disponible, on garde au moins ce qui a déjà été utilisé
+                    rec.credit_used = already_used if already_used > 0 else 0.0
             else:
                 rec.credit_used = 0
 

@@ -140,90 +140,63 @@
                             <field name="sub_cash_count" widget="statinfo" string="Sous-Caisses"/>
                         </button>
                     </div>
-                    
-                    <!-- En-tête -->
-                    <div class="oe_title mb-2">
+                           <div class="oe_title">
                         <h1>
-                            <field name="name" placeholder="Nom de la caisse" required="1" class="text-primary"/>
+                            <field name="name" placeholder="Caisse..."/>
                         </h1>
                     </div>
                     
-                    <!-- Section Informations & Ouverture -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Informations">
-                                <field name="code" string="Code"/>
-                                <field name="sequence_id" string="Séquence" options="{'no_create': True, 'no_create_edit': True}"/>
-                                <field name="is_main" string="Caisse Principale"/>
-                                <field name="main_cash_id" string="Caisse Parente" 
-                                       attrs="{'required': [('is_main', '=', False)], 'invisible': [('is_main', '=', True)]}"
-                                       options="{'no_create': True}"/>
-                                <field name="user_id" string="Responsable"/>
-                                <field name="company_id" groups="base.group_multi_company"/>
+                    <group>
+                        <group string="Configuration">
+                            <field name="code"/>
+                            <field name="is_main"/>
+                            <field name="main_cash_id" attrs="{'invisible': [('is_main', '=', True)]}"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group string="Solde Actuel">
+                            <field name="balance" widget="monetary" string="Solde Actuel"/>
+                            <field name="state" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Ouverture / Fermeture" name="session">
+                            <group>
+                                <group string="Ouverture">
+                                    <field name="opening_date"/>
+                                    <field name="opening_user_id"/>
+                                    <field name="opening_balance"/>
+                                </group>
+                                <group string="Fermeture">
+                                    <field name="closing_date"/>
+                                    <field name="closing_user_id"/>
+                                    <field name="closing_balance"/>
+                                </group>
                             </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Ouverture/Fermeture">
-                                <field name="opening_date" string="Date Ouverture" readonly="1"/>
-                                <field name="opening_user_id" string="Ouvert par" readonly="1"/>
-                                <field name="opening_balance" string="Solde Ouverture" widget="monetary"/>
-                                <field name="closing_date" string="Date Fermeture" readonly="1"/>
-                                <field name="closing_user_id" string="Fermé par" readonly="1"/>
-                                <field name="closing_balance" string="Solde Fermeture" widget="monetary" readonly="1"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <!-- Solde actuel -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-primary text-center py-3">
-                                <h4 class="mb-0">Solde Actuel</h4>
-                                <h2 class="mb-0 text-primary fw-bold">
-                                    <field name="balance" widget="monetary" nolabel="1"/>
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <separator string="Sous-Caisses" class="mt-4" attrs="{'invisible': [('is_main', '=', False)]}"/>
-                    
-                    <!-- Sous-caisses -->
-                    <field name="sub_cash_ids" nolabel="1" attrs="{'invisible': [('is_main', '=', False)]}">
-                        <tree string="Sous-Caisses" create="1" delete="1" 
-                              decoration-success="state == 'opened'" decoration-muted="state == 'closed'">
-                            <field name="name" string="Nom"/>
-                            <field name="code" string="Code"/>
-                            <field name="user_id" string="Responsable"/>
-                            <field name="state" string="État" widget="badge"/>
-                            <field name="opening_balance" string="Ouverture" widget="monetary"/>
-                            <field name="total_receipts" string="Recettes" sum="Total" widget="monetary"/>
-                            <field name="total_expenses" string="Dépenses" sum="Total" widget="monetary"/>
-                            <field name="balance" string="Solde" sum="Total" widget="monetary"/>
-                        </tree>
-                    </field>
-                    
-                    <separator string="Opérations" class="mt-4"/>
-                    
-                    <!-- Opérations -->
-                    <field name="operation_ids" nolabel="1">
-                        <tree string="Opérations" 
-                              decoration-success="type == 'receipt' and state == 'confirmed'" 
-                              decoration-danger="type == 'expense' and state == 'confirmed'"
-                              decoration-muted="state == 'cancelled'">
-                            <field name="name" string="Référence"/>
-                            <field name="date" string="Date"/>
-                            <field name="type" string="Type" widget="badge"/>
-                            <field name="amount" string="Montant" widget="monetary"/>
-                            <field name="signed_amount" string="Solde" sum="Solde Net" widget="monetary" 
-                                   decoration-success="signed_amount > 0" decoration-danger="signed_amount &lt; 0"/>
-                            <field name="payment_method" string="Mode"/>
-                            <field name="invoice_number" string="N° Facture" optional="show"/>
-                            <field name="quote_number" string="N° Devis" optional="show"/>
-                            <field name="user_id" string="Utilisateur"/>
-                            <field name="state" string="État" widget="badge"/>
-                        </tree>
-                    </field>
+                        </page>
+                        <page string="Sous-Caisses" name="sub_cashes" attrs="{'invisible': [('is_main', '=', False)]}">
+                            <field name="sub_cash_ids" nolabel="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="user_id"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="balance" widget="monetary"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Opérations" name="operations">
+                            <field name="operation_ids" nolabel="1">
+                                <tree>
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                    <field name="type" widget="badge"/>
+                                    <field name="payment_method"/>
+                                    <field name="amount" widget="monetary"/>
+                                    <field name="state" widget="badge"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
@@ -355,69 +328,42 @@
                         </button>
                     </div>
                     
-                    <!-- En-tête -->
-                    <div class="oe_title mb-2">
+                    <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1" class="text-primary"/>
+                            <field name="name" readonly="1"/>
                         </h1>
                     </div>
                     
-                    <!-- Section Informations & Paiement -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Informations">
-                                <field name="cash_register_id" string="Caisse" options="{'no_create': True}"/>
-                                <field name="date" string="Date"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Détails Paiement">
-                                <field name="type" string="Type" widget="radio" options="{'horizontal': true}"/>
-                                <field name="payment_method" string="Mode de Paiement"/>
-                            </group>
-                            <div class="alert alert-primary text-center py-3">
-                                <h4 class="mb-0">Montant</h4>
-                                <h2 class="mb-0 text-primary fw-bold">
-                                    <field name="amount" widget="monetary" nolabel="1"
-                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <separator string="Références Liées" class="mt-4"/>
-                    
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group>
-                                <field name="reservation_id" string="Réservation"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                       options="{'no_create': True}"/>
-                                <field name="invoice_number" string="N° Facture" 
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="quote_number" string="N° Devis" 
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group>
-                                <field name="sale_order_id" string="Commande"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                       options="{'no_create': True}"/>
-                                <field name="invoice_id" string="Facture Odoo"
-                                       domain="[('move_type', 'in', ['out_invoice', 'out_refund'])]"
-                                       attrs="{'readonly': [('state', '!=', 'draft')]}"
-                                       options="{'no_create': True}"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="Note" class="mt-4"/>
-                    
                     <group>
-                        <field name="note" placeholder="Références ou notes sur cette opération..." 
-                               nolabel="1" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                        <group string="Détails">
+                            <field name="cash_register_id" options="{'no_create': True}"/>
+                            <field name="date"/>
+                            <field name="type" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                        <group string="Montant &amp; Mode">
+                            <field name="amount" widget="monetary"/>
+                            <field name="payment_method"/>
+                        </group>
                     </group>
+
+                    <notebook>
+                        <page string="Références" name="references">
+                            <group>
+                                <group>
+                                    <field name="reservation_id" options="{'no_create': True}"/>
+                                    <field name="invoice_number"/>
+                                    <field name="quote_number"/>
+                                </group>
+                                <group>
+                                    <field name="sale_order_id" options="{'no_create': True}"/>
+                                    <field name="invoice_id" options="{'no_create': True}"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Notes..."/>
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>

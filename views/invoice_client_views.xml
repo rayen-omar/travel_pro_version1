@@ -111,151 +111,72 @@
                         </button>
                     </div>
                     
-                    <!-- En-tête -->
-                    <div class="oe_title mb-2">
+                    <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1" class="text-primary"/>
+                            <field name="name" readonly="1"/>
                         </h1>
                     </div>
                     
-                    <!-- Section Informations & Membres -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Informations">
-                                <field name="date_invoice" string="Date"/>
-                                <field name="travel_company_id" string="Société" 
-                                       options="{'no_create': True}" required="1"/>
-                                <field name="invoice_template_type" string="Type de Template"
-                                       widget="radio" options="{'horizontal': true}"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Membres">
-                                <field name="member_ids" widget="many2many_tags" nolabel="1"
-                                       domain="[('company_id', '=', travel_company_id)]"
-                                       options="{'no_create': True}"/>
-                            </group>
-                        </div>
-                    </div>
+                    <group>
+                        <group string="Informations">
+                            <field name="date_invoice"/>
+                            <field name="travel_company_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Membres &amp; Template">
+                            <field name="member_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="invoice_template_type" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                    </group>
 
-                    <separator string="Lignes de Facturation" class="mt-4"/>
                     <notebook>
-                        <page string="Lignes de Facturation">
-                            <field name="invoice_line_ids" mode="tree,kanban">
-                                <tree string="Lignes Facturation" editable="bottom">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="passenger_id" string="Membre"
-                                           options="{'create': True, 'create_edit': True}"
-                                           domain="[('company_id', '=', parent.travel_company_id)]"
-                                           context="{'default_company_id': parent.travel_company_id}"/>
-                                    <field name="member_count" string="Nombre" required="1" force_save="1"/>
-                                    <field name="hotel_id" string="Hôtel"
-                                           options="{'create': True, 'create_edit': True}"
-                                           domain="[('type', '=', 'hebergement')]"/>
-                                    <field name="destination_id" string="Voyage"
-                                           options="{'create': True, 'create_edit': True}"/>
-                                    <field name="reference" string="Référence"/>
-                                    <field name="description" string="Description"/>
-                                    <field name="service_id" string="Service"
-                                           options="{'create': True, 'create_edit': True}"
-                                           context="{'default_name': description, 'default_price': price_ttc, 'default_price_ttc': price_ttc, 'default_destination_id': destination_id, 'default_tax_rate': tax_rate, 'default_tax_rate_custom': tax_rate_custom}"/>
-                                    <field name="is_ticket" string="Billet?" widget="boolean_toggle" optional="show"/>
-                                    <field name="ticket_price" string="Prix Billet" widget="monetary" optional="show" attrs="{'invisible': [('is_ticket', '=', False)], 'required': [('is_ticket', '=', True)]}"/>
-                                    <field name="commission" string="Commission HT" widget="monetary" optional="show" attrs="{'invisible': [('is_ticket', '=', False)], 'required': [('is_ticket', '=', True)]}"/>
-                                    <field name="price_ttc" string="Prix TTC" widget="monetary" sum="Total" attrs="{'readonly': [('is_ticket', '=', True)]}"/>
-                                    <field name="tax_rate" string="TVA"/>
-                                    <field name="price_tax" string="Montant TVA" widget="monetary" sum="Total TVA" readonly="1"/>
-                                    <field name="tax_rate_custom" string="Taux Personnalisé (%)"
-                                           attrs="{'invisible': [('tax_rate', '!=', 'custom')], 'required': [('tax_rate', '=', 'custom')]}"/>
-                                    <field name="currency_id" invisible="1"/>
+                        <page string="Lignes de Facturation" name="lines">
+                            <field name="invoice_line_ids" mode="tree">
+                                <tree editable="bottom">
+                                    <field name="passenger_id" domain="[('company_id', '=', parent.travel_company_id)]"/>
+                                    <field name="destination_id"/>
+                                    <field name="description"/>
+                                    <field name="price_ttc" widget="monetary" sum="Total"/>
+                                    <field name="tax_rate"/>
+                                    <field name="price_tax" widget="monetary" sum="Total TVA"/>
                                 </tree>
                             </field>
                         </page>
-                    </notebook>
-                    
-                    <separator string="Calcul des Montants" class="mt-4"/>
-                    
-                    <!-- Section calcul -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Remise">
-                                <field name="discount_type" string="Type"/>
-                                <field name="discount_rate" string="Taux (%)"
-                                       attrs="{'invisible': [('discount_type', '!=', 'percent')]}"/>
-                                <field name="discount_fixed" string="Montant Fixe" widget="monetary"
-                                       attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="📊 Totaux">
-                                <field name="amount_untaxed" string="Total H.T" widget="monetary" readonly="1"/>
-                                <field name="discount_amount" string="Remise" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
-                                <field name="amount_after_discount" string="H.T après remise" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
-                                <separator string="TVA par Taux" attrs="{'invisible': [('amount_tax', '=', 0)]}"/>
-                                <field name="tax_7_amount" string="TVA 7%" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('tax_7_amount', '=', 0)]}"/>
-                                <field name="tax_13_amount" string="TVA 13%" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('tax_13_amount', '=', 0)]}"/>
-                                <field name="tax_19_amount" string="TVA 19%" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('tax_19_amount', '=', 0)]}"/>
-                                <field name="tax_custom_amount" string="TVA Autre" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('tax_custom_amount', '=', 0)]}"/>
-                                <field name="amount_tax" string="Total TVA" widget="monetary" readonly="1" decoration-bf="True"/>
-                                <div class="alert alert-primary text-center py-2 mt-2">
-                                    <span class="text-muted">Total TTC</span>
-                                    <h3 class="mb-0 text-primary fw-bold">
-                                        <field name="amount_total" widget="monetary" nolabel="1"/>
-                                    </h3>
-                                </div>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <separator string="📉 RETENUES À LA SOURCE" class="mt-4"/>
-                    
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Retenue 1% sur TTC">
-                                <field name="apply_withholding_tax" string="Appliquer"/>
-                                <field name="withholding_tax_amount" string="Montant" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('apply_withholding_tax', '=', False)]}"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Retenue 25% sur TVA">
-                                <field name="apply_vat_withholding" string="Appliquer"/>
-                                <field name="vat_withholding_amount" string="Montant" widget="monetary" readonly="1"
-                                       attrs="{'invisible': [('apply_vat_withholding', '=', False)]}"/>
-                            </group>
-                        </div>
-                    </div>
-                    
-                    <!-- Net à payer -->
-                    <div class="row" attrs="{'invisible': [('total_withholding', '=', 0)]}">
-                        <div class="col-12">
+                        <page string="Calculs &amp; Taxes" name="taxes">
                             <group>
-                                <field name="total_withholding" string="📉 Total Retenues" widget="monetary" readonly="1"/>
+                                <group string="Remise">
+                                    <field name="discount_type"/>
+                                    <field name="discount_rate" attrs="{'invisible': [('discount_type', '!=', 'percent')]}"/>
+                                    <field name="discount_fixed" attrs="{'invisible': [('discount_type', '!=', 'fixed')]}"/>
+                                </group>
+                                <group string="Totaux">
+                                    <field name="amount_untaxed"/>
+                                    <field name="discount_amount" attrs="{'invisible': [('discount_type', '=', 'none')]}"/>
+                                    <field name="amount_tax"/>
+                                    <field name="amount_total" class="oe_subtotal_footer_separator"/>
+                                </group>
                             </group>
-                            <div class="alert alert-success text-center py-3">
-                                <span class="text-muted">Net à Payer</span>
-                                <h2 class="mb-0 text-success fw-bold">
-                                    <field name="net_to_pay" widget="monetary" nolabel="1"/>
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <group>
-                        <field name="amount_in_words_fr" string="💬 Montant en lettres" readonly="1"/>
-                    </group>
-                    
-                    <separator string="Notes" class="mt-4"/>
-                    
-                    <group>
-                        <field name="note" placeholder="Notes internes..." nolabel="1"/>
-                    </group>
+                            <group string="Retenues à la Source">
+                                <group string="Retenue 1% (TTC)">
+                                    <field name="apply_withholding_tax"/>
+                                    <field name="withholding_tax_amount" attrs="{'invisible': [('apply_withholding_tax', '=', False)]}"/>
+                                </group>
+                                <group string="Retenue 25% (TVA)">
+                                    <field name="apply_vat_withholding"/>
+                                    <field name="vat_withholding_amount" attrs="{'invisible': [('apply_vat_withholding', '=', False)]}"/>
+                                </group>
+                            </group>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_withholding" attrs="{'invisible': [('total_withholding', '=', 0)]}"/>
+                                <field name="net_to_pay" class="oe_subtotal_footer_separator" decoration-bf="True" decoration-success="True"/>
+                            </group>
+                        </page>
+                        <page string="Informations Complémentaires" name="info">
+                            <group>
+                                <field name="amount_in_words_fr"/>
+                                <field name="note" placeholder="Notes internes..."/>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>

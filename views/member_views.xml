@@ -52,70 +52,49 @@
                     <!-- En-tête -->
                     <div class="oe_title mb-3">
                         <h1>
-                            <field name="name" placeholder="Nom du membre" required="1" class="text-primary"/>
+                            <field name="name" placeholder="Nom du membre" required="1"/>
                         </h1>
-                        <div class="mt-2">
-                            <field name="company_id" options="{'no_create': True}" placeholder="Sélectionner une société..."/>
-                        </div>
+                        <field name="company_id" options="{'no_create': True}" placeholder="Société cliente..."/>
                     </div>
                     
-                    <!-- Section Contact & Crédit -->
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <group string="Informations">
-                                <field name="matricule" string="Matricule"/>
-                                <field name="email" string="Email" widget="email" placeholder="email@exemple.com"/>
-                                <field name="phone" string="Téléphone" widget="phone" placeholder="+216 XX XXX XXX"/>
-                            </group>
-                        </div>
-                        <div class="col-lg-6">
-                            <group string="Crédit">
-                                <div class="alert alert-success text-center py-3" role="alert">
-                                    <h4 class="mb-0">Solde Crédit</h4>
-                                    <h2 class="mb-0 text-success fw-bold">
-                                        <field name="credit_balance" widget="monetary" nolabel="1"/>
-                                    </h2>
-                                </div>
-                            </group>
-                        </div>
-                    </div>
+                    <group>
+                        <group string="Informations">
+                            <field name="matricule"/>
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                        </group>
+                        <group string="Finances">
+                            <field name="credit_balance" widget="monetary" string="Solde Crédit"/>
+                        </group>
+                    </group>
                     
-                    <separator string="Réservations" class="mt-4"/>
-                    
-                    <!-- Section Réservations -->
-                    <div class="row mb-3">
-                        <div class="col-12">
+                    <notebook>
+                        <page string="Réservations" name="reservations">
                             <field name="reservation_ids" nolabel="1">
-                                <tree decoration-success="status == 'confirmed'" 
-                                      decoration-info="status == 'done'" 
-                                      decoration-muted="status == 'cancel'">
-                                    <field name="name" string="Référence"/>
-                                    <field name="destination_id" string="Voyage"/>
-                                    <field name="check_in" string="Arrivée"/>
-                                    <field name="check_out" string="Départ"/>
-                                    <field name="total_price" string="Total" widget="monetary"/>
-                                    <field name="remaining_to_pay" string="Reste" widget="monetary" 
-                                           decoration-danger="remaining_to_pay > 0"/>
-                                    <field name="status" string="État" widget="badge"/>
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="destination_id"/>
+                                    <field name="check_in"/>
+                                    <field name="check_out"/>
+                                    <field name="total_price" widget="monetary"/>
+                                    <field name="remaining_to_pay" widget="monetary"/>
+                                    <field name="status" widget="badge" 
+                                           decoration-success="status == 'confirmed'"
+                                           decoration-info="status == 'done'"/>
                                 </tree>
                             </field>
-                        </div>
-                    </div>
-                    
-                    <separator string="Historique Crédit" class="mt-4"/>
-                    
-                    <!-- Section Historique Crédit -->
-                    <field name="credit_history_ids" nolabel="1">
-                        <tree decoration-success="type == 'recharge'" 
-                              decoration-danger="type == 'usage'"
-                              decoration-warning="type == 'refund'">
-                            <field name="date" string="Date"/>
-                            <field name="type" string="Type" widget="badge"/>
-                            <field name="amount" string="Montant" sum="Total" widget="monetary"/>
-                            <field name="reservation_id" string="Réservation" optional="show"/>
-                            <field name="note" string="Note"/>
-                        </tree>
-                    </field>
+                        </page>
+                        <page string="Historique Crédit" name="credit_history">
+                            <field name="credit_history_ids" nolabel="1">
+                                <tree>
+                                    <field name="date"/>
+                                    <field name="type" widget="badge"/>
+                                    <field name="amount" widget="monetary" sum="Total"/>
+                                    <field name="note"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
