@@ -142,16 +142,17 @@
                     </div>
                            <div class="oe_title">
                         <h1>
-                            <field name="name" placeholder="Caisse..."/>
+                            <field name="name" placeholder="Caisse..." attrs="{'readonly': [('id', '!=', False)]}"/>
                         </h1>
                     </div>
                     
                     <group>
                         <group string="Configuration">
-                            <field name="code"/>
-                            <field name="is_main"/>
-                            <field name="main_cash_id" attrs="{'invisible': [('is_main', '=', True)]}"/>
-                            <field name="user_id"/>
+                            <field name="id" invisible="1"/>
+                            <field name="code" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="is_main" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="main_cash_id" attrs="{'invisible': [('is_main', '=', True)], 'readonly': [('id', '!=', False)]}"/>
+                            <field name="user_id" attrs="{'readonly': [('id', '!=', False)]}"/>
                         </group>
                         <group string="Solde Actuel">
                             <field name="balance" widget="monetary" string="Solde Actuel"/>
@@ -163,14 +164,14 @@
                         <page string="Ouverture / Fermeture" name="session">
                             <group>
                                 <group string="Ouverture">
-                                    <field name="opening_date"/>
-                                    <field name="opening_user_id"/>
-                                    <field name="opening_balance"/>
+                                    <field name="opening_date" readonly="1"/>
+                                    <field name="opening_user_id" readonly="1"/>
+                                    <field name="opening_balance" readonly="1"/>
                                 </group>
                                 <group string="Fermeture">
-                                    <field name="closing_date"/>
-                                    <field name="closing_user_id"/>
-                                    <field name="closing_balance"/>
+                                    <field name="closing_date" readonly="1"/>
+                                    <field name="closing_user_id" readonly="1"/>
+                                    <field name="closing_balance" readonly="1"/>
                                 </group>
                             </group>
                         </page>
@@ -336,13 +337,14 @@
                     
                     <group>
                         <group string="Détails">
-                            <field name="cash_register_id" options="{'no_create': True}"/>
-                            <field name="date"/>
-                            <field name="type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="id" invisible="1"/>
+                            <field name="cash_register_id" options="{'no_create': True}" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="date" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="type" widget="radio" options="{'horizontal': true}" attrs="{'readonly': [('id', '!=', False)]}"/>
                         </group>
                         <group string="Montant &amp; Mode">
-                            <field name="amount" widget="monetary"/>
-                            <field name="payment_method"/>
+                            <field name="amount" widget="monetary" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="payment_method" attrs="{'readonly': [('id', '!=', False)]}"/>
                         </group>
                     </group>
 
@@ -350,18 +352,18 @@
                         <page string="Références" name="references">
                             <group>
                                 <group>
-                                    <field name="reservation_id" options="{'no_create': True}"/>
-                                    <field name="invoice_number"/>
-                                    <field name="quote_number"/>
+                                    <field name="reservation_id" options="{'no_create': True}" attrs="{'readonly': [('id', '!=', False)]}"/>
+                                    <field name="invoice_number" attrs="{'readonly': [('id', '!=', False)]}"/>
+                                    <field name="quote_number" attrs="{'readonly': [('id', '!=', False)]}"/>
                                 </group>
                                 <group>
-                                    <field name="sale_order_id" options="{'no_create': True}"/>
-                                    <field name="invoice_id" options="{'no_create': True}"/>
+                                    <field name="sale_order_id" options="{'no_create': True}" attrs="{'readonly': [('id', '!=', False)]}"/>
+                                    <field name="invoice_id" options="{'no_create': True}" attrs="{'readonly': [('id', '!=', False)]}"/>
                                 </group>
                             </group>
                         </page>
                         <page string="Notes" name="notes">
-                            <field name="note" placeholder="Notes..."/>
+                            <field name="note" placeholder="Notes..." attrs="{'readonly': [('id', '!=', False)]}"/>
                         </page>
                     </notebook>
                 </sheet>
